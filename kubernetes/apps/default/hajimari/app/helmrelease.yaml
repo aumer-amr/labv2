@@ -32,9 +32,9 @@ spec:
     hajimari:
       title: Apps
       darkTheme: blackboard
-      alwaysTargetBlank: true
+      alwaysTargetBlank: false
       showGreeting: false
-      showAppGroups: false
+      showAppGroups: true
       showAppStatus: false
       showBookmarkGroups: false
       showGlobalBookmarks: false
