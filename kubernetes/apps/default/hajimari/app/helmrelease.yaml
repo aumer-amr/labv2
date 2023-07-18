@@ -31,7 +31,7 @@ spec:
   values:
     hajimari:
       title: Apps
-      darkTheme: espresso
+      darkTheme: blackboard
       alwaysTargetBlank: true
       showGreeting: false
       showAppGroups: false
@@ -43,13 +43,54 @@ spec:
       namespaceSelector:
         matchNames:
           - default
+          - flux-system
+          - kube-system
+          - storage
           - monitoring
+          - networking
+      customApps:
+        - group: infra
+          apps:
+            - name: Zeus (Proxmox)
+              url: "https://zeus.pve.${SECRET_INFRA_DOMAIN}:8006/"
+              icon: simple-icons:proxmox
+            - name: Storage (Proxmox)
+              url: "https://storage.${SECRET_INFRA_DOMAIN}:8006/"
+              icon: simple-icons:proxmox
+            - name: OPNSense
+              url: "https://router.${SECRET_INFRA_DOMAIN}/"
+              icon: simple-icons:opnsense
+            - name: AdGuard
+              url: "https://adguard.${SECRET_INFRA_DOMAIN}/"
+              icon: simple-icons:adguard
+            - name: PowerDNS
+              url: "https://powerdns.${SECRET_INFRA_DOMAIN}/"
+              icon: dns
+            - name: Bitwarden (temp)
+              url: "https://bitwarden.${SECRET_INFRA_DOMAIN}/"
+              icon: simple-icons:bitwarden
+            - name: Switch main
+              url: "http://sw-main.${SECRET_INFRA_DOMAIN}/"
+              icon: switch
+            - name: Switch servers
+              url: "http://sw-servers.${SECRET_INFRA_DOMAIN}/"
+              icon: switch
+            - name: Switch office
+              url: "http://sw-office.${SECRET_INFRA_DOMAIN}/"
+              icon: switch
+            - name: Switch living room
+              url: "http://sw-livingroom.${SECRET_INFRA_DOMAIN}/"
+              icon: switch
     ingress:
       main:
         enabled: true
         ingressClassName: nginx
-        annotations:
+        annotations: #https://github.com/toboshii/hajimari/pull/101
+          nginx.ingress.kubernetes.io/configuration-snippet: |
+            sub_filter '</head>' '<style>html, body { width: 100% !important }</style></head>';
+            sub_filter_once on;
           hajimari.io/enable: "false"
+          hajimari.io/icon: "weather-sunset"
         hosts:
           - host: &host "hajimari.${SECRET_DOMAIN}"
             paths:
