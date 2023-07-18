@@ -46,16 +46,20 @@ spec:
           - flux-system
           - kube-system
           - storage
+          - infra
           - monitoring
           - networking
       customApps:
         - group: infra
           apps:
-            - name: Zeus (Proxmox)
-              url: "https://zeus.pve.${SECRET_INFRA_DOMAIN}:8006/"
+            - name: Hera
+              url: "https://hera.${SECRET_INFRA_DOMAIN}:8006/"
               icon: simple-icons:proxmox
-            - name: Storage (Proxmox)
-              url: "https://storage.${SECRET_INFRA_DOMAIN}:8006/"
+            - name: Ares
+              url: "https://ares.pve.${SECRET_INFRA_DOMAIN}:8006/"
+              icon: simple-icons:proxmox
+            - name: Zeus
+              url: "https://zeus.pve.${SECRET_INFRA_DOMAIN}:8006/"
               icon: simple-icons:proxmox
             - name: OPNSense
               url: "https://router.${SECRET_INFRA_DOMAIN}/"
@@ -66,7 +70,7 @@ spec:
             - name: PowerDNS
               url: "https://powerdns.${SECRET_INFRA_DOMAIN}/"
               icon: dns
-            - name: Bitwarden (temp)
+            - name: Bitwarden
               url: "https://bitwarden.${SECRET_INFRA_DOMAIN}/"
               icon: simple-icons:bitwarden
             - name: Switch main
