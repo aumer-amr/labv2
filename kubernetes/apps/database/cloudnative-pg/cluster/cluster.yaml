@@ -7,20 +7,20 @@ metadata:
   annotations:
     kyverno.io/ignore: "true"
 spec:
-  instances: 1
+  instances: 3
   imageName: ghcr.io/cloudnative-pg/postgresql:14.8-6
   inheritedMetadata:
     labels:
       kube-image-keeper.enix.io/image-caching-policy: ignore
   primaryUpdateStrategy: unsupervised
   storage:
-    size: 20Gi
+    size: 10Gi
     storageClass: local-path
   superuserSecret:
     name: cloudnative-pg-secret
   bootstrap:
     recovery:
-      source: &previous-cluster postgres-v3
+      source: &previousCluster postgres-v3
   postgresql:
     parameters:
       max_connections: "600"
@@ -45,7 +45,7 @@ spec:
           key: aws-secret-access-key
   # Note: externalClusters is needed when recovering from an existing cnpg cluster
   externalClusters:
-    - name: *previous-cluster
+    - name: *previousCluster
       barmanObjectStore:
         wal:
           compression: bzip2
