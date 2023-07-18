@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - ./bitnami.yaml
   - ./bjw-s.yaml
+  - ./bootc.yaml
   - ./cilium.yaml
   - ./coredns.yaml
   - ./cloudnative-pg.yaml
