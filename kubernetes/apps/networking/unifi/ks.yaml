@@ -7,8 +7,6 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-apps-ingress-nginx
-    - name: cluster-apps-multus
-    - name: cluster-apps-multus-config
   path: ./kubernetes/apps/networking/unifi/app
   prune: true
   sourceRef:
