@@ -30,14 +30,7 @@ spec:
       numberOfReplicas: "3"
       staleReplicaTimeout: "30"
     groups:
-      "Database":
-        snapshot:
-          - interval: 10m
-            retain: 6
-        backup:
-          - interval: 12h
-            retain: 2
-      "Config":
+      "config":
         snapshot:
           - interval: 10m
             retain: 6
