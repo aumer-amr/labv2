@@ -79,6 +79,14 @@ spec:
             editable: true
             options:
               path: /var/lib/grafana/dashboards/nginx
+          - name: unifi
+            orgId: 1
+            folder: Unifi
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/unifi
     datasources:
       datasources.yaml:
         apiVersion: 1
@@ -158,6 +166,23 @@ spec:
           datasource: Prometheus
         nginx-request-handling-performance:
           url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/grafana/dashboards/request-handling-performance.json
+          datasource: Prometheus
+      unifi:
+        unifi-insights:
+          gnetId: 11315 # https://grafana.com/grafana/dashboards/11315?tab=revisions
+          revision: 9
+          datasource: Prometheus
+        unifi-network-sites:
+          gnetId: 11311 # https://grafana.com/grafana/dashboards/11311?tab=revisions
+          revision: 5
+          datasource: Prometheus
+        unifi-uap:
+          gnetId: 11314 # https://grafana.com/grafana/dashboards/11314?tab=revisions
+          revision: 10
+          datasource: Prometheus
+        unifi-usw:
+          gnetId: 11312 # https://grafana.com/grafana/dashboards/11312?tab=revisions
+          revision: 9
           datasource: Prometheus
     sidecar:
       dashboards:
