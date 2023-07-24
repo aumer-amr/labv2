@@ -2,7 +2,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: unpoller #redeploy
+  name: unpoller
   namespace: monitoring
 spec:
   interval: 10m
@@ -26,7 +26,7 @@ spec:
     keepHistory: false
   values:
     image:
-      repository: golift/unpoller/unpoller
+      repository: ghcr.io/unpoller/unpoller
       tag: v2.7.20
     podAnnotations:
       reloader.stakater.com/auto: "true"
