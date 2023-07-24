@@ -97,6 +97,7 @@ spec:
             sub_filter_once on;
           hajimari.io/enable: "false"
           hajimari.io/icon: "weather-sunset"
+          auth.home.arpa/enabled: "true"
         hosts:
           - host: &host "hajimari.${SECRET_DOMAIN}"
             paths:
