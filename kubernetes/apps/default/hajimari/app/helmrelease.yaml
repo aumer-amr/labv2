@@ -50,6 +50,7 @@ spec:
           - monitoring
           - networking
           - storage
+          - system
       customApps:
         - group: infra
           apps:
