@@ -4,4 +4,5 @@ kind: Kustomization
 namespace: system
 resources:
   - ./remove-cpu-limit.yaml
+  - ./ingress-auth.yaml
   - ./ingress-whitelist.yaml
