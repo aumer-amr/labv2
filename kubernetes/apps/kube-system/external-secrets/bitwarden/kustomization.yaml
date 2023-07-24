@@ -4,5 +4,6 @@ kind: Kustomization
 namespace: kube-system
 resources:
   - ./secret.sops.yaml
-  - ./helmrelease.yaml
   - ./clustersecretstore.yaml
+  - ./helmrelease.yaml
+  - ./networkpolicy.yaml
