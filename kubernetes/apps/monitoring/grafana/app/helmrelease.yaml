@@ -190,3 +190,5 @@ spec:
       storageClassName: local-path
     testFramework:
       enabled: false
+    plugins:
+      - grafana-worldmap-panel
