@@ -101,7 +101,7 @@ spec:
             url: http://influxdb.database.svc.cluster.local
             jsonData:
               version: Flux
-              organisation: lab
+              organization: lab
             secureJsonData:
               token: ${SECRET_INFLUX_DB_TOKEN}
     dashboards:
