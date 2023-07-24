@@ -115,5 +115,5 @@ spec:
             - hosts:
                 - *hostcd
         volumeMounts:
-          - name: config
+          - name: hass-config
             mountPath: /config
