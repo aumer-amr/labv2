@@ -154,7 +154,7 @@ spec:
 
       data:
         enabled: true
-        type: longhorn
+        type: pvc
         existingClaim: authelia
 
     topologySpreadConstraints:
