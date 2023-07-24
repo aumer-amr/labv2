@@ -5,7 +5,7 @@ metadata:
   name: cluster-apps-unpoller
   namespace: flux-system
 spec:
-  path: ./kubernetes/apps/monitoring/unifi-poller/app
+  path: ./kubernetes/apps/monitoring/unpoller/app
   prune: true
   sourceRef:
     kind: GitRepository
