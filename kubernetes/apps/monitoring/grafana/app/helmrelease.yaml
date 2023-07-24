@@ -45,6 +45,7 @@ spec:
         check_for_plugin_updates: false
         reporting_enabled: false
       auth:
+        signout_redirect_url: "https://auth.${PUBLIC_DOMAIN}/logout"
         oauth_auto_login: true
         oauth_allow_insecure_email_lookup: true
       auth.basic:
@@ -60,7 +61,6 @@ spec:
         name_attribute_path: name
         use_pkce: true
         client_id: grafana
-        client_secret: # Set by env vars
         auth_url: https://auth.${SECRET_DOMAIN}/api/oidc/authorization
         token_url: https://auth.${SECRET_DOMAIN}/api/oidc/token
         api_url: https://auth.${SECRET_DOMAIN}/api/oidc/userinfo
