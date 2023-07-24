@@ -198,6 +198,9 @@ spec:
         enabled: true
         searchNamespace: ALL
         labelValue: ""
+    plugins:
+      - grafana-clock-panel
+      - grafana-worldmap-panel
     serviceMonitor:
       enabled: true
     ingress:
