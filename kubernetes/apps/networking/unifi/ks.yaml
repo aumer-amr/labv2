@@ -1,0 +1,20 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cluster-apps-unifi
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: cluster-apps-ingress-nginx
+    - name: cluster-apps-multus
+    - name: cluster-apps-multus-config
+  path: ./kubernetes/apps/networking/unifi/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-kubernetes
+  wait: true
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
