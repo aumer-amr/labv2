@@ -31,10 +31,10 @@ spec:
       createPrometheusRules: true
     defaultSettings:
       backupTarget: s3://longhorn@weur/
-      backupTargetCredentialSecret: longhorn-external-secret-secret
+      backupTargetCredentialSecret: longhorn-secret
       defaultReplicaCount: 3
       backupstorePollInterval: 0
-      createDefaultDiskLabeledNodes: true
+      createDefaultDiskLabeledNodes: false
       defaultDataPath: /mnt/longhorn
       storageOverProvisioningPercentage: 100
       storageMinimalAvailablePercentage: 1
