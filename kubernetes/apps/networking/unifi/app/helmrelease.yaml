@@ -60,8 +60,7 @@ spec:
       main:
         type: LoadBalancer
         annotations:
-          metallb.universe.tf/allow-shared-ip: unifi
-        loadBalancerIP: 10.20.0.239
+          io.cilium/lb-ipam-ips: 10.20.0.239
         externalTrafficPolicy: Local
         ports:
           http:
