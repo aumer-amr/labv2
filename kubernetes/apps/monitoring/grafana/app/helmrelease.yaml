@@ -102,6 +102,7 @@ spec:
             jsonData:
               version: Flux
               organization: lab
+              defaultBucket: default
             secureJsonData:
               token: ${SECRET_INFLUX_DB_TOKEN}
     dashboards:
