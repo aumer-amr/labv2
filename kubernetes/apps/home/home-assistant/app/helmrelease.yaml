@@ -107,7 +107,7 @@ spec:
             hajimari.io/appName: "Hass Config"
             hajimari.io/icon: cib:visual-studio-code
           hosts:
-            - host: &hostcd "hass-code.${EXTERNAL_DOMAIN}"
+            - host: &hostcd "hass-code.${SECRET_DOMAIN}"
               paths:
                 - path: /
                   pathType: Prefix
