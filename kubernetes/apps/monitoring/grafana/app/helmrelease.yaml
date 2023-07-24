@@ -84,6 +84,7 @@ spec:
         apiVersion: 1
         deleteDatasources:
           - { name: Prometheus, orgId: 1 }
+          - { name: Influxdb, orgId: 1 }
         datasources:
           - name: Prometheus
             type: prometheus
@@ -93,6 +94,16 @@ spec:
             jsonData:
               prometheusType: Prometheus
             isDefault: true
+          - name: Influxdb
+            type: influxdb
+            uid: influxdb
+            access: proxy
+            url: http://influxdb.database.svc.cluster.local
+            jsonData:
+              version: Flux
+              organisation: lab
+            secureJsonData:
+              token: ${SECRET_INFLUX_DB_TOKEN}
     dashboards:
       default:
         cloudflared:
@@ -111,6 +122,9 @@ spec:
           gnetId: 1860 # https://grafana.com/grafana/dashboards/1860?tab=revisions
           revision: 31
           datasource: Prometheus
+        opensense:
+          url: https://raw.githubusercontent.com/aumer-amr/labv2/main/opensense-grafana.json
+          datasource: Influxdb
       flux:
         flux-cluster:
           url: https://raw.githubusercontent.com/fluxcd/flux2/main/manifests/monitoring/monitoring-config/dashboards/cluster.json
