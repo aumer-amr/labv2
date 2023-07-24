@@ -1,0 +1,20 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cluster-apps-lldap
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: cluster-apps-external-secrets-bitwarden
+    - name: cluster-apps-longhorn
+    - name: cluster-apps-ingress-nginx
+  path: ./kubernetes/apps/system/lldap/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-kubernetes
+  wait: true
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
