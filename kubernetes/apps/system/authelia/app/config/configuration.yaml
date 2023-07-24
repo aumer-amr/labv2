@@ -13,7 +13,7 @@ access_control:
         - "172.16.0.0/12"
   rules:
     - domain: "echo-server.${SECRET_DOMAIN}"
-      policy: one_factor
+      policy: two_factor
       subject:
         - ["group:admins"]
 
