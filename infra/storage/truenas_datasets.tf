@@ -1,3 +1,4 @@
+# Check for pools
 data "truenas_pool_ids" "all" {}
 
 output "pool_ids" {
@@ -7,6 +8,28 @@ output "pool_ids" {
 data "asserting_test" "pool_ids" {
     test = length(data.truenas_pool_ids.all.ids) > 0
     throw = "There should be at least one pool, found ${length(data.truenas_pool_ids.all.ids)}"
+}
+
+# Check for users
+data "http" "check_k8s_user" {
+  url = "${data.sops_file.secrets.data["truenas_baseurl"]}/user?username=${data.sops_file.secrets.data["truenas_mapall_user"]}"
+  method = "GET"
+
+  request_headers = {
+    Authorization = "Bearer ${data.sops_file.secrets.data["truenas_apikey"]}"
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = contains([200], self.status_code)
+      error_message = "Status code invalid"
+    }
+  }
+}
+
+data "asserting_test" "k8s_user" {
+    test = length(jsondecode(data.http.check_k8s_user.response_body)) > 0
+    throw = "User ${data.sops_file.secrets.data["truenas_mapall_user"]} not found"
 }
 
 # Datasets
@@ -20,9 +43,9 @@ resource "truenas_dataset" "dataset-creation" {
   pool = var.truenas_pool_name
   name = each.key
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
 
 # NFS shares
