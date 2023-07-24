@@ -44,11 +44,12 @@ spec:
         matchNames:
           - default
           - flux-system
-          - kube-system
-          - storage
+          - home
           - infra
+          - kube-system
           - monitoring
           - networking
+          - storage
       customApps:
         - group: infra
           apps:
