@@ -38,6 +38,10 @@ spec:
     env:
       GF_EXPLORE_ENABLED: true
       GF_SERVER_ROOT_URL: "https://grafana.${SECRET_DOMAIN}"
+      GF_AUTH_GENERIC_OAUTH_API_URL: https://auth.devbu.io/api/oidc/userinfo
+      GF_AUTH_GENERIC_OAUTH_AUTH_URL: https://auth.devbu.io/api/oidc/authorization
+      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: grafana
+      GF_AUTH_GENERIC_OAUTH_TOKEN_URL: https://auth.devbu.io/api/oidc/token
     envFrom: grafana-external-secret
     grafana.ini:
       analytics:
@@ -45,11 +49,8 @@ spec:
         check_for_plugin_updates: false
         reporting_enabled: false
       auth:
-        signout_redirect_url: "https://auth.${PUBLIC_DOMAIN}/logout"
         oauth_auto_login: true
         oauth_allow_insecure_email_lookup: true
-      auth.basic:
-        enabled: false
       auth.generic_oauth:
         enabled: true
         name: Authelia
@@ -60,14 +61,14 @@ spec:
         groups_attribute_path: groups
         name_attribute_path: name
         use_pkce: true
-        client_id: grafana
-        auth_url: https://auth.${SECRET_DOMAIN}/api/oidc/authorization
-        token_url: https://auth.${SECRET_DOMAIN}/api/oidc/token
-        api_url: https://auth.${SECRET_DOMAIN}/api/oidc/userinfo
       auth.generic_oauth.group_mapping:
         org_id: 1
         role_attribute_path: |
           contains(groups[*], 'admins') && 'Admin' || contains(groups[*], 'people') && 'Viewer'
+      auth.basic:
+        enabled: false
+      auth.anonymous:
+        enabled: false
     dashboardProviders:
       dashboardproviders.yaml:
         apiVersion: 1
