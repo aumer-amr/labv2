@@ -86,8 +86,8 @@ spec:
         tls:
           - hosts:
               - *host
-    alertmanagerSpec:
-      replicas: 3
+      alertmanagerSpec:
+        replicas: 3
     kube-state-metrics:
       metricLabelsAllowlist:
         - "deployments=[*]"
@@ -176,6 +176,7 @@ spec:
           - hosts:
               - *host
       prometheusSpec:
+        replicas: 3
         ruleSelectorNilUsesHelmValues: false
         serviceMonitorSelectorNilUsesHelmValues: false
         podMonitorSelectorNilUsesHelmValues: false
