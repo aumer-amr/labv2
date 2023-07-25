@@ -29,8 +29,8 @@ spec:
       namespace: system
   values:
     controller:
-      replicas: 2
-      strategy: RollingUpdate
+      replicas: 1
+      strategy: Recreate
       annotations:
         reloader.stakater.com/auto: "true"
 
