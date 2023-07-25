@@ -33,3 +33,10 @@ identity_providers:
         scopes: ["openid", "profile", "groups", "email"]
         redirect_uris: ["https://grafana.${SECRET_DOMAIN}/login/generic_oauth"]
         userinfo_signing_algorithm: none
+
+webauthn:
+  disable: false
+  display_name: Authelia
+  attestation_conveyance_preference: indirect
+  user_verification: preferred
+  timeout: 60s
