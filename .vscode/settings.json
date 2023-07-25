@@ -1,10 +1,6 @@
 {
     "files.associations": {
-        "*.json5": "jsonc",
-        "**/ansible/**/*.yaml": "ansible",
-        "**/ansible/**/*.sops.yaml": "yaml",
-        "**/ansible/**/inventory/**/*.yaml": "yaml",
-        "**/kubernetes/**/*.sops.toml": "plaintext"
+        "*.yaml": "home-assistant"
     },
     "yaml.schemas": {
         "ansible": "ansible/*.yaml",
