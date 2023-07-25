@@ -11,6 +11,7 @@ resources:
   - ./csi-driver-nfs.yaml
   - ./external-dns.yaml
   - ./external-secrets.yaml
+  - ./fairwinds.yaml
   - ./grafana.yaml
   - ./hajimari.yaml
   - ./influxdata.yaml
