@@ -38,8 +38,16 @@ spec:
         type: secret
         name: rss-forwarder-secret
         storageClass: "local-path"
+    service:
+      main:
+        enabled: false
+    ingress:
+      main:
+        enabled: false
     probes:
       liveness:
         enabled: false
       readiness:
+        enabled: false
+      startup:
         enabled: false
