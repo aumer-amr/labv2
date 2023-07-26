@@ -71,6 +71,7 @@ spec:
           annotations:
             hajimari.io/icon: simple-icons:cilium
             hajimari.io/group: monitoring
+            hajimari.io/appName: "hubble"
           hosts:
             - &host "hubble.${SECRET_DOMAIN}"
           tls:
