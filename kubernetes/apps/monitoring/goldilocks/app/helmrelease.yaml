@@ -41,6 +41,7 @@ spec:
         annotations:
           hajimari.io/enable: "true"
           hajimari.io/icon: grommet-icons:resources
+          hajimari.io/appName: "goldilocks"
         hosts:
           - host: &host goldilocks.${SECRET_DOMAIN}
             paths:
