@@ -52,6 +52,11 @@ spec:
           - storage
           - system
       customApps:
+        - group: authentiation
+          apps:
+            - name: Bitwarden
+              url: "https://bitwarden.${SECRET_INFRA_DOMAIN}/"
+              icon: simple-icons:bitwarden
         - group: infra
           apps:
             - name: Hera
@@ -72,9 +77,6 @@ spec:
             - name: PowerDNS
               url: "https://powerdns.${SECRET_INFRA_DOMAIN}/"
               icon: dns
-            - name: Bitwarden
-              url: "https://bitwarden.${SECRET_INFRA_DOMAIN}/"
-              icon: simple-icons:bitwarden
             - name: Switch main
               url: "http://sw-main.${SECRET_INFRA_DOMAIN}/"
               icon: switch
