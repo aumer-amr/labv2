@@ -52,7 +52,7 @@ spec:
           - storage
           - system
       customApps:
-        - group: authentiation
+        - group: authentication
           apps:
             - name: Bitwarden
               url: "https://bitwarden.${SECRET_INFRA_DOMAIN}/"
