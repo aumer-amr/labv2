@@ -32,9 +32,14 @@ spec:
       tag: 0.6.1
     env:
       TZ: "${TIMEZONE}"
-  persistence:
-    data:
-      enabled: true
-      type: secret
-      name: rss-forwarder-secret
-      storageClass: "local-path"
+    persistence:
+      data:
+        enabled: true
+        type: secret
+        name: rss-forwarder-secret
+        storageClass: "local-path"
+    probes:
+      liveness:
+        enabled: false
+      readiness:
+        enabled: false
