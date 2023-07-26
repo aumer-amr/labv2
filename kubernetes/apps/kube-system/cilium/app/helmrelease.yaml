@@ -70,6 +70,7 @@ spec:
           className: nginx
           annotations:
             hajimari.io/icon: simple-icons:cilium
+            hajimari.io/group: monitoring
           hosts:
             - &host "hubble.${SECRET_DOMAIN}"
           tls:
