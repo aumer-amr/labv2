@@ -35,6 +35,7 @@ spec:
       defaultReplicaCount: 3
       backupstorePollInterval: 0
       createDefaultDiskLabeledNodes: false
+      restoreVolumeRecurringJobs: true
       defaultDataPath: /mnt/longhorn
       storageOverProvisioningPercentage: 100
       storageMinimalAvailablePercentage: 1
