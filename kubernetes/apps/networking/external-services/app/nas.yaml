@@ -6,6 +6,9 @@ metadata:
   namespace: networking
 spec:
   ingressClassName: nginx
+  annotations:
+    hajimari.io/icon: simple-icons:truenas
+    hajimari.io/group: infra
   rules:
     - host: &host nas.${SECRET_DOMAIN}
       http:
