@@ -4,11 +4,12 @@ kind: Ingress
 metadata:
   name: external-service-nas
   namespace: networking
-spec:
-  ingressClassName: nginx
   annotations:
+    hajimari.io/appName: nas
     hajimari.io/icon: simple-icons:truenas
     hajimari.io/group: infra
+spec:
+  ingressClassName: nginx
   rules:
     - host: &host nas.${SECRET_DOMAIN}
       http:
