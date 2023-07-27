@@ -7,7 +7,7 @@ metadata:
   annotations:
     hajimari.io/appName: nas
     hajimari.io/icon: simple-icons:truenas
-    hajimari.io/group: infra
+    hajimari.io/group: storage
 spec:
   ingressClassName: nginx
   rules:
