@@ -7,9 +7,14 @@ metadata:
   name: cilium
   namespace: kube-system
 spec:
+  # renovate: datasource=helm
   repo: https://helm.cilium.io/
   chart: cilium
+<<<<<<< HEAD
   version: 1.14.0
+=======
+  version: 1.14.0-rc.1
+>>>>>>> f037aa4 (chore: renovate helm.cattle.io/v1 HelmCharts)
   targetNamespace: kube-system
   bootstrap: true
   valuesContent: |-
