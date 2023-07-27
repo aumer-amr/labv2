@@ -35,6 +35,7 @@ spec:
                 - ""
               resources:
                 - pods
+                - ingress
               verbs:
                 - create
                 - update
