@@ -33,6 +33,7 @@ spec:
           extraResources:
             - apiGroups:
                 - ""
+                - networking.k8s.io
               resources:
                 - pods
                 - ingresses
