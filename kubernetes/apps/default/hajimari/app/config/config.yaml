@@ -31,12 +31,15 @@ customApps:
       - name: Hera
         url: "https://hera.${SECRET_INFRA_DOMAIN}:8006/"
         icon: simple-icons:proxmox
+        location: 1
       - name: Ares
         url: "https://ares.pve.${SECRET_INFRA_DOMAIN}:8006/"
         icon: simple-icons:proxmox
+        location: 2
       - name: Zeus
         url: "https://zeus.pve.${SECRET_INFRA_DOMAIN}:8006/"
         icon: simple-icons:proxmox
+        location: 3
       - name: OPNSense
         url: "https://router.${SECRET_INFRA_DOMAIN}/"
         icon: simple-icons:opnsense
