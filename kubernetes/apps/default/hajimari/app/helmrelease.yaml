@@ -51,10 +51,7 @@ spec:
       main:
         enabled: true
         ingressClassName: nginx
-        annotations: #https://github.com/toboshii/hajimari/pull/101
-          nginx.ingress.kubernetes.io/configuration-snippet: |
-            sub_filter '</head>' '<style>html, body { width: 100% !important }</style></head>';
-            sub_filter_once on;
+        annotations:
           hajimari.io/enable: "false"
           hajimari.io/icon: "weather-sunset"
         hosts:
