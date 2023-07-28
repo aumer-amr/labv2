@@ -2,17 +2,18 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: hajimari #redeploy
-  namespace: default
+  name: rss-forwarder
+  namespace: system
 spec:
-  interval: 30m
+  interval: 15m
   chart:
     spec:
-      chart: hajimari
-      version: 2.0.2
+      chart: app-template
+      version: 1.5.1
+      interval: 30m
       sourceRef:
         kind: HelmRepository
-        name: hajimari
+        name: bjw-s
         namespace: flux-system
   maxHistory: 2
   install:
@@ -89,6 +90,15 @@ spec:
             - name: Switch living room
               url: "http://sw-livingroom.${SECRET_INFRA_DOMAIN}/"
               icon: switch
+    image:
+      repository: ghcr.io/aumer-amr/hajimari
+      tag: main-7cf2dec
+    env:
+      TZ: "${TIMEZONE}"
+    persistence:
+      data:
+        enabled: true
+        type: emptyDir
     ingress:
       main:
         enabled: true
@@ -109,10 +119,6 @@ spec:
               - *host
     podAnnotations:
       configmap.reloader.stakater.com/reload: hajimari-settings
-    persistence:
-      data:
-        enabled: true
-        type: emptyDir
     resources:
       requests:
         cpu: 100m
