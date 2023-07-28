@@ -61,7 +61,8 @@ spec:
         enabled: true
         ingressClassName: nginx
         annotations:
-          hajimari.io/enabled: "false"
+          hajimari.io/enabled: "true"
+          hajimari.io/icon: "arcticons:ntfy"
         hosts:
           - host: &host "ntfy.${SECRET_DOMAIN}"
             paths:
