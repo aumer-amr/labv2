@@ -30,73 +30,20 @@ spec:
     - name: ingress-nginx
       namespace: networking
   values:
-    hajimari:
-      name: "You"
-      title: Apps
-      darkTheme: blackboard
-      alwaysTargetBlank: false
-      showGreeting: false
-      showAppGroups: true
-      showAppStatus: false
-      showBookmarkGroups: false
-      showGlobalBookmarks: false
-      showAppUrls: false
-      defaultEnable: true
-      namespaceSelector:
-        matchNames:
-          - default
-          - flux-system
-          - home
-          - infra
-          - kube-system
-          - monitoring
-          - networking
-          - storage
-          - system
-      customApps:
-        - group: authentication
-          apps:
-            - name: Bitwarden
-              url: "https://bitwarden.${SECRET_INFRA_DOMAIN}/"
-              icon: simple-icons:bitwarden
-        - group: infra
-          apps:
-            - name: Hera
-              url: "https://hera.${SECRET_INFRA_DOMAIN}:8006/"
-              icon: simple-icons:proxmox
-            - name: Ares
-              url: "https://ares.pve.${SECRET_INFRA_DOMAIN}:8006/"
-              icon: simple-icons:proxmox
-            - name: Zeus
-              url: "https://zeus.pve.${SECRET_INFRA_DOMAIN}:8006/"
-              icon: simple-icons:proxmox
-            - name: OPNSense
-              url: "https://router.${SECRET_INFRA_DOMAIN}/"
-              icon: simple-icons:opnsense
-            - name: AdGuard
-              url: "https://adguard.${SECRET_INFRA_DOMAIN}/"
-              icon: simple-icons:adguard
-            - name: PowerDNS
-              url: "https://powerdns.${SECRET_INFRA_DOMAIN}/"
-              icon: dns
-            - name: Switch main
-              url: "http://sw-main.${SECRET_INFRA_DOMAIN}/"
-              icon: switch
-            - name: Switch servers
-              url: "http://sw-servers.${SECRET_INFRA_DOMAIN}/"
-              icon: switch
-            - name: Switch office
-              url: "http://sw-office.${SECRET_INFRA_DOMAIN}/"
-              icon: switch
-            - name: Switch living room
-              url: "http://sw-livingroom.${SECRET_INFRA_DOMAIN}/"
-              icon: switch
     image:
       repository: ghcr.io/aumer-amr/hajimari
       tag: main-7cf2dec
     env:
       TZ: "${TIMEZONE}"
+      SECRET_INFRA_DOMAIN: ${SECRET_INFRA_DOMAIN}
     persistence:
+      config:
+        enabled: true
+        type: configMap
+        name: hajimari-configmap
+        subPath: config.yaml
+        mountPath: /config/config.yaml
+        readOnly: false
       data:
         enabled: true
         type: emptyDir
