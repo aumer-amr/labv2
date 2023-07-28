@@ -43,12 +43,15 @@ customApps:
       - name: OPNSense
         url: "https://router.${SECRET_INFRA_DOMAIN}/"
         icon: simple-icons:opnsense
+        location: 4
       - name: AdGuard
         url: "https://adguard.${SECRET_INFRA_DOMAIN}/"
         icon: simple-icons:adguard
+        location: 5
       - name: PowerDNS
         url: "https://powerdns.${SECRET_INFRA_DOMAIN}/"
         icon: dns
+        location: 6
       - name: Switch main
         url: "http://sw-main.${SECRET_INFRA_DOMAIN}/"
         icon: switch
