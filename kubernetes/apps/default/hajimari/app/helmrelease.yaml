@@ -30,6 +30,8 @@ spec:
     - name: ingress-nginx
       namespace: networking
   values:
+    podAnnotations:
+      reloader.stakater.com/auto: "true"
     image:
       repository: ghcr.io/aumer-amr/hajimari
       tag: main-7cf2dec
