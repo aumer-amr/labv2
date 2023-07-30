@@ -33,7 +33,7 @@ spec:
       masquerade: true
       tproxy: true
     bgpControlPlane:
-      enabled: true
+      enabled: false
     cluster:
       name: home-cluster
       id: 1
