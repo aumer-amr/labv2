@@ -62,7 +62,7 @@ spec:
           hajimari.io/icon: "game-icons:tiger-head"
           auth.home.arpa/enabled: "true"
         hosts:
-          - host: &host "radarr.${SECRET_DOMAIN}"
+          - host: &host "prowlarr.${SECRET_DOMAIN}"
             paths:
               - path: /
                 pathType: Prefix

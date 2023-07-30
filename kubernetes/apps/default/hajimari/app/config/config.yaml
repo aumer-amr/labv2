@@ -12,6 +12,7 @@ defaultEnable: true
 namespaceSelector:
   matchNames:
     - default
+    - downloads
     - flux-system
     - home
     - infra
