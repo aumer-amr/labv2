@@ -32,8 +32,8 @@ spec:
       lbBypassFIBLookup: true
       masquerade: true
       tproxy: true
-    bgp:
-      enabled: false
+    bgpControlPlane:
+      enabled: true
     cluster:
       name: home-cluster
       id: 1
