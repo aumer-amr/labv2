@@ -71,7 +71,6 @@ spec:
         enabled: true
         annotations:
           hajimari.io/icon: "arcticons:qbittorrent-remote"
-          auth.home.arpa/enabled: "true"
           nginx.ingress.kubernetes.io/configuration-snippet: |
             proxy_hide_header "x-webkit-csp";
             proxy_hide_header "content-security-policy";
