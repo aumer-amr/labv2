@@ -20,3 +20,11 @@ metadata:
 spec:
   cidrs:
     - cidr: "${NODE_CIDR}"
+---
+apiVersion: cilium.io/v2alpha1
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: pool-system
+spec:
+  cidrs:
+    - cidr: "${SYSTEM_CIDR}"
