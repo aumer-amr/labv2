@@ -1,6 +1,6 @@
 ---
 apiVersion: cilium.io/v2alpha1
-kind: CiliumBGPPeeringPolicy
+kind: CiliumBGPPeeringPolicy #update
 metadata:
   name: l3-policy
 spec:
