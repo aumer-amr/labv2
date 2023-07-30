@@ -57,7 +57,7 @@ spec:
         enabled: true
         type: LoadBalancer
         annotations:
-          io.cilium/lb-ipam-ips: 10.20.1.2
+          io.cilium/lb-ipam-ips: 10.10.1.230
           io.cilium/lb-ipam-layer: layer3
         ports:
           bittorrent:
