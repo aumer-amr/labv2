@@ -15,7 +15,7 @@ spec:
           io.cilium/lb-ipam-layer: layer3
       neighbors:
         - peerAddress: ${CILIUM_BGP_PEER}/32
-          peerASN: 64512
+          peerASN: 64513
 ---
 apiVersion: cilium.io/v2alpha1
 kind: CiliumLoadBalancerIPPool
