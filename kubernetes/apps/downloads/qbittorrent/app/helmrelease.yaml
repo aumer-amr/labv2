@@ -1,0 +1,124 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: qbittorrent
+  namespace: downloads
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: app-template
+      version: 1.5.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 2
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  dependsOn:
+    - name: longhorn
+      namespace: storage
+  values:
+    controller:
+      type: statefulset
+      annotations:
+        reloader.stakater.com/auto: "true"
+    image:
+      repository: ghcr.io/onedr0p/qbittorrent
+      tag: 4.5.4
+    env:
+      TZ: ${TIMEZONE}
+      QBITTORRENT__PORT: &port 8080
+      QBITTORRENT__BT_PORT: &bittorrentPort 50413
+      QBT_Application__MemoryWorkingSetLimit: 12000
+    podAnnotations:
+      setGateway: "true"
+    hostname: qbittorrent-0
+    service:
+      main:
+        ports:
+          http:
+            port: *port
+      bittorrent:
+        enabled: true
+        type: LoadBalancer
+        annotations:
+          io.cilium/lb-ipam-ips: 10.10.1.230
+        ports:
+          bittorrent:
+            enabled: true
+            port: *bittorrentPort
+            protocol: TCP
+            targetPort: *bittorrentPort
+        externalTrafficPolicy: Local
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/icon: "arcticons:qbittorrent-remote"
+          auth.home.arpa/enabled: "true"
+          nginx.ingress.kubernetes.io/configuration-snippet: |
+            proxy_hide_header "x-webkit-csp";
+            proxy_hide_header "content-security-policy";
+            proxy_hide_header "X-Frame-Options";
+            proxy_set_header Accept-Encoding "";
+        hosts:
+          - host: &host "qbittorrent.${SECRET_DOMAIN}"
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - hosts:
+              - *host
+    metrics:
+      enabled: true
+      exporter:
+        image:
+          repository: ghcr.io/k8s-at-home/prometheus-qbittorrent-exporter
+          tag: v1.2.0
+      serviceMonitor:
+        interval: 1m
+        scrapeTimeout: 10s
+      prometheusRule:
+        enabled: true
+    podSecurityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: OnRootMismatch
+    volumeClaimTemplates:
+      - name: config
+        mountPath: /config
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn-config
+    persistence:
+      media:
+        enabled: true
+        type: nfs
+        server: ${SECRET_NAS_IP}
+        path: /mnt/rpool/media
+        mountPath: /media
+      incomplete:
+        enabled: true
+        type: emptyDir
+    resources:
+      requests:
+        cpu: 25m
+        memory: 1G
+      limits:
+        memory: 3G
+    sidecars:
+      reannounce:
+        image: ghcr.io/buroa/qbittools:v0.1.1
+        imagePullPolicy: IfNotPresent
+        args: ["reannounce", "-s", "localhost", "-p", "8080"]
