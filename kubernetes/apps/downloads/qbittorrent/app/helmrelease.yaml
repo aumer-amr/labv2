@@ -116,10 +116,10 @@ spec:
         type: emptyDir
     resources:
       requests:
-        cpu: 25m
-        memory: 1G
+        cpu: 10m
+        memory: 1642M
       limits:
-        memory: 3G
+        memory: 3316M
     sidecars:
       reannounce:
         image: ghcr.io/buroa/qbittools:v0.1.1
