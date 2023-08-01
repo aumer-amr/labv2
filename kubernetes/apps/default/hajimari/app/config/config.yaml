@@ -17,6 +17,7 @@ namespaceSelector:
     - home
     - infra
     - kube-system
+    - media
     - monitoring
     - networking
     - storage
