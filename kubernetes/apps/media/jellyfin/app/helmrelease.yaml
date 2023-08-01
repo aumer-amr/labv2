@@ -53,6 +53,9 @@ spec:
       runAsGroup: 568
       fsGroup: 568
       fsGroupChangePolicy: OnRootMismatch
+      supplementalGroups:
+      - 39
+      - 105
     volumeClaimTemplates:
       - name: config
         mountPath: /config
@@ -69,6 +72,14 @@ spec:
       transcode:
         enabled: true
         type: emptyDir
+      cache:
+        enabled: true
+        type: emptyDir
+      dri:
+        enabled: true
+        type: hostPath
+        mountPath: /dev/dri
+        hostPath: /dev/dri
     resources:
       requests:
         gpu.intel.com/i915: 1
