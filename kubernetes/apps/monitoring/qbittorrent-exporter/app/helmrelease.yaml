@@ -3,7 +3,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: prometheus-qbittorrent-exporter
-  namespace: downloads
+  namespace: monitoring
 spec:
   interval: 30m
   chart:
@@ -24,13 +24,9 @@ spec:
       retries: 3
   uninstall:
     keepHistory: false
-  dependsOn:
-    - name: qbittorrent
-      namespace: downloads
   values:
     controller:
       type: daemonset
-      replicas: 1
     image:
       repository: ghcr.io/k8s-at-home/prometheus-qbittorrent-exporter
       tag: v1.2.0
@@ -43,17 +39,5 @@ spec:
         ports:
           http:
             port: 8000
-    serviceMonitor:
-      main:
-        enabled: false
-        endpoints:
-          - port: http
-            scheme: http
-            path: /metrics
-            interval: 1m
-            scrapeTimeout: 10s
-            relabelings:
-              - sourceLabels: [__meta_kubernetes_pod_node_name]
-                targetLabel: node
     securityContext:
       privileged: true
