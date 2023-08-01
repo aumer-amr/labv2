@@ -6,6 +6,7 @@ resources:
   - ./authelia/ks.yaml
   - ./kyverno/ks.yaml
   - ./lldap/ks.yaml
+  - ./node-feature-discovery/ks.yaml
   - ./ntfy/ks.yaml
   - ./rss-forwarder/ks.yaml
   - ./theme-park/ks.yaml
