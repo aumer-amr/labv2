@@ -45,8 +45,8 @@ spec:
       QBT_BitTorrent__Session__LSDEnabled: 'false'
       QBT_BitTorrent__Session__PeXEnabled: 'false'
       QBT_BitTorrent__Session__DefaultSavePath: '/media/downloads'
-    # podAnnotations:
-    #   set-gateway-vpn: "true"
+    podAnnotations:
+      set-gateway-vpn: "true"
     hostname: qbittorrent-0
     service:
       main:
