@@ -6,5 +6,5 @@ metadata:
   namespace: monitoring
 spec:
   staticConfigs:
-    - targets: ['prometheus-qbittorrent-exporter.downloads.svc.cluster.local:8000']
+    - targets: ['prometheus-qbittorrent-exporter.monitoring.svc.cluster.local:8000']
   metricsPath: /metrics
