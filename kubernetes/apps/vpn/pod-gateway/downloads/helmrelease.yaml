@@ -54,6 +54,8 @@ spec:
             value: "off"
           - name: SHADOWSOCKS
             value: "on"
+          - name: SHADOWSOCKS_PASSWORD
+            value: ${SECRET_VPN_SHADOWSOCKS_PASSWORD}
         envFrom:
           - secretRef:
               name: downloads-gateway-vpnconfig-secret
