@@ -63,10 +63,8 @@ spec:
       fsGroup: 568
       fsGroupChangePolicy: OnRootMismatch
       supplementalGroups:
-      - 39 # irc
       - 44 # video
-      - 105 # jellyfin
-      - 109 # render
+      - 105 # render
     volumeClaimTemplates:
       - name: config
         mountPath: /config
