@@ -8,3 +8,4 @@ resources:
   - ./kube-prometheus-stack/ks.yaml
   - ./unpoller/ks.yaml
   - ./vpa/ks.yaml
+  - ./qbittorrent-exporter/ks.yaml
