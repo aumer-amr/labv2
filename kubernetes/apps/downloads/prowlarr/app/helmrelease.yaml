@@ -28,6 +28,8 @@ spec:
     - name: longhorn
       namespace: storage
   values:
+    podAnnotations:
+      set-gateway-vpn: "true"
     initContainers:
       01-init-db:
         image: ghcr.io/onedr0p/postgres-init:14.8
