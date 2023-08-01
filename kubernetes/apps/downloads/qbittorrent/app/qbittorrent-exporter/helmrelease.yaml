@@ -30,6 +30,7 @@ spec:
   values:
     controller:
       type: daemonset
+      replicas: 1
     image:
       repository: ghcr.io/k8s-at-home/prometheus-qbittorrent-exporter
       tag: v1.2.0
@@ -44,7 +45,7 @@ spec:
             port: 8000
     serviceMonitor:
       main:
-        enabled: true
+        enabled: false
         endpoints:
           - port: http
             scheme: http
