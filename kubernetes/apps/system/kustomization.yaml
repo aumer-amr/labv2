@@ -8,3 +8,4 @@ resources:
   - ./lldap/ks.yaml
   - ./ntfy/ks.yaml
   - ./rss-forwarder/ks.yaml
+  - ./theme-park/ks.yaml
