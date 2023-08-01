@@ -21,7 +21,18 @@ spec:
       tag: v1.8.1@sha256:690b6365728fe9012ad4cdfca38334992664596513dca187d1b93d2025205776
     podAnnotations:
       reloader.stakater.com/auto: "true"
-    DNS: 1.1.1.1
+    DNS: 172.16.1.1
+    service:
+      vpn:
+        enabled: true
+        type: LoadBalancer
+        annotations:
+          io.cilium/lb-ipam-ips: 10.10.1.231
+        externalTrafficPolicy: Cluster
+        ports:
+          shadowsocks:
+            enabled: true
+            port: 8388
     addons:
       vpn:
         enabled: true
@@ -41,6 +52,8 @@ spec:
             value: "off"
           - name: DOT
             value: "off"
+          - name: SHADOWSOCKS
+            value: "on"
         envFrom:
           - secretRef:
               name: downloads-gateway-vpnconfig-secret
