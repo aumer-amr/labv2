@@ -48,6 +48,13 @@ spec:
           enabled: false
           http:
             port: 8265
+    probes:
+      liveness:
+        enabled: false
+      readiness:
+        enabled: false
+      startup:
+        enabled: false
     persistence:
       movies:
         enabled: true
