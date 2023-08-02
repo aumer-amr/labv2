@@ -51,14 +51,14 @@ spec:
         enabled: true
         type: nfs
         server: ${SECRET_NAS_IP}
-        path: /mnt/rpool/media/movies
-        mountPath: /media/movies
+        path: /mnt/rpool/media/series
+        mountPath: /media/series
       temp:
         enabled: true
         type: nfs
         server: ${SECRET_NAS_IP}
-        path: /mnt/rpool/media/movies
-        mountPath: /media/movies
+        path: /mnt/rpool/media/tdarr
+        mountPath: /temp
     service:
       main:
         ports:
