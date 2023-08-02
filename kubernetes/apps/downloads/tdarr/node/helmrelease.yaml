@@ -84,7 +84,6 @@ spec:
       supplementalGroups:
         - 44
         - 105
-        - 226
     resources:
       requests:
         cpu: 15m
