@@ -75,7 +75,7 @@ spec:
       media:
         enabled: true
         type: nfs
-        server: ${SECRET_NAS_IP}
+        server: ${SECRET_NAS_IP_STREAMING}
         path: /mnt/rpool/media
         mountPath: /media
       transcode:
