@@ -43,21 +43,15 @@ spec:
         storageClass: longhorn
       movies:
         enabled: true
-        type: nfs
-        server: ${SECRET_NAS_IP}
-        path: /mnt/rpool/media/movies
+        existingClaim: tdarr-movies
         mountPath: /media/movies
       series:
         enabled: true
-        type: nfs
-        server: ${SECRET_NAS_IP}
-        path: /mnt/rpool/media/series
+        existingClaim: tdarr-series
         mountPath: /media/series
       temp:
         enabled: true
-        type: nfs
-        server: ${SECRET_NAS_IP}
-        path: /mnt/rpool/media/tdarr
+        existingClaim: tdarr-cache
         mountPath: /temp
     service:
       main:
