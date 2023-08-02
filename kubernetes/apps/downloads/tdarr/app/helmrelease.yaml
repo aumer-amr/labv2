@@ -74,7 +74,7 @@ spec:
           - hosts:
               - *host
     podSecurityContext:
-      runAsUser: 568
-      runAsGroup: 568
-      fsGroup: 568
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
       fsGroupChangePolicy: OnRootMismatch
