@@ -64,7 +64,6 @@ spec:
         ingressClassName: nginx
         annotations:
           hajimari.io/icon: "ic:round-panorama-fish-eye"
-          auth.home.arpa/enabled: "true"
         hosts:
           - host: &host "tdarr.${SECRET_DOMAIN}"
             paths:
