@@ -37,7 +37,7 @@ spec:
       TZ: ${TIMEZONE}
       QBITTORRENT__PORT: &port 8080
       QBITTORRENT__BT_PORT: &bittorrentPort ${SECRET_VPN_FORWARDED_PORT_1}
-      QBT_Application__MemoryWorkingSetLimit: 12000
+      QBT_Application__MemoryWorkingSetLimit: 7500
       QBT_BitTorrent__Session__BTProtocol: 'TCP'
       QBT_BitTorrent__Session__DTHEnabled: 'false'
       QBT_BitTorrent__Session__LSDEnabled: 'false'
@@ -106,9 +106,9 @@ spec:
     resources:
       requests:
         cpu: 10m
-        memory: 6G
+        memory: 8G
       limits:
-        memory: 6G
+        memory: 8G
     sidecars:
       reannounce:
         image: ghcr.io/buroa/qbittools:v0.1.1
