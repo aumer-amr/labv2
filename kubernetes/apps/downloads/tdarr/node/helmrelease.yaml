@@ -43,7 +43,9 @@ spec:
             fieldPath: spec.nodeName
     service:
       main:
+        enabled: false
         ports:
+          enabled: false
           http:
             port: 8265
     persistence:
