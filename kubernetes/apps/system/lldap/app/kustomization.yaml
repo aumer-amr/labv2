@@ -6,6 +6,7 @@ resources:
   - ./external-secret.yaml
   - ./pvc.yaml
   - ./helmrelease.yaml
+  - ./gatus.yaml
 commonLabels:
   app.kubernetes.io/name: lldap
   app.kubernetes.io/instance: lldap

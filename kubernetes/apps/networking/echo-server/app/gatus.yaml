@@ -2,16 +2,16 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: authelia-gatus
+  name: echo-server-gatus
   namespace: system
   labels:
     gatus.io/enabled: "true"
 data:
   config.yaml: |
     endpoints:
-      - name: Auth
-        group: system
-        url: https://auth.${SECRET_DOMAIN}
+      - name: Echo
+        group: networking
+        url: https://echo-server.${SECRET_DOMAIN}
         interval: 1m
         conditions: ["[STATUS] == 200"]
         alerts: [{ type: discord }]
