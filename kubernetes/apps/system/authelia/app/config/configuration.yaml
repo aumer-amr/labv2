@@ -20,6 +20,11 @@ access_control:
       networks:
         - internal
         - vpn
+    - domain: "cyberchef.${SECRET_DOMAIN}"
+      policy: bypass
+      networks:
+        - internal
+        - vpn
     - domain: "echo-server.${SECRET_DOMAIN}"
       policy: two_factor
       subject:
