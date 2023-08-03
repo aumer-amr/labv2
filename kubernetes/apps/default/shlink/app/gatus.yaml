@@ -13,7 +13,7 @@ data:
         group: tools
         url: https://sh.${SECRET_DOMAIN}/jb6d5
         interval: 1m
-        conditions: ["[STATUS] == 302"]
+        conditions: ["[STATUS] == 200"]
         alerts: [{ type: discord }]
         ui:
           hide-hostname: true
