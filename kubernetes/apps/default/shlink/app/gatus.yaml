@@ -11,9 +11,9 @@ data:
     endpoints:
       - name: Links
         group: tools
-        url: https://shlink.${SECRET_DOMAIN}
+        url: https://sh.${SECRET_DOMAIN}/jb6d5
         interval: 1m
-        conditions: ["[STATUS] == 200"]
+        conditions: ["[STATUS] == 302"]
         alerts: [{ type: discord }]
         ui:
           hide-hostname: true
