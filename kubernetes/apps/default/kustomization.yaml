@@ -5,3 +5,4 @@ resources:
   - ./namespace.yaml
   - ./cyberchef/ks.yaml
   - ./hajimari/ks.yaml
+  - ./shlink/ks.yaml
