@@ -75,6 +75,7 @@ spec:
         ingressClassName: nginx
         annotations:
           external-dns.alpha.kubernetes.io/target: ingress.${SECRET_DOMAIN}
+          external-dns.home.arpa/enabled: "true"
           hajimari.io/icon: simple-icons:statuspage
         hosts:
           - host: &host status.${SECRET_DOMAIN}
