@@ -2,16 +2,16 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: authelia-gatus
+  name: lldap-gatus
   namespace: system
   labels:
     gatus.io/enabled: "true"
 data:
   config.yaml: |
     endpoints:
-      - name: Auth
+      - name: LDAP
         group: system
-        url: https://auth.${SECRET_DOMAIN}
+        url: https://lldap.${SECRET_DOMAIN}
         interval: 1m
         conditions: ["[STATUS] == 200"]
         alerts: [{ type: discord }]
