@@ -12,7 +12,8 @@ metadata:
       applies the nginx auth annotations for use with Authelia.
 spec:
   validationFailureAction: enforce
-  generateExistingOnPolicyUpdate: true
+  mutateExistingOnPolicyUpdate: true
+  generateExisting: true
   rules:
     - name: auth
       match:
@@ -22,6 +23,14 @@ spec:
               annotations:
                 auth.home.arpa/enabled: "true"
       mutate:
+        targets:
+        - apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          preConditions:
+            all:
+            - key: "{{ target.annotations[auth.home.arpa/enabled] || 'false' }}"
+              operator: Equals
+              value: "true"
         patchStrategicMerge:
           metadata:
             # https://www.authelia.com/integration/kubernetes/nginx-ingress/#nginx-ingress-controller-ingress-nginx
