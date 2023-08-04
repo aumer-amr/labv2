@@ -26,7 +26,7 @@ spec:
         targets:
         - apiVersion: networking.k8s.io/v1
           kind: Ingress
-          preConditions:
+          preconditions:
             all:
             - key: "{{ target.annotations[auth.home.arpa/enabled] || 'false' }}"
               operator: Equals
