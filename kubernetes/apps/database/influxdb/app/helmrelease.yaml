@@ -37,7 +37,7 @@ spec:
       name: influxdb-pvc
     ingress:
       enabled: true
-      className: "nginx"
+      className: internal
       annotations:
         hajimari.io/appName: Influxdb
         hajimari.io/icon: simple-icons:influxdb

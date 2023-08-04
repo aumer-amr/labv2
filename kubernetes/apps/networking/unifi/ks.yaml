@@ -6,7 +6,7 @@ metadata:
   namespace: flux-system
 spec:
   dependsOn:
-    - name: cluster-apps-ingress-nginx
+    - name: cluster-apps-nginx-internal
   path: ./kubernetes/apps/networking/unifi/app
   prune: true
   sourceRef:

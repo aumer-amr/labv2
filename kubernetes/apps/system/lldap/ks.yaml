@@ -8,7 +8,7 @@ spec:
   dependsOn:
     - name: cluster-apps-external-secrets-bitwarden
     - name: cluster-apps-longhorn
-    - name: cluster-apps-ingress-nginx
+    - name: cluster-apps-nginx-external
   path: ./kubernetes/apps/system/lldap/app
   prune: true
   sourceRef:

@@ -57,7 +57,7 @@ spec:
     ingress:
       main:
         enabled: true
-        ingressClassName: nginx
+        ingressClassName: internal
         annotations:
           hajimari.io/icon: "game-icons:tiger-head"
           auth.home.arpa/enabled: "true"

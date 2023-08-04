@@ -9,7 +9,7 @@ metadata:
     hajimari.io/icon: simple-icons:truenas
     hajimari.io/group: storage
 spec:
-  ingressClassName: nginx
+  ingressClassName: internal
   rules:
     - host: &host nas.${SECRET_DOMAIN}
       http:

@@ -6,7 +6,7 @@ metadata:
   namespace: flux-system
 spec:
   dependsOn:
-    - name: cluster-apps-ingress-nginx
+    - name: cluster-apps-nginx-internal
     - name: cluster-apps-external-secrets-bitwarden
   path: ./kubernetes/apps/storage/longhorn/app
   prune: true
@@ -18,7 +18,7 @@ spec:
       kind: HelmRelease
       name: longhorn
       namespace: storage
-  wait: false # no flux ks dependents
+  wait: false
   interval: 30m
   retryInterval: 1m
   timeout: 3m

@@ -30,8 +30,6 @@ spec:
   dependsOn:
     - name: kyverno
       namespace: system
-    - name: ingress-nginx
-      namespace: networking
   values:
     controller:
       type: statefulset
@@ -59,7 +57,7 @@ spec:
     ingress:
       main:
         enabled: true
-        ingressClassName: nginx
+        ingressClassName: internal
         annotations:
           hajimari.io/enable: "true"
           hajimari.io/icon: "arcticons:ntfy"

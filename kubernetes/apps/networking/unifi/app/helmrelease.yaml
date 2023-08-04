@@ -47,7 +47,7 @@ spec:
           hajimari.io/icon: simple-icons:ubiquiti
           hajimari.io/enable: "true"
           hajimari.io/group: "infra"
-        ingressClassName: "nginx"
+        ingressClassName: internal
         hosts:
           - host: &host "unifi.${SECRET_DOMAIN}"
             paths:
