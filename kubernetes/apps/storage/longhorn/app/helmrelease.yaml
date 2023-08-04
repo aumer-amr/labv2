@@ -47,6 +47,7 @@ spec:
       nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
     ingress:
       enabled: true
+      ingressClassName: internal
       annotations:
         hajimari.io/appName: "Longhorn"
         hajimari.io/enable: "true"

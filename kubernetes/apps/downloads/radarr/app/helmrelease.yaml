@@ -72,7 +72,7 @@ spec:
     ingress:
       main:
         enabled: true
-        ingressClassName: nginx
+        ingressClassName: internal
         annotations:
           hajimari.io/icon: "ph:play-fill"
           auth.home.arpa/enabled: "true"

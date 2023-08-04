@@ -76,14 +76,14 @@ spec:
     ingress:
       main:
         enabled: true
-        ingressClassName: nginx
+        ingressClassName: external
         annotations:
           hajimari.io/enable: "true"
           hajimari.io/icon: material-symbols:link
           hajimari.io/group: "Tools"
           hajimari.io/url: "https://app.shlink.io/"
           external-dns.home.arpa/enabled: "true"
-          external-dns.alpha.kubernetes.io/target: "ingress.${SECRET_DOMAIN}"
+          external-dns.alpha.kubernetes.io/target: "external.${SECRET_DOMAIN}"
         hosts:
           - host: *host
             paths:

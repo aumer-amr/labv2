@@ -53,7 +53,7 @@ spec:
     ingress:
       main:
         enabled: true
-        ingressClassName: nginx
+        ingressClassName: internal
         annotations:
           hajimari.io/enable: "true"
           hajimari.io/icon: mdi:home-assistant
@@ -102,7 +102,7 @@ spec:
           - "/config/.vscode"
         ingress:
           enabled: true
-          ingressClassName: "nginx"
+          ingressClassName: internal
           annotations:
             hajimari.io/appName: "Hass Config"
             hajimari.io/icon: cib:visual-studio-code

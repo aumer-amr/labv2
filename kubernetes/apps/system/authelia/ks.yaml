@@ -9,7 +9,7 @@ spec:
     - name: cluster-apps-external-secrets-bitwarden
     - name: cluster-apps-lldap
     - name: cluster-apps-longhorn
-    - name: cluster-apps-ingress-nginx
+    - name: cluster-apps-nginx-external
   path: ./kubernetes/apps/system/authelia/app
   prune: true
   sourceRef:
