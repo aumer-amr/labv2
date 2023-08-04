@@ -24,7 +24,8 @@ spec:
       exclude:
         any:
           - resources:
-              ingressClassName: external
+              annotations:
+                external-dns.home.arpa/enabled: "true"
       mutate:
         targets:
           - apiVersion: networking.k8s.io/v1
