@@ -28,7 +28,7 @@ spec:
           kind: Ingress
           preconditions:
             all:
-            - key: "{{ target.annotations[] | contains(@, 'auth.home.arpa/enabled']) || 'false' }}"
+            - key: "{{ target.annotations[] | contains(@, 'auth.home.arpa/enabled') || 'false' }}"
               operator: Equals
               value: "true"
         patchStrategicMerge:
