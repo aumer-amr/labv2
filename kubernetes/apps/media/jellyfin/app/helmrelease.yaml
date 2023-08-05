@@ -21,13 +21,11 @@ spec:
     controller:
       type: statefulset
     image:
-      repository: lscr.io/linuxserver/jellyfin
-      tag: latest
+      repository: ghcr.io/onedr0p/jellyfin
+      tag: 10.8.10
     env:
       TZ: "${TIMEZONE}"
       JELLYFIN_CACHE_DIR: "/cache"
-      PUID: "1000"
-      PGID: "1000"
     service:
       main:
         type: LoadBalancer
