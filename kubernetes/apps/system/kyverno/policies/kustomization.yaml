@@ -3,6 +3,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: system
 resources:
-  - ./remove-cpu-limit.yaml
-  - ./ingress-auth.yaml
-  - ./ingress-whitelist.yaml
+  - ./remove-container-cpu-limit.yaml
+  - ./apply-ingress-auth-annotations.yaml
+  - ./apply-ingress-whitelist-annotations-internal.yaml
+  - ./validated-ingress-external-target.yaml
