@@ -7,8 +7,8 @@ metadata:
     policies.kyverno.io/title: Validate Ingress External Target Annotations
     policies.kyverno.io/subject: Ingress
     policies.kyverno.io/description: >-
-      This policy validates that external ingress resources have the
-      external-dns.alpha.kubernetes.io/target annotation set.
+      This policy validates that ingress resources have the
+      external-dns.alpha.kubernetes.io/target correctly annotation set.
 spec:
   validationFailureAction: Audit
   generateExisting: true
@@ -30,3 +30,20 @@ spec:
           metadata:
             annotations:
               external-dns.alpha.kubernetes.io/target: "external.${SECRET_DOMAIN}"
+    - name: external-dns-target-internal
+      match:
+        any:
+        - resources:
+            kinds:
+            - Ingress
+      preconditions:
+        all:
+        - key: "{{ request.object.spec.ingressClassName }}"
+          operator: Equals
+          value: internal
+      validate:
+        message: "External ingress must not have external-dns.alpha.kubernetes.io/target annotation set."
+        pattern:
+          metadata:
+            =(annotations):
+              X(external-dns.alpha.kubernetes.io/target): "external.${SECRET_DOMAIN}"
