@@ -21,7 +21,7 @@ spec:
     controller:
       type: statefulset
     image:
-      repository: docker.io/jellyfin/jellyfin
+      repository: ghcr.io/onedr0p/jellyfin
       tag: 10.8.10
     env:
       TZ: "${TIMEZONE}"
@@ -65,7 +65,6 @@ spec:
       supplementalGroups:
       - 44 # video
       - 105 # render
-      - 1000 # app
     volumeClaimTemplates:
       - name: config
         mountPath: /config
