@@ -2,7 +2,7 @@
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
-  name: ingress-auth
+  name: apply-ingress-auth-annotations
   annotations:
     policies.kyverno.io/title: Apply Ingress Auth Annotations
     policies.kyverno.io/subject: Ingress
