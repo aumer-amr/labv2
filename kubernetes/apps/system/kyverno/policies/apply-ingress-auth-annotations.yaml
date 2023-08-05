@@ -11,7 +11,7 @@ metadata:
       the `auth.home.arpa/enabled` annotation is `true` it
       applies the nginx auth annotations for use with Authelia.
 spec:
-  validationFailureAction: Audit
+  validationFailureAction: Enforce
   mutateExistingOnPolicyUpdate: true
   generateExisting: true
   rules:
@@ -28,7 +28,7 @@ spec:
           kind: Ingress
           preconditions:
             all:
-            - key: "{{ items(target.metadata.annotations, 'key', 'value')[].key | contains(@, 'auth.home.arpa/enabled') || false }}"
+            - key: "{{ target.metadata.annotations.\"auth.home.arpa/enabled\" || false }}"
               operator: Equals
               value: "true"
         patchStrategicMerge:
