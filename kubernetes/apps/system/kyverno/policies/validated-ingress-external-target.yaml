@@ -10,7 +10,7 @@ metadata:
       This policy validates that ingress resources have the
       external-dns.alpha.kubernetes.io/target correctly annotation  set for the ingressClass external.
 spec:
-  validationFailureAction: Audit
+  validationFailureAction: Enforce
   generateExisting: true
   rules:
     - name: external-dns-target
@@ -42,7 +42,7 @@ metadata:
       This policy validates that ingress resources have the
       external-dns.alpha.kubernetes.io/target correctly annotation set for the ingressClass internal.
 spec:
-  validationFailureAction: Audit
+  validationFailureAction: Enforce
   generateExisting: true
   rules:
     - name: external-dns-target-internal
