@@ -2,13 +2,13 @@
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
-  name: validated-ingress-external-target
+  name: validated-ingress-external-target-external
   annotations:
     policies.kyverno.io/title: Validate Ingress External Target Annotations
     policies.kyverno.io/subject: Ingress
     policies.kyverno.io/description: >-
       This policy validates that ingress resources have the
-      external-dns.alpha.kubernetes.io/target correctly annotation set.
+      external-dns.alpha.kubernetes.io/target correctly annotation  set for the ingressClass external.
 spec:
   validationFailureAction: Audit
   generateExisting: true
@@ -30,6 +30,21 @@ spec:
           metadata:
             annotations:
               external-dns.alpha.kubernetes.io/target: "external.${SECRET_DOMAIN}"
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: validated-ingress-external-target-internal
+  annotations:
+    policies.kyverno.io/title: Validate Ingress External Target Annotations
+    policies.kyverno.io/subject: Ingress
+    policies.kyverno.io/description: >-
+      This policy validates that ingress resources have the
+      external-dns.alpha.kubernetes.io/target correctly annotation set for the ingressClass internal.
+spec:
+  validationFailureAction: Audit
+  generateExisting: true
+  rules:
     - name: external-dns-target-internal
       match:
         any:
