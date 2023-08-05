@@ -88,3 +88,11 @@ spec:
       requests:
         cpu: 15m
         memory: 350M
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+              - key: intel.feature.node.kubernetes.io/gpu
+                operator: DoesNotExist
+              topologyKey: kubernetes.io/hostname
