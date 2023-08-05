@@ -27,7 +27,7 @@ spec:
   values:
     image:
       repository: ghcr.io/unpoller/unpoller
-      tag: v2.7.20
+      tag: v2.8.0
     podAnnotations:
       reloader.stakater.com/auto: "true"
     env:
