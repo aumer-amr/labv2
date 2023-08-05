@@ -24,8 +24,10 @@ spec:
       repository: lscr.io/linuxserver/jellyfin
       tag: latest
     env:
-      TZ: "${CONFIG_TZ}"
+      TZ: "${TIMEZONE}"
       JELLYFIN_CACHE_DIR: "/cache"
+      PUID: 1000
+      GUID: 1000
     service:
       main:
         type: LoadBalancer
