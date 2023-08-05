@@ -26,8 +26,8 @@ spec:
     env:
       TZ: "${TIMEZONE}"
       JELLYFIN_CACHE_DIR: "/cache"
-      PUID: 1000
-      PGID: 1000
+      PUID: "1000"
+      PGID: "1000"
     service:
       main:
         type: LoadBalancer
