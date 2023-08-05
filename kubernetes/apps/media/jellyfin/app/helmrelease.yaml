@@ -21,8 +21,8 @@ spec:
     controller:
       type: statefulset
     image:
-      repository: ghcr.io/onedr0p/jellyfin
-      tag: 10.8.10
+      repository: lscr.io/linuxserver/jellyfin
+      tag: latest
     env:
       TZ: "${CONFIG_TZ}"
       JELLYFIN_CACHE_DIR: "/cache"
