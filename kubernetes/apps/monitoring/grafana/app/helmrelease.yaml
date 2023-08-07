@@ -156,9 +156,13 @@ spec:
           gnetId: 1860 # https://grafana.com/grafana/dashboards/1860?tab=revisions
           revision: 31
           datasource: Prometheus
-        opensense:
-          url: https://raw.githubusercontent.com/aumer-amr/labv2/main/raw/opensense-grafana.json
-          datasource: Influxdb
+        # Ref: https://grafana.com/grafana/dashboards/16541
+        speedtest-exporter-hub:
+          gnetId: 16541
+          revision: 1
+          datasource:
+            - name: datasource
+              value: Prometheus
       flux:
         flux-cluster:
           url: https://raw.githubusercontent.com/fluxcd/flux2/main/manifests/monitoring/monitoring-config/dashboards/cluster.json
