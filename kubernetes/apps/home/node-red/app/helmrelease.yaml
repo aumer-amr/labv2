@@ -43,7 +43,7 @@ spec:
         annotations:
           hajimari.io/icon: simple-icons:nodered
         hosts:
-          - host: &host "nodered.${EXTERNAL_DOMAIN}"
+          - host: &host "nodered.${SECRET_DOMAIN}"
             paths:
               - path: /
                 pathType: Prefix
