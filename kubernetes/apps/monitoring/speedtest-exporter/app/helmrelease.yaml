@@ -32,6 +32,8 @@ spec:
       tag: v3.5.4
     env:
       TZ: ${TIMEZONE}
+      SPEEDTEST_SERVER_ID: ${SECRET_SPEEDTEST_SERVER_ID}
+      SPEEDTEST_CACHE_FOR: 3600
     service:
       main:
         ports:
