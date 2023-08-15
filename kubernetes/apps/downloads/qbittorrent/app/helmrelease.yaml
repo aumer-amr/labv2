@@ -97,9 +97,7 @@ spec:
     persistence:
       media:
         enabled: true
-        type: nfs
-        server: ${SECRET_NAS_IP}
-        path: /mnt/rpool/media
+        existingClaim: qbittorrent-downloads
         mountPath: /media
       incomplete:
         enabled: true
