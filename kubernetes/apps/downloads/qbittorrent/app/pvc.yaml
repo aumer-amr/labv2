@@ -1,12 +1,38 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: downloads
+spec:
+  capacity:
+    storage: 10T
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: ${SECRET_NAS_IP}
+    path: /mnt/rpool/media
+  mountOptions:
+    - nfsvers=4.2
+    - tcp
+    - intr
+    - hard
+    - relatime
+    - nocto
+    - noacl
+    - nconnect=8
+    - rsize=131072
+    - wsize=131072
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: qbittorrent-downloads
+  name: downloads
   namespace: downloads
 spec:
-  storageClassName: nas-media
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
+  volumeName: downloads
+  storageClassName: ""
   resources:
     requests:
-      storage: 1Gi
+      storage: 10T
