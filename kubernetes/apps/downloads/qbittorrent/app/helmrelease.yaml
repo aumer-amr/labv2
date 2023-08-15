@@ -97,8 +97,7 @@ spec:
     persistence:
       media:
         enabled: true
-        type: pvc
-        existingClaim: qbittorrent-downloads
+        existingClaim: downloads
         mountPath: /media
       incomplete:
         enabled: true
