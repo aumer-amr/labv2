@@ -52,7 +52,7 @@ spec:
       OIDC_AUTH_URI: https://auth.${SECRET_DOMAIN}/api/oidc/authorization
       OIDC_TOKEN_URI: https://auth.${SECRET_DOMAIN}/api/oidc/token
       OIDC_USERINFO_URI: https://auth.${SECRET_DOMAIN}/api/oidc/userinfo
-      OIDC_SCOPES: openid,profile,email,groups
+      OIDC_SCOPES: openid profile email groups
       OIDC_DISPLAY_NAME: Authelia
     command:
       [
