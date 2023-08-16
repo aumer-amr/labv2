@@ -36,7 +36,7 @@ spec:
 
     image:
       repository: ghcr.io/authelia/authelia
-      tag: master@sha256:f8aae5b3b25f294d121d17564c1a110c3c73bf0ba311ca2d8f4ebd776a91bb36
+      tag: master@sha256:6388fce6e8f1f92e394987c9af407959f16446c3762cbca6760cd9219d3176cf
 
     args: ["--config", "/config/configuration.yaml", "--config.experimental.filters", "expand-env"]
 
