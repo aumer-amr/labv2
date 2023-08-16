@@ -51,6 +51,15 @@ identity_providers:
         scopes: ["openid", "profile", "groups", "email"]
         redirect_uris: ["https://grafana.${SECRET_DOMAIN}/login/generic_oauth"]
         userinfo_signing_algorithm: none
+      - id: outline
+        description: Outline
+        secret: "${OUTLINE_OAUTH_CLIENT_SECRET}"
+        public: false
+        authorization_policy: two_factor
+        pre_configured_consent_duration: 1y
+        scopes: ["openid", "profile", "groups", "email"]
+        redirect_uris: ["https://docs.${SECRET_DOMAIN}/auth/Authelia.callback"]
+        userinfo_signing_algorithm: none
 
 webauthn:
   disable: false
