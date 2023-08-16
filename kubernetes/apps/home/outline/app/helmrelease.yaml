@@ -49,10 +49,11 @@ spec:
       URL: "https://docs.${SECRET_DOMAIN}"
       WEB_CONCURRENCY: 10
       OIDC_CLIENT_ID: outline
-      OIDC_AUTH_URI: https://auth.${SECRET_DOMAIN}/oauth2/auth
-      OIDC_TOKEN_URI: https://auth.${SECRET_DOMAIN}/oauth2/token
-      OIDC_USERINFO_URI: https://auth.${SECRET_DOMAIN}/oauth2/userinfo
+      OIDC_AUTH_URI: https://auth.${SECRET_DOMAIN}/api/oidc/authorization
+      OIDC_TOKEN_URI: https://auth.${SECRET_DOMAIN}/api/oidc/token
+      OIDC_USERINFO_URI: https://auth.${SECRET_DOMAIN}/api/oidc/userinfo
       OIDC_SCOPES: openid,profile,email,groups
+      OIDC_DISPLAY_NAME: Authelia
     command:
       [
         "/bin/sh",
