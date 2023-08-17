@@ -31,7 +31,7 @@ spec:
         reloader.stakater.com/auto: "true"
     image:
       repository: docker.io/makeplane/plane-worker
-      tag: 0.10
+      tag: "0.10"
     envFrom:
       - secretRef:
           name: plane-secret
