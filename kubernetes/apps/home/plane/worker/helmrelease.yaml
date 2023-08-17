@@ -38,23 +38,17 @@ spec:
     command: ["./bin/worker"]
     service:
       main:
-        ports:
-          http:
-            port: 8080
+        enabled: false
     ingress:
       main:
-        enabled: true
-        ingressClassName: internal
-        annotations:
-          hajimari.io/enabled: "false"
-        hosts:
-          - host: &host "plane-worker.${SECRET_DOMAIN}"
-            paths:
-              - path: /
-                pathType: Prefix
-        tls:
-          - hosts:
-              - *host
+        enabled: false
+    probes:
+      liveness:
+        enabled: false
+      readiness:
+        enabled: false
+      startup:
+        enabled: false
     resources:
       requests:
         cpu: 10m
