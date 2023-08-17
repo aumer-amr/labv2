@@ -30,7 +30,7 @@ spec:
       annotations:
         reloader.stakater.com/auto: "true"
     image:
-      repository: docker.io/makeplane/backend
+      repository: docker.io/makeplane/plane-backend
       tag: "0.10"
     envFrom:
       - secretRef:
