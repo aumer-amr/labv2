@@ -112,4 +112,4 @@ spec:
       reannounce:
         image: ghcr.io/buroa/qbittools:v0.2.0
         imagePullPolicy: IfNotPresent
-        args: ["reannounce", "-s", "localhost", "-p", "8080"]
+        args: ["reannounce", "--process-seeding", "-s", "localhost", "-p", "8080"]
