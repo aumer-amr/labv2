@@ -31,7 +31,7 @@ spec:
         imagePullPolicy: IfNotPresent
         envFrom: &envFrom
           - secretRef:
-              name: outline-secret
+              name: plane-secret
     controller:
       strategy: RollingUpdate
       annotations:
