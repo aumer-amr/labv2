@@ -51,7 +51,7 @@ spec:
         enabled: true
         ingressClassName: internal
         annotations:
-          hajimari.io/enabled: "false"
+          hajimari.io/enable: "false"
         hosts:
           - host: &host "plane-api.${SECRET_DOMAIN}"
             paths:
