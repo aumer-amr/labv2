@@ -6,3 +6,4 @@ resources:
   - ./home-assistant/ks.yaml
   - ./node-red/ks.yaml
   - ./outline/ks.yaml
+  - ./plane/ks.yaml

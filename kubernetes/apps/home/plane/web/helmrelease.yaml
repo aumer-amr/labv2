@@ -1,0 +1,73 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: plane-web
+  namespace: home
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 1.5.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    controller:
+      strategy: RollingUpdate
+      annotations:
+        reloader.stakater.com/auto: "true"
+    image:
+      repository: docker.io/makeplane/frontend
+      tag: 0.10
+    envFrom:
+      - secretRef:
+          name: plane-secret
+    env:
+      NEXT_PUBLIC_API_BASE_URL: "https://plane-api.${SECRET_DOMAIN}"
+      NEXT_PUBLIC_GOOGLE_CLIENTID: "0"
+      NEXT_PUBLIC_GITHUB_APP_NAME: "0"
+      NEXT_PUBLIC_GITHUB_ID: "0"
+      NEXT_PUBLIC_SENTRY_DSN: "0"
+      NEXT_PUBLIC_ENABLE_OAUTH: "0"
+      NEXT_PUBLIC_ENABLE_SENTRY: "0"
+      NEXT_PUBLIC_ENABLE_SESSION_RECORDER: "0"
+      NEXT_PUBLIC_TRACK_EVENTS: "0"
+    command: ["/usr/local/bin/start.sh"]
+    service:
+      main:
+        ports:
+          http:
+            port: 8080
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: internal
+        annotations:
+          hajimari.io/icon: mingcute:send-plane-line
+        hosts:
+          - host: &host "plane.${SECRET_DOMAIN}"
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - hosts:
+              - *host
+    resources:
+      requests:
+        cpu: 10m
+        memory: 50Mi
+      limits:
+        memory: 500Mi
