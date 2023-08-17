@@ -25,6 +25,13 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    initContainers:
+      01-init-db:
+        image: ghcr.io/onedr0p/postgres-init:14.9
+        imagePullPolicy: IfNotPresent
+        envFrom: &envFrom
+          - secretRef:
+              name: outline-secret
     controller:
       strategy: RollingUpdate
       annotations:
@@ -32,9 +39,7 @@ spec:
     image:
       repository: docker.io/makeplane/plane-backend
       tag: "0.10"
-    envFrom:
-      - secretRef:
-          name: plane-secret
+    envFrom: *envFrom
     command: ["./bin/takeoff"]
     service:
       main:
