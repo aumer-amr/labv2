@@ -71,9 +71,11 @@ spec:
     ingress:
       main:
         enabled: true
-        ingressClassName: internal
+        ingressClassName: external
         annotations:
           hajimari.io/icon: mdi:text-box-multiple
+          external-dns.alpha.kubernetes.io/target: "external.${SECRET_DOMAIN}"
+          auth.home.arpa/enabled: "true"
         hosts:
           - host: &host "docs.${SECRET_DOMAIN}"
             paths:
