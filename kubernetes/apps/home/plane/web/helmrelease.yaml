@@ -57,6 +57,7 @@ spec:
         ingressClassName: internal
         annotations:
           hajimari.io/icon: mingcute:send-plane-line
+          hajimari.io/appName: "plane"
         hosts:
           - host: &host "plane.${SECRET_DOMAIN}"
             paths:
