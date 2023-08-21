@@ -77,3 +77,7 @@ tasks:
       - task: certificates
       - task: ingresses
       - task: pods
+
+  restart-nginx:
+    desc: Restart the nginx ingress controllers
+    cmd: kubectl get deployments -n networking | grep nginx | awk '{ print $1 }' | xargs -n1 kubectl rollout restart deployment -n networking
