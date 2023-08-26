@@ -98,7 +98,7 @@ spec:
     persistence:
       data:
         enabled: true
-        size: 512Mi
+        size: 1Gi
         storageClass: longhorn
         accessMode: ReadWriteOnce
         mountPath: /unifi
