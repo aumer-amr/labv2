@@ -45,7 +45,7 @@ spec:
       NEXT_PUBLIC_ENABLE_SENTRY: "0"
       NEXT_PUBLIC_ENABLE_SESSION_RECORDER: "0"
       NEXT_PUBLIC_TRACK_EVENTS: "0"
-    command: ["/usr/local/bin/start.sh"]
+    command: ["/usr/local/bin/start.sh apps/app/server.js app"]
     service:
       main:
         ports:
