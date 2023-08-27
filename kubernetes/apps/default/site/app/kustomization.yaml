@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: default
 resources:
   - ./helmrelease.yaml
+  - ./gatus.yaml
 configMapGenerator:
   - name: site-assets-configmap
     files:
