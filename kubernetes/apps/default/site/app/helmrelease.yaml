@@ -39,7 +39,7 @@ spec:
       tag: main
     env:
       TZ: "${TIMEZONE}"
-      DEBUG: "false"
+      DEBUG: "true"
       PORT: "3000"
     ingress:
       main:
