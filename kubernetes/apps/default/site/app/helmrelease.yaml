@@ -29,7 +29,7 @@ spec:
   values:
     image:
       repository: ghcr.io/aumer-amr/site
-      tag: main-7cf2dec
+      tag: main
     env:
       TZ: "${TIMEZONE}"
       DEBUG: "false"
