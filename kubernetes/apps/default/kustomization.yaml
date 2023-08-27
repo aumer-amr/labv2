@@ -5,5 +5,6 @@ resources:
   - ./namespace.yaml
   - ./cyberchef/ks.yaml
   - ./hajimari/ks.yaml
+  - ./paperless/ks.yaml
   - ./shlink/ks.yaml
   - ./site/ks.yaml
