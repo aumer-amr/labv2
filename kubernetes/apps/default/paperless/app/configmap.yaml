@@ -36,3 +36,6 @@ data:
 
   # Configure user permissions
   USERMAP_GID: "65543"
+
+  # Configure email
+  PAPERLESS_EMAIL_TASK_CRON: "*/30 * * * *"
