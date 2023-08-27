@@ -4,3 +4,12 @@ kind: Kustomization
 namespace: default
 resources:
   - ./helmrelease.yaml
+configMapGenerator:
+  - name: site-assets-configmap
+    files:
+      - favicon.png=./assets/favicon.png
+      - logo.png=./assets/logo.png
+      - style.css=./assets/style.css
+      - index.html=./assets/index.html
+generatorOptions:
+  disableNameSuffixHash: true
