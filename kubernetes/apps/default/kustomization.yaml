@@ -6,3 +6,4 @@ resources:
   - ./cyberchef/ks.yaml
   - ./hajimari/ks.yaml
   - ./shlink/ks.yaml
+  - ./site/ks.yaml
