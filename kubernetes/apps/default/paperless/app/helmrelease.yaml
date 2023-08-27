@@ -69,7 +69,7 @@ spec:
         mountPath: /data/nas/consume
         type: nfs
         server: ${SECRET_NAS_IP}
-        path: ${SECRET_NFS_PAPERLESS}/consume
+        path: /mnt/rpool/paperless/consume
       nas-export:
         enabled: true
         mountPath: /data/nas/export
