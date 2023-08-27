@@ -1,0 +1,89 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: autobrr
+  namespace: downloads
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 1.5.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    controller:
+      type: statefulset
+      annotations:
+        reloader.stakater.com/auto: "true"
+    image:
+      repository: ghcr.io/autobrr/autobrr
+      tag: v1.28.0
+    env:
+      TZ: "${TIMEZONE}"
+      AUTOBRR__CHECKFORUPDATES: "false"
+      AUTOBRR__HOST: 0.0.0.0
+      AUTOBRR__PORT: &port 80
+      AUTOBRR__LOGLEVEL: DEBUG
+    service:
+      main:
+        ports:
+          http:
+            port: 7474
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: internal
+        annotations:
+          hajimari.io/icon: "mdi:rabbit"
+        hosts:
+          - host: &host "autobrr.${SECRET_DOMAIN}"
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - hosts:
+              - *host
+    podSecurityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: OnRootMismatch
+      supplementalGroups: [10000]
+    persistence:
+      config:
+        enabled: true
+        type: emptyDir
+      config-file:
+        enabled: true
+        type: configMap
+        name: autobrr-configmap
+        mountPath: /config/config.toml
+        subPath: config.toml
+        readOnly: true
+    resources:
+      requests:
+        memory: 250Mi
+        cpu: 10m
+      limits:
+        memory: 500Mi
+    volumeClaimTemplates:
+      - name: config
+        mountPath: /config
+        accessMode: ReadWriteOnce
+        size: 2Gi
+        storageClass: longhorn-config
