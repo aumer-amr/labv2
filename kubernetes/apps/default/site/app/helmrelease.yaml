@@ -2,7 +2,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: site #redeploy
+  name: site
   namespace: default
 spec:
   interval: 15m
@@ -39,7 +39,7 @@ spec:
       tag: main
     env:
       TZ: "${TIMEZONE}"
-      DEBUG: "true"
+      DEBUG: "false"
       PORT: "3000"
     ingress:
       main:

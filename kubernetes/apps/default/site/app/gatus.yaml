@@ -18,5 +18,5 @@ data:
         conditions: ["[STATUS] == 200"]
         alerts: [{ type: discord }]
         ui:
-          hide-hostname: true
+          hide-hostname: false
           hide-url: false
