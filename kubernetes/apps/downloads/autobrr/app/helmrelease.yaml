@@ -37,13 +37,13 @@ spec:
       TZ: "${TIMEZONE}"
       AUTOBRR__CHECKFORUPDATES: "false"
       AUTOBRR__HOST: 0.0.0.0
-      AUTOBRR__PORT: &port 80
+      AUTOBRR__PORT: &port 7474
       AUTOBRR__LOGLEVEL: DEBUG
     service:
       main:
         ports:
           http:
-            port: 7474
+            port: *port
     ingress:
       main:
         enabled: true
