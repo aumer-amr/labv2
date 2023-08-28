@@ -31,7 +31,7 @@ customApps:
   - group: infra
     apps:
       - name: Hera
-        url: "https://hera.${SECRET_INFRA_DOMAIN}:8006/"
+        url: "https://hera.pve.${SECRET_INFRA_DOMAIN}:8006/"
         icon: simple-icons:proxmox
         location: 1
       - name: Ares
