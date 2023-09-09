@@ -27,7 +27,7 @@ spec:
   values:
     image:
       repository: ghcr.io/haveagitgat/tdarr
-      tag: 2.10.02
+      tag: 2.11.01
     persistence:
       config:
         enabled: true
