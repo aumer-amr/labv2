@@ -29,7 +29,7 @@ spec:
   values:
     image:
       repository: ghcr.io/aumer-amr/gmail-operator
-      tag: main@sha256:7aae50ae560803a8eaf342655173d6c5006dd79dfdfc1d32a830a0234a526d9e
+      tag: main@sha256:41387b94b8755fa270280b88b6990cb8fdf1147af9fb4a50ff7b9dd9a58cf70b
     env:
       TZ: "${TIMEZONE}"
     persistence:
