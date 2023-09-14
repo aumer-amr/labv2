@@ -1,0 +1,21 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gmail-operator
+rules:
+- apiGroups: ["", "aumer.dev"]
+  resources: ["gmailaddresses"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gmail-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gmail-operator
+subjects:
+- kind: ServiceAccount
+  name: gmail-operator
+  namespace: default
