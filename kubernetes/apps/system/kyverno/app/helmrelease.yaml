@@ -26,6 +26,12 @@ spec:
       annotations:
         grafana_folder: Kyverno
     backgroundController:
+      resources:
+        requests:
+          cpu: 15m
+          memory: 94M
+        limits:
+          memory: 94M
       serviceMonitor:
         enabled: true
       rbac:
