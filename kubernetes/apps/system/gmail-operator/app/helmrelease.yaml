@@ -3,7 +3,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: gmail-operator
-  namespace: system #redeploy
+  namespace: system
 spec:
   interval: 15m
   chart:
@@ -37,7 +37,7 @@ spec:
         enabled: true
         type: secret
         name: gmail-operator-secret
-        mountPath: /home/node/app
+        mountPath: /usr/src/app/credentials
         readOnly: true
     ingress:
       main:
