@@ -29,7 +29,7 @@ spec:
   values:
     image:
       repository: ghcr.io/aumer-amr/gmail-operator
-      tag: 1.0.8
+      tag: 1.0.9
     env:
       TZ: "${TIMEZONE}"
     persistence:
