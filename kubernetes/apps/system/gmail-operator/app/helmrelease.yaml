@@ -37,7 +37,7 @@ spec:
         enabled: true
         type: secret
         name: gmail-operator-secret
-        mountPath: /home/node/app
+        mountPath: /usr/src/app
         readOnly: true
     ingress:
       main:
