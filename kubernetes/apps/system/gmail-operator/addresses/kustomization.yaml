@@ -4,3 +4,4 @@ kind: Kustomization
 namespace: system
 resources:
   - ./github-template.yaml
+  - ./github-lab.yaml
