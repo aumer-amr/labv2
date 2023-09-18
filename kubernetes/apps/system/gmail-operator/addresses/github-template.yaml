@@ -1,9 +1,9 @@
-# ---
-# apiVersion: aumer.dev/v1alpha1
-# kind: GmailAddress
-# metadata:
-#   name: github-template
-#   namespace: system
-# spec:
-#   address: flux-cluster-template@noreply.github.com
-#   parentLabel: 'k8s'
+---
+apiVersion: aumer.dev/v1alpha1
+kind: GmailAddress
+metadata:
+  name: github-template
+  namespace: system
+spec:
+  address: flux-cluster-template@noreply.github.com
+  parentLabel: 'k8s'
