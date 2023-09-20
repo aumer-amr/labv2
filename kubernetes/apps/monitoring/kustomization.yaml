@@ -6,6 +6,7 @@ resources:
   - ./gatus/ks.yaml
   - ./goldilocks/ks.yaml
   - ./grafana/ks.yaml
+  - ./karma/ks.yaml
   - ./kube-prometheus-stack/ks.yaml
   - ./speedtest-exporter/ks.yaml
   - ./unpoller/ks.yaml
