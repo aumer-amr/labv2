@@ -44,6 +44,16 @@ spec:
           secretKeyRef:
             name: zipline-secret
             key: AWS_SECRET_ACCESS_KEY
+      OAUTH_DISCORD_CLIENT_ID:
+        valueFrom:
+          secretKeyRef:
+            name: zipline-secret
+            key: OAUTH_DISCORD_CLIENT_ID
+      OAUTH_DISCORD_CLIENT_SECRET:
+        valueFrom:
+          secretKeyRef:
+            name: zipline-secret
+            key: OAUTH_DISCORD_CLIENT_SECRET
       DATASOURCE_TYPE: s3
       DATASOURCE_S3_BUCKET: zipline
       DATASOURCE_S3_ENDPOINT: ${SECRET_CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
