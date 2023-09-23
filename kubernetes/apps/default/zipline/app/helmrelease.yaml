@@ -1,0 +1,149 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: zipline
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: app-template
+      version: 1.5.1
+      sourceRef:
+        name: bjw-s
+        kind: HelmRepository
+        namespace: flux-system
+  values:
+    automountServiceAccountToken: false
+    controller:
+      type: deployment
+      replicas: 1
+    image:
+      repository: ghcr.io/diced/zipline
+      tag: 3.7.0@sha256:6ff84bd03bde7d1f108ed87b3f953027d5dace33e2c8238ca1fbe432a499f723
+    env:
+      TZ: ${TZ}
+      CORE_SECRET:
+        valueFrom:
+          secretKeyRef:
+            name: zipline-secret
+            key: CORE_SECRET
+      CORE_DATABASE_URL:
+        valueFrom:
+          secretKeyRef:
+            name: zipline-secret
+            key: CORE_DATABASE_URL
+      DATASOURCE_S3_ACCESS_KEY_ID:
+        valueFrom:
+          secretKeyRef:
+            name: zipline-secret
+            key: AWS_ACCESS_KEY_ID
+      DATASOURCE_S3_SECRET_ACCESS_KEY:
+        valueFrom:
+          secretKeyRef:
+            name: zipline-secret
+            key: AWS_SECRET_ACCESS_KEY
+      DATASOURCE_TYPE: s3
+      DATASOURCE_S3_BUCKET: zipline
+      DATASOURCE_S3_ENDPOINT: https://${SECRET_CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+      DATASOURCE_S3_PORT: "6953"
+      DATASOURCE_S3_REGION: WEUR
+      CORE_RETURN_HTTPS: "true"
+      CORE_HTTPS: "true"
+      CORE_HOST: "0.0.0.0"
+      CORE_PORT: "3000"
+      CORE_COMPRESSION_ENABLED: "true"
+      CORE_COMPRESSION_THRESHOLD: 200mb
+      CORE_COMPRESSION_ON_DASHBOARD: "true"
+      EXIF_ENABLED: "false"
+      EXIF_REMOVE_GPS: "true"
+      FEATURES_INVITES: "false"
+      FEATURES_INVITES_LENGTH: "16"
+      FEATURES_OAUTH_REGISTRATION: "true"
+      FEATURES_USER_REGISTRATION: "false"
+      FEATURES_HEADLESS: "false"
+      RATELIMIT_USER: "5"
+      RATELIMIT_ADMIN: "1"
+      UPLOADER_DEFAULT_FORMAT: DATE
+      UPLOADER_ROUTE: &upload /file
+      UPLOADER_ADMIN_LIMIT: 100gb
+      UPLOADER_USER_LIMIT: 500mb
+      UPLOADER_DISABLED_EXTENSIONS: ps1,pdf,bat,exe,sh,fish
+      UPLOADER_FORMAT_DATE: YYYY-MM-DD_HH-mm-ss
+      UPLOADER_DEFAULT_EXPIRATION:
+      URLS_ROUTE: &shorten /go
+      URLS_LENGTH: "6"
+      WEBSITE_TITLE: Aumer
+      WEBSITE_SHOW_FILES_PER_USER: "false"
+      WEBSITE_EXTERNAL_LINKS: '[{label:Admin: Aumer,link:https://${SECRET_DOMAIN}},{label:Powered by Zipline,link:https://github.com/diced/zipline}]'
+      WEBSITE_SHOW_VERSION: "false"
+      WEBSITE_DISABLE_MEDIA_PREVIEW: "false"
+    service:
+      main:
+        ports:
+          http:
+            port: 3000
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: internal
+        annotations:
+          hajimari.io/icon: pajamas:media
+        hosts:
+          - host: &host zipline.${SECRET_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - hosts:
+              - *host
+      shorten:
+        enabled: true
+        primary: false
+        ingressClassName: external
+        annotations:
+          hajimari.io/enable: false
+          external-dns.alpha.kubernetes.io/target: external.${SECRET_DOMAIN}
+        hosts:
+          - host: &exthost media.${SECRET_DOMAIN}
+            paths:
+              - path: *shorten
+                pathType: Prefix
+        tls:
+          - hosts:
+              - *exthost
+      shorten-rewrite:
+        enabled: true
+        primary: false
+        ingressClassName: external
+        annotations:
+          hajimari.io/enable: false
+          external-dns.alpha.kubernetes.io/target: external.${SECRET_DOMAIN}
+          nginx.ingress.kubernetes.io/use-regex: true
+          nginx.ingress.kubernetes.io/rewrite-target: /go/$1
+        hosts:
+          - host: *exthost
+            paths:
+              - path: /(.*)
+                pathType: Prefix
+        tls:
+          - hosts:
+              - *exthost
+    podSecurityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
+      fsGroupChangePolicy: OnRootMismatch
+    resources:
+      requests:
+        cpu: 10m
+        memory: 128Mi
+      limits:
+        memory: 6000Mi
+    initContainers:
+      01-init-db:
+        image: ghcr.io/onedr0p/postgres-init:14.9
+        imagePullPolicy: IfNotPresent
+        envFrom:
+          - secretRef:
+              name: zipline-secret

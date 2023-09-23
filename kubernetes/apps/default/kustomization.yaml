@@ -9,3 +9,4 @@ resources:
   - ./paperless/ks.yaml
   - ./shlink/ks.yaml
   - ./site/ks.yaml
+  - ./zipline/ks.yaml
