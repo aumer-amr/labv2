@@ -16,7 +16,6 @@ spec:
         kind: HelmRepository
         namespace: flux-system
   values:
-    automountServiceAccountToken: false
     controller:
       type: deployment
       replicas: 1
