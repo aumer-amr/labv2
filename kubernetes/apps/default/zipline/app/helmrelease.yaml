@@ -103,7 +103,7 @@ spec:
         primary: false
         ingressClassName: external
         annotations:
-          hajimari.io/enable: false
+          hajimari.io/enable: "false"
           external-dns.alpha.kubernetes.io/target: external.${SECRET_DOMAIN}
         hosts:
           - host: &exthost media.${SECRET_DOMAIN}
@@ -118,9 +118,9 @@ spec:
         primary: false
         ingressClassName: external
         annotations:
-          hajimari.io/enable: false
+          hajimari.io/enable: "false"
           external-dns.alpha.kubernetes.io/target: external.${SECRET_DOMAIN}
-          nginx.ingress.kubernetes.io/use-regex: true
+          nginx.ingress.kubernetes.io/use-regex: "true"
           nginx.ingress.kubernetes.io/rewrite-target: /go/$1
         hosts:
           - host: *exthost
