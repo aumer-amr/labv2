@@ -47,8 +47,9 @@ spec:
       DATASOURCE_TYPE: s3
       DATASOURCE_S3_BUCKET: zipline
       DATASOURCE_S3_ENDPOINT: ${SECRET_CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
-      DATASOURCE_S3_PORT: "6953"
       DATASOURCE_S3_REGION: WEUR
+      DATASOURCE_S3_USE_SSL: "true"
+      DATASOURCE_S3_PORT: "443"
       CORE_RETURN_HTTPS: "true"
       CORE_HTTPS: "true"
       CORE_HOST: "0.0.0.0"
