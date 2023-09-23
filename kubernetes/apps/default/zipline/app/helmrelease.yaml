@@ -5,6 +5,7 @@ metadata:
   name: zipline
   namespace: default
 spec:
+  interval: 30m
   chart:
     spec:
       chart: app-template
