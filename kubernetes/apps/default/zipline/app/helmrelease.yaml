@@ -76,16 +76,15 @@ spec:
       FEATURES_HEADLESS: "false"
       RATELIMIT_USER: "5"
       RATELIMIT_ADMIN: "1"
-      UPLOADER_DEFAULT_FORMAT: DATE
-      UPLOADER_ROUTE: &upload /file
+      UPLOADER_DEFAULT_FORMAT: RANDOM
+      UPLOADER_ROUTE: /file
       UPLOADER_ADMIN_LIMIT: 100gb
       UPLOADER_USER_LIMIT: 500mb
       UPLOADER_DISABLED_EXTENSIONS: ps1,pdf,bat,exe,sh,fish
-      UPLOADER_FORMAT_DATE: YYYY-MM-DD_HH-mm-ss
       UPLOADER_DEFAULT_EXPIRATION:
       URLS_ROUTE: &shorten /g
       URLS_LENGTH: "6"
-      WEBSITE_TITLE: Aumer
+      WEBSITE_TITLE: Zipline
       WEBSITE_SHOW_FILES_PER_USER: "false"
       WEBSITE_EXTERNAL_LINKS: '[{label:Admin: Aumer,link:https://${SECRET_DOMAIN}},{label:Powered by Zipline,link:https://github.com/diced/zipline}]'
       WEBSITE_SHOW_VERSION: "true"
