@@ -30,6 +30,7 @@ spec:
   values:
     fullnameOverride: nginx-external
     controller:
+      allowSnippetAnnotations: true
       replicaCount: 1
       service:
         annotations:
