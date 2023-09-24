@@ -11,11 +11,11 @@ data:
     endpoints:
       - name: Media share
         group: tools
-        url: https://m.${SECRET_DOMAIN}/file/ZJQMCi.png
+        url: https://m.${SECRET_DOMAIN}/api/version
         interval: 1m
         client:
           dns-resolver: tcp://1.1.1.1:53
-        conditions: ["[STATUS] == 200"]
+        conditions: ["[STATUS] == 401"]
         alerts: [{ type: discord }]
         ui:
           hide-hostname: true
