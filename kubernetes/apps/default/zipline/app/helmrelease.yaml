@@ -143,7 +143,7 @@ spec:
         hosts:
           - host: *exthost
             paths:
-              - path: /(.*)
+              - path: ^\/((?!go).)*$
                 pathType: Prefix
         tls:
           - hosts:
