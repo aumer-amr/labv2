@@ -11,7 +11,7 @@ data:
     endpoints:
       - name: Media share
         group: tools
-        url: https://zipline.${SECRET_DOMAIN}
+        url: https://m.${SECRET_DOMAIN}/file/ZJQMCi.png
         interval: 1m
         client:
           dns-resolver: tcp://1.1.1.1:53
