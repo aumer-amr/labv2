@@ -124,8 +124,6 @@ spec:
             paths:
               - path: *shorten
                 pathType: Prefix
-              - path: /file
-                pathType: Prefix
         tls:
           - hosts:
               - *exthost
