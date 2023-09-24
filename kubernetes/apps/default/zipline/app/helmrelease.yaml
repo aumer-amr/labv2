@@ -125,6 +125,8 @@ spec:
                 pathType: Prefix
               - path: /file
                 pathType: Prefix
+              - path: /view
+                pathType: Prefix
               - path: /api/version
                 pathType: Prefix
         tls:
