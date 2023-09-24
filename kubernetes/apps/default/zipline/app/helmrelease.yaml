@@ -88,7 +88,7 @@ spec:
       WEBSITE_TITLE: Aumer
       WEBSITE_SHOW_FILES_PER_USER: "false"
       WEBSITE_EXTERNAL_LINKS: '[{label:Admin: Aumer,link:https://${SECRET_DOMAIN}},{label:Powered by Zipline,link:https://github.com/diced/zipline}]'
-      WEBSITE_SHOW_VERSION: "false"
+      WEBSITE_SHOW_VERSION: "true"
       WEBSITE_DISABLE_MEDIA_PREVIEW: "false"
     service:
       main:
@@ -102,7 +102,6 @@ spec:
         annotations:
           hajimari.io/icon: pajamas:media
           nginx.ingress.kubernetes.io/proxy-body-size: "100m"
-          nginx.ingress.kubernetes.io/custom-http-errors: "400,403,404,405,409,410,411,412,413,414,415,416,417,418,421,425,431,451,500,501,502,503,504,505,506,510"
         hosts:
           - host: &host zipline.${SECRET_DOMAIN}
             paths:
