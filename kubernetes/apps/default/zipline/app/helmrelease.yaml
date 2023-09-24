@@ -74,6 +74,7 @@ spec:
       FEATURES_OAUTH_REGISTRATION: "false"
       FEATURES_USER_REGISTRATION: "false"
       FEATURES_HEADLESS: "false"
+      FEATURES_ROBOTS_TXT: "true"
       RATELIMIT_USER: "5"
       RATELIMIT_ADMIN: "1"
       UPLOADER_DEFAULT_FORMAT: RANDOM
@@ -125,6 +126,8 @@ spec:
               - path: /file
                 pathType: Prefix
               - path: /api/version
+                pathType: Prefix
+              - path: /robots.txt
                 pathType: Prefix
         tls:
           - hosts:
