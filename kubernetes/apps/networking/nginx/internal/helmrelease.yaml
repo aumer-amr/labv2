@@ -27,6 +27,7 @@ spec:
   values:
     fullnameOverride: nginx-internal
     controller:
+      allowSnippetAnnotations: true
       replicaCount: 1
       service:
         annotations:
