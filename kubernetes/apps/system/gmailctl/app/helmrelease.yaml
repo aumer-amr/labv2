@@ -27,6 +27,8 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    podAnnotations:
+      reloader.stakater.com/auto: "true"
     image:
       repository: ghcr.io/aumer-amr/gmailctl
       tag: sha-edd123b
