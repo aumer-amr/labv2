@@ -4,7 +4,6 @@ kind: Kustomization
 resources:
   - ./namespace.yaml
   - ./authelia/ks.yaml
-  - ./gmail-operator/ks.yaml
   - ./intel-device-plugins/ks.yaml
   - ./kyverno/ks.yaml
   - ./lldap/ks.yaml
