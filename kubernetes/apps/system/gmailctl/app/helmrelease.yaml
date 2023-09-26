@@ -35,6 +35,7 @@ spec:
       CONFIG_DIR: /config
       DATA_DIR: /data
       DEBUG: "true"
+      ALLOW_LABEL_DELETION: "true"
     persistence:
       config:
         enabled: true
