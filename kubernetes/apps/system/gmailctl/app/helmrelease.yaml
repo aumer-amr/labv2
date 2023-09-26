@@ -29,7 +29,7 @@ spec:
   values:
     image:
       repository: ghcr.io/aumer-amr/gmailctl
-      tag: sha-1e078f3
+      tag: sha-59b0255
     env:
       TZ: "${TIMEZONE}"
       CONFIG_DIR: /config
