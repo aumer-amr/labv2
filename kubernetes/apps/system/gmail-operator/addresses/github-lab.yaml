@@ -1,9 +1,0 @@
----
-apiVersion: aumer.dev/v1alpha1
-kind: GmailAddress
-metadata:
-  name: github-lab
-  namespace: system
-spec:
-  address: labv2@noreply.github.com
-  parentLabel: 'k8s'
