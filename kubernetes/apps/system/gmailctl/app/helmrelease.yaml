@@ -39,11 +39,6 @@ spec:
       DEBUG: "true"
       ALLOW_LABEL_DELETION: "false"
     persistence:
-      config-credentials:
-        enabled: true
-        type: secret
-        name: gmailctl-config-secret
-        mountPath: /config
       data:
         enabled: true
         type: nfs
@@ -55,6 +50,11 @@ spec:
         type: nfs
         server: ${SECRET_NAS_IP}
         path: /mnt/rpool/gmail/config
+        mountPath: /config
+      config-credentials:
+        enabled: true
+        type: secret
+        name: gmailctl-config-secret
         mountPath: /config
     ingress:
       main:
