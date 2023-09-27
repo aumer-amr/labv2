@@ -31,7 +31,7 @@ spec:
       reloader.stakater.com/auto: "true"
     image:
       repository: ghcr.io/aumer-amr/gmailctl
-      tag: sha-d7f03cc
+      tag: sha-6a027fb
     env:
       TZ: "${TIMEZONE}"
       CONFIG_DIR: /config
