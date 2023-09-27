@@ -52,6 +52,7 @@ spec:
         type: secret
         name: gmailctl-config-secret
         mountPath: /config
+        readOnly: false
     ingress:
       main:
         enabled: true
