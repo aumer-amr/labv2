@@ -4,7 +4,6 @@ kind: Kustomization
 namespace: system
 resources:
   - ./config.secret.sops.yaml
-  - ./data.secret.sops.yaml
   - ./helmrelease.yaml
 labels:
   - pairs:
