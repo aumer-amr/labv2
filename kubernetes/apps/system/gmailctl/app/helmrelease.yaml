@@ -31,15 +31,15 @@ spec:
       reloader.stakater.com/auto: "true"
     image:
       repository: ghcr.io/aumer-amr/gmailctl
-      tag: sha-54090f6
+      tag: sha-4da867d
     env:
       TZ: "${TIMEZONE}"
       CONFIG_DIR: /config
       DATA_DIR: /data
-      DEBUG: "true"
-      ALLOW_LABEL_DELETION: "false"
-      USE_POLLING: "true"
-      USE_DATA_SYNC: "true"
+      DEBUG: true
+      ALLOW_LABEL_DELETION: false
+      USE_POLLING: true
+      USE_DATA_SYNC: true
     persistence:
       data:
         enabled: true
