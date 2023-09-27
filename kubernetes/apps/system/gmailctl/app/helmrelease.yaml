@@ -31,27 +31,23 @@ spec:
       reloader.stakater.com/auto: "true"
     image:
       repository: ghcr.io/aumer-amr/gmailctl
-      tag: sha-af55cdf
+      tag: sha-cf2b43b
     env:
       TZ: "${TIMEZONE}"
       CONFIG_DIR: /config
       DATA_DIR: /data
       DEBUG: "true"
       ALLOW_LABEL_DELETION: "false"
+      USE_POLLING: "true"
+      USE_DATA_SYNC: "true"
     persistence:
       data:
         enabled: true
         type: nfs
         server: ${SECRET_NAS_IP}
-        path: /mnt/rpool/gmail/data
+        path: /mnt/rpool/gmail
         mountPath: /data
       config:
-        enabled: true
-        type: nfs
-        server: ${SECRET_NAS_IP}
-        path: /mnt/rpool/gmail/config
-        mountPath: /config
-      config-credentials:
         enabled: true
         type: secret
         name: gmailctl-config-secret
