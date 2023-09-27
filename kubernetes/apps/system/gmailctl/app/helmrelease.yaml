@@ -36,8 +36,8 @@ spec:
       TZ: "${TIMEZONE}"
       CONFIG_DIR: /config
       DATA_DIR: /data
-      DEBUG: "true"
-      ALLOW_LABEL_DELETION: "false"
+      DEBUG: "false"
+      ALLOW_LABEL_DELETION: "true"
       USE_POLLING: "true"
       USE_DATA_SYNC: "true"
     persistence:
