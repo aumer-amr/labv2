@@ -12,5 +12,6 @@ configMapGenerator:
       - logo.png=./assets/logo.png
       - style.css=./assets/style.css
       - index.html=./assets/index.html
+      - robots.txt=./assets/robots.txt
 generatorOptions:
   disableNameSuffixHash: true
