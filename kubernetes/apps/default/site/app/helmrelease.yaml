@@ -36,7 +36,7 @@ spec:
         readOnly: true
     image:
       repository: ghcr.io/aumer-amr/site
-      tag: main
+      tag: sha-d78dba5
     podAnnotations:
       reloader.stakater.com/auto: "true"
     env:
