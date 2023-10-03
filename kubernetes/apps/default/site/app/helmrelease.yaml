@@ -37,6 +37,8 @@ spec:
     image:
       repository: ghcr.io/aumer-amr/site
       tag: main
+    podAnnotations:
+      reloader.stakater.com/auto: "true"
     env:
       TZ: "${TIMEZONE}"
       DEBUG: "false"
