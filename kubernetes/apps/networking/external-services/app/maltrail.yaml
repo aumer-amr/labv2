@@ -20,7 +20,7 @@ spec:
               service:
                 name: external-service-maltrail
                 port:
-                  number: 80
+                  number: 8338
   tls:
     - hosts:
         - *host
