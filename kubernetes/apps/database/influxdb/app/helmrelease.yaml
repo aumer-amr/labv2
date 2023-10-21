@@ -19,7 +19,7 @@ spec:
     fullnameOverride: *app
     image:
       repository: influxdb
-      tag: 2.7.1
+      tag: 2.7.3
     pdb:
       create: false
     env:
