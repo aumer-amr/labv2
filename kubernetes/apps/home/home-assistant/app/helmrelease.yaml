@@ -39,7 +39,7 @@ spec:
         reloader.stakater.com/auto: "true"
     image:
       repository: ghcr.io/home-assistant/home-assistant
-      tag: 2023.9.3
+      tag: 2023.10.5
     env:
       TZ: "${TIMEZONE}"
     #   POSTGRES_HOST: postgres-rw.database.svc.cluster.local
