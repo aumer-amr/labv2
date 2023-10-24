@@ -15,7 +15,7 @@ spec:
         kind: HelmRepository
         namespace: flux-system
   dependsOn:
-    - name: intel-device-plugin-gpu
+    - name: intel-device-plugins-gpu
       namespace: kube-system
   values:
     nodeSelector:
