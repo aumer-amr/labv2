@@ -16,7 +16,7 @@ spec:
         namespace: flux-system
   dependsOn:
     - name: intel-device-plugins-gpu
-      namespace: kube-system
+      namespace: system
   values:
     nodeSelector:
       intel.feature.node.kubernetes.io/gpu: "true"
