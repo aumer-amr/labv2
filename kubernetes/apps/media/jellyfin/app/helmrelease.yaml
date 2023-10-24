@@ -14,6 +14,9 @@ spec:
         name: bjw-s
         kind: HelmRepository
         namespace: flux-system
+  dependsOn:
+    - name: intel-device-plugin-gpu
+      namespace: kube-system
   values:
     nodeSelector:
       intel.feature.node.kubernetes.io/gpu: "true"
@@ -74,6 +77,8 @@ spec:
         accessMode: ReadWriteOnce
         size: 20Gi
         storageClass: longhorn-config
+    securityContext:
+      privileged: true
     persistence:
       media:
         enabled: true
