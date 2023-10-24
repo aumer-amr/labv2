@@ -67,6 +67,7 @@ spec:
       - 44 # video
       - 101 # input
       - 104 # render
+      - 105 # jellyfin
     volumeClaimTemplates:
       - name: config
         mountPath: /config
