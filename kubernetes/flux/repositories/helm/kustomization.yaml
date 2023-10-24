@@ -10,6 +10,7 @@ resources:
   - ./coredns.yaml
   - ./cloudnative-pg.yaml
   - ./csi-driver-nfs.yaml
+  - ./descheduler.yaml
   - ./ext-postgres-operator.yaml
   - ./external-dns.yaml
   - ./external-secrets.yaml
