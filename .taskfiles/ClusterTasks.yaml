@@ -81,3 +81,7 @@ tasks:
   restart-nginx:
     desc: Restart the nginx ingress controllers
     cmd: kubectl get deployments -n networking | grep nginx | awk '{ print $1 }' | xargs -n1 kubectl rollout restart deployment -n networking
+
+  count-pods:
+    desc: Count the number of pods in your cluster per node
+    cmd: kubectl get pods -A -o jsonpath='{range .items[?(@.spec.nodeName)]}{.spec.nodeName}{"\n"}{end}' | sort | uniq -c | sort -rn | sed -e 's/[ \t]*//'
