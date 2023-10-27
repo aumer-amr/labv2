@@ -15,6 +15,8 @@ spec:
     sst: mariabackup
     replicaThreads: 1
     agent:
+      image:
+        tag: "v0.0.3"
       port: 5555
       kubernetesAuth:
         enabled: true
