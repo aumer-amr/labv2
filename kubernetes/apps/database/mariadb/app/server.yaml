@@ -41,13 +41,6 @@ spec:
       accessModes:
         - ReadWriteOnce
 
-  initContainers:
-    - image: mariadb:11.0.3
-      args:
-        - mariadb-backup
-        - --copy-back
-        - --target-dir=/var/mariadb/backup/
-
   volumes:
     - name: mariabackup
       persistentVolumeClaim:
