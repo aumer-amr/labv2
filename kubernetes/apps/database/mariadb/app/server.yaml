@@ -32,14 +32,6 @@ spec:
       accessModes:
         - ReadWriteOnce
 
-  volumes:
-    - name: mariabackup
-      persistentVolumeClaim:
-        claimName: mariabackup
-  volumeMounts:
-    - name: mariabackup
-      mountPath: /var/mariadb/backup/
-
   rootPasswordSecretKeyRef:
     name: mariadb-secret
     key: password
