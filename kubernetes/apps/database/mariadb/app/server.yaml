@@ -3,23 +3,79 @@ kind: MariaDB
 metadata:
   name: mariadb
 spec:
+  replicas: 3
+
+  port: 3306
+
+  galera:
+    enabled: true
+    primary:
+      podIndex: 0
+      automaticFailover: true
+    sst: mariabackup
+    replicaThreads: 1
+    agent:
+      image:
+        repository: ghcr.io/mariadb-operator/agent
+        tag: "v0.0.3"
+        pullPolicy: IfNotPresent
+      port: 5555
+      kubernetesAuth:
+        enabled: true
+      gracefulShutdownTimeout: 5s
+    recovery:
+      enabled: true
+      clusterHealthyTimeout: 3m
+      clusterBootstrapTimeout: 10m
+      podRecoveryTimeout: 5m
+      podSyncTimeout: 5m
+    initContainer:
+      image:
+        repository: ghcr.io/mariadb-operator/init
+        tag: "v0.0.6"
+        pullPolicy: IfNotPresent
+    volumeClaimTemplate:
+      resources:
+        requests:
+          storage: 300Mi
+      accessModes:
+        - ReadWriteOnce
+
+  initContainers:
+    - image: mariadb:11.0.3
+      args:
+        - mariadb-backup
+        - --copy-back
+        - --target-dir=/var/mariadb/backup/
+
+  volumes:
+    - name: mariabackup
+      persistentVolumeClaim:
+        claimName: mariabackup
+  volumeMounts:
+    - name: mariabackup
+      mountPath: /var/mariadb/backup/
+
   rootPasswordSecretKeyRef:
     name: mariadb-secret
     key: password
+
   image:
     repository: mariadb
     tag: "11.0.3"
     pullPolicy: IfNotPresent
-  port: &port 3306
+
   env:
     - name: TZ
       value: ${TIMEZONE}
+
   volumeClaimTemplate:
     resources:
       requests:
         storage: 10Gi
     accessModes:
       - ReadWriteOnce
+
   resources:
     requests:
       cpu: 100m
@@ -27,22 +83,23 @@ spec:
     limits:
       cpu: 300m
       memory: 512Mi
+
   podSecurityContext:
     runAsUser: 568
     runAsGroup: 568
     fsGroup: 568
     fsGroupChangePolicy: OnRootMismatch
+
   service:
     type: LoadBalancer
-    port: *port
     annotations:
       io.cilium/lb-ipam-ips: "10.10.1.190"
-    externalTrafficPolicy: Cluster
+
   metrics:
     exporter:
       image:
         repository: prom/mysqld-exporter
-        tag: "v0.14.0"
+        tag: "v0.15.0"
         pullPolicy: IfNotPresent
       resources:
         requests:
