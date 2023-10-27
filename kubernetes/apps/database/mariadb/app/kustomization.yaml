@@ -4,5 +4,6 @@ kind: Kustomization
 namespace: database
 resources:
   - ./external-secret.yaml
+  - ./pvc.yaml
   - ./server.yaml
   - ./backup.yaml
