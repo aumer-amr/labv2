@@ -26,6 +26,7 @@ spec:
         tag: "v0.0.5"
         pullPolicy: IfNotPresent
     volumeClaimTemplate:
+      storageClassName: longhorn-database
       resources:
         requests:
           storage: 300Mi
@@ -46,6 +47,7 @@ spec:
       value: ${TIMEZONE}
 
   volumeClaimTemplate:
+    storageClassName: longhorn-database
     resources:
       requests:
         storage: 10Gi

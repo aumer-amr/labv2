@@ -7,6 +7,7 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-apps-mariadb-operator
+    - name: cluster-apps-longhorn
   path: ./kubernetes/apps/database/mariadb/app
   prune: true
   sourceRef:
