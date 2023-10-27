@@ -26,6 +26,7 @@ resources:
   - ./kubernetes-sigs-nfd.yaml
   - ./kyverno.yaml
   - ./longhorn.yaml
+  - ./mariadb-operator.yaml
   - ./metrics-server.yaml
   - ./prometheus-community.yaml
   - ./stakater.yaml

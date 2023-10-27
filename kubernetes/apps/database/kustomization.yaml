@@ -6,4 +6,6 @@ resources:
   - ./cloudnative-pg/ks.yaml
   - ./ext-postgres-operator/ks.yaml
   - ./influxdb/ks.yaml
+  - ./mariadb/ks.yaml
+  - ./mariadb-operator/ks.yaml
   - ./redis/ks.yaml
