@@ -23,7 +23,7 @@ spec:
     initContainer:
       image:
         repository: ghcr.io/mariadb-operator/init
-        tag: "v0.0.5"
+        tag: "v0.0.6"
         pullPolicy: IfNotPresent
     volumeClaimTemplate:
       storageClassName: longhorn-database
