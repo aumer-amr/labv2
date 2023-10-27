@@ -75,7 +75,7 @@ spec:
     exporter:
       image:
         repository: prom/mysqld-exporter
-        tag: "v0.15.0"
+        tag: "v0.14.0"
         pullPolicy: IfNotPresent
       resources:
         requests:
