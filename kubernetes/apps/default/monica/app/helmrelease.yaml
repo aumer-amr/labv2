@@ -14,9 +14,6 @@ spec:
         kind: HelmRepository
         name: bjw-s
         namespace: flux-system
-  dependsOn:
-    - name: mariadb
-      namespace: database
   maxHistory: 2
   install:
     remediation:
