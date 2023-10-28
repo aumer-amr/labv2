@@ -3,35 +3,7 @@ kind: MariaDB
 metadata:
   name: mariadb
 spec:
-  replicas: 3
-
   port: 3306
-
-  galera:
-    enabled: true
-    primary:
-      podIndex: 0
-      automaticFailover: true
-    sst: mariabackup
-    replicaThreads: 1
-    recovery:
-      enabled: true
-      clusterHealthyTimeout: 3m
-      clusterBootstrapTimeout: 10m
-      podRecoveryTimeout: 5m
-      podSyncTimeout: 5m
-    initContainer:
-      image:
-        repository: ghcr.io/mariadb-operator/init
-        tag: "v0.0.5"
-        pullPolicy: IfNotPresent
-    volumeClaimTemplate:
-      storageClassName: longhorn-database
-      resources:
-        requests:
-          storage: 300Mi
-      accessModes:
-        - ReadWriteOnce
 
   rootPasswordSecretKeyRef:
     name: mariadb-secret
