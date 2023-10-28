@@ -5,3 +5,4 @@ namespace: default
 resources:
   - ./external-secret.yaml
   - ./database.yaml
+  - ./helmrelease.yaml
