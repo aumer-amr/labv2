@@ -1,0 +1,102 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: monica
+  namespace: default
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 2.0.3
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  dependsOn:
+    - name: mariadb
+      namespace: database
+  maxHistory: 2
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              repository: docker.io/monica
+              tag: 4.0.0-fpm-alpine
+            env:
+              TZ: "${TIMEZONE}"
+              APP_ENV: production
+              DB_HOST: mariadb.database.svc.cluster.local
+              DB_DATABASE: monica
+              DB_USERNAME: monica
+              DEFAULT_MAX_STORAGE_SIZE: 4096
+              APP_URL: "https://monica.${SECRET_DOMAIN}"
+              MAIL_MAILER: smtp
+              MAIL_HOST: smtp.gmail.com
+              MAIL_PORT: 465
+              MAIL_ENCRYPTION: tls
+              MAIL_FROM_NAME: Monica
+            envFrom:
+              - secretRef:
+                  name: monica-secret
+            probes:
+              liveness:
+                enabled: false
+              readiness:
+                enabled: false
+              startup:
+                enabled: false
+            resources:
+              requests:
+                cpu: 15m
+                memory: 100Mi
+              limits:
+                memory: 300Mi
+        pod:
+          enableServiceLinks: false
+          securityContext:
+            runAsUser: 568
+            runAsGroup: 568
+            fsGroup: 568
+            fsGroupChangePolicy: OnRootMismatch
+        statefulset:
+          volumeClaimTemplates:
+            - name: config
+              accessMode: ReadWriteOnce
+              size: 1Gi
+              storageClass: longhorn-config
+              globalMounts:
+                - path: /config
+    service:
+      main:
+        ports:
+          http:
+            port: *port
+    ingress:
+      main:
+        enabled: true
+        className: internal
+        annotations:
+          hajimari.io/icon: "simple-icons:monica"
+        hosts:
+          - host: &host "monica.${SECRET_DOMAIN}"
+            paths:
+              - path: /
+                service:
+                  name: main
+                  port: http
+        tls:
+          - hosts:
+              - *host
