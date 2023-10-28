@@ -33,6 +33,10 @@ spec:
       accessModes:
         - ReadWriteOnce
 
+  bootstrapFrom:
+    backupRef:
+      name: mariabackup
+
   rootPasswordSecretKeyRef:
     name: mariadb-secret
     key: password
