@@ -6,6 +6,7 @@ metadata:
 spec:
   mariaDbRef:
     name: mariadb
+    namespace: database
   characterSet: utf8
   collate: utf8_general_ci
 ---
@@ -16,6 +17,7 @@ metadata:
 spec:
   mariaDbRef:
     name: mariadb
+    namespace: database
   passwordSecretKeyRef:
     name: monica-secret
     key: DB_PASSWORD
@@ -28,6 +30,7 @@ metadata:
 spec:
   mariaDbRef:
     name: mariadb
+    namespace: database
   privileges:
     - "ALL"
   database: "*"
