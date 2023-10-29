@@ -45,7 +45,7 @@ spec:
 
   metrics:
     exporter:
-      image: "prom/mysqld-exporter:0.14.0"
+      image: "prom/mysqld-exporter:v0.14.0"
       imagePullPolicy: IfNotPresent
       resources:
         requests:
