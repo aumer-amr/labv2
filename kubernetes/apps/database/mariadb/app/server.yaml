@@ -9,10 +9,8 @@ spec:
     name: mariadb-secret
     key: password
 
-  image:
-    repository: mariadb
-    tag: "11.0.3"
-    pullPolicy: IfNotPresent
+  image: "mariadb:11.0.3"
+  imagePullPolicy: IfNotPresent
 
   env:
     - name: TZ
