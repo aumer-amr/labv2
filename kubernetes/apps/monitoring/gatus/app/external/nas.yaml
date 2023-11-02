@@ -11,7 +11,7 @@ data:
     endpoints:
       - name: NAS
         group: main
-        url: https://nas.${SECRET_DOMAIN}
+        url: https://nas.${SECRET_DOMAIN}/ui/sessions/signin
         interval: 1m
         conditions: ["[STATUS] == 200"]
         alerts: [{ type: discord }]
