@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: longhorn
-      version: 1.5.1
+      version: 1.5.2
       sourceRef:
         kind: HelmRepository
         name: longhorn
@@ -39,8 +39,7 @@ spec:
       defaultDataPath: /mnt/longhorn
       storageOverProvisioningPercentage: 100
       storageMinimalAvailablePercentage: 1
-      guaranteedEngineManagerCPU: 20
-      guaranteedReplicaManagerCPU: 20
+      guaranteedInstanceManagerCPU: 20
       orphanAutoDeletion: true
       concurrentAutomaticEngineUpgradePerNodeLimit: 3
       defaultLonghornStaticStorageClass: longhorn
