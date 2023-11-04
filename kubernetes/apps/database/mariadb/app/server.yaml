@@ -1,7 +1,7 @@
 apiVersion: mariadb.mmontes.io/v1alpha1
 kind: MariaDB
 metadata:
-  name: mariadb #restore
+  name: mariadb
 spec:
   port: 3306
 
@@ -45,7 +45,7 @@ spec:
 
   metrics:
     exporter:
-      image: "prom/mysqld-exporter:v0.15.0"
+      image: "prom/mysqld-exporter:v0.14.0"
       imagePullPolicy: IfNotPresent
       resources:
         requests:
