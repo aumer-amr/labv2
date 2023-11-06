@@ -23,6 +23,11 @@ namespaceSelector:
     - storage
     - system
 customApps:
+  - group: tools
+    apps:
+      - name: Taskboard
+        url: "https://tasksboard.com/"
+        icon: arcticons:google-tasks
   - group: authentication
     apps:
       - name: Bitwarden
