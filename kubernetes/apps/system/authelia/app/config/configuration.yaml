@@ -7,6 +7,9 @@ storage:
 access_control:
   default_policy: two_factor
   networks:
+    - name: main_pc
+      networks:
+        - "${SECRET_MAIN_PC_IP}/32"
     - name: internal
       networks:
         - "10.0.0.0/8"
@@ -35,6 +38,18 @@ access_control:
       policy: one_factor
     - domain: "sonarr.${SECRET_DOMAIN}"
       policy: one_factor
+    - domain: "prowlarr.${SECRET_DOMAIN}"
+      policy: bypass
+      networks:
+        - main_pc
+    - domain: "radarr.${SECRET_DOMAIN}"
+      policy: bypass
+      networks:
+        - main_pc
+    - domain: "sonarr.${SECRET_DOMAIN}"
+      policy: bypass
+      networks:
+        - main_pc
 
 identity_providers:
   oidc:
