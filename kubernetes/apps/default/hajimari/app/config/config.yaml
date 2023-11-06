@@ -23,7 +23,7 @@ namespaceSelector:
     - storage
     - system
 customApps:
-  - group: Tools
+  - group: tools
     apps:
       - name: Taskboard
         url: "https://tasksboard.com/"

@@ -80,7 +80,7 @@ spec:
         annotations:
           hajimari.io/enable: "true"
           hajimari.io/icon: material-symbols:link
-          hajimari.io/group: "Tools"
+          hajimari.io/group: "tools"
           hajimari.io/url: "https://app.shlink.io/"
           external-dns.alpha.kubernetes.io/target: "external.${SECRET_DOMAIN}"
         hosts:

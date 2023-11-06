@@ -43,7 +43,7 @@ spec:
         annotations:
           hajimari.io/enable: "true"
           hajimari.io/icon: hammer-wrench
-          hajimari.io/group: "Tools"
+          hajimari.io/group: "tools"
           external-dns.alpha.kubernetes.io/target: "external.${SECRET_DOMAIN}"
           auth.home.arpa/enabled: "true"
         hosts:
