@@ -45,6 +45,10 @@ spec:
               MAIL_PORT: 465
               MAIL_ENCRYPTION: tls
               MAIL_FROM_NAME: Monica
+              FILESYSTEM_DISK: s3
+              AWS_ENDPOINT: ${SECRET_CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+              AWS_BUCKET: monica
+              AWS_DEFAULT_REGION: WEUR
             envFrom:
               - secretRef:
                   name: monica-secret
@@ -91,9 +95,3 @@ spec:
         size: 1Gi
         storageClass: longhorn-config
         mountPath: /config
-      photos:
-        enabled: true
-        accessMode: ReadWriteOnce
-        size: 1Gi
-        storageClass: longhorn
-        mountPath: /var/www/html/storage/app/public/photos
