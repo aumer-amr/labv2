@@ -91,3 +91,9 @@ spec:
         size: 1Gi
         storageClass: longhorn-config
         mountPath: /config
+      photos:
+        enabled: true
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn
+        mountPath: /var/www/html/storage/app/public/photos
