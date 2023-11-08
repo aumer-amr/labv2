@@ -49,6 +49,7 @@ spec:
               AWS_ENDPOINT: ${SECRET_CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
               AWS_BUCKET: monica
               AWS_DEFAULT_REGION: WEUR
+              USE_PATH_STYLE_ENDPOINT: false
             envFrom:
               - secretRef:
                   name: monica-secret
