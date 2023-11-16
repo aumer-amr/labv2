@@ -35,6 +35,9 @@ spec:
         tag: v1.0.0
         securityContext:
           privileged: true
+        grpc:
+          enabled: true
+          address: "localhost:50051"
         enableK8sAPI: true
         enablePolicyFilter: true
         enableCiliumAPI: true
