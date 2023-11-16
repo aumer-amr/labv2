@@ -37,7 +37,7 @@ spec:
           privileged: true
         grpc:
           enabled: true
-          address: "localhost:50051"
+          address: "localhost:54321"
         enableK8sAPI: true
         enablePolicyFilter: true
         enableCiliumAPI: true
