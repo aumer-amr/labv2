@@ -41,7 +41,7 @@ spec:
         reloader.stakater.com/auto: "true"
     image:
       repository: docker.io/outlinewiki/outline
-      tag: 0.72.2
+      tag: 0.73.1
     envFrom: *envFrom
     env:
       ENABLE_UPDATES: "false"
