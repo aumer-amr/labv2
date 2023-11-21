@@ -1,0 +1,30 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: bitwarden-backup
+  namespace: kube-system
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsUser: 568
+            runAsGroup: 568
+            fsGroup: 568
+            fsGroupChangePolicy: "OnRootMismatch"
+          volumes:
+            - name: bitwarden-backup
+              emptyDir: # emptyDir for testing
+                sizeLimit: "50Mi"
+          containers:
+          - name: bitwarden-backup
+            image: ghcr.io/aumer-amr/bitwarden-backup:sha-72a2211
+            volumeMounts:
+              - name: bitwarden-backup
+                mountPath: /backup
+            envFrom:
+            - secretRef:
+                name: bitwarden-cli

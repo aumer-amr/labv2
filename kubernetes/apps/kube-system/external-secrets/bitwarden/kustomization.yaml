@@ -7,3 +7,4 @@ resources:
   - ./clustersecretstore.yaml
   - ./helmrelease.yaml
   - ./networkpolicy.yaml
+  - ./backup.yaml
