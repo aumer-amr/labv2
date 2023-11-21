@@ -45,6 +45,7 @@ spec:
         enableProcessNs: true
         prometheus:
           enabled: true
+          port: 2113
           serviceMonitor:
             enabled: true
     tetragonOperator:
