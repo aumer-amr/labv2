@@ -11,4 +11,4 @@ resources:
   - ./local-path-provisioner/ks.yaml
   - ./metrics-server/ks.yaml
   - ./reloader/ks.yaml
-  - ./tetragon/ks.yaml
+  #- ./tetragon/ks.yaml
