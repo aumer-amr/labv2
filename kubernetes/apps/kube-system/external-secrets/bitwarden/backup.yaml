@@ -7,7 +7,6 @@ spec:
   schedule: "0 0 * * *"
   jobTemplate:
     spec:
-      suspend: true
       template:
         spec:
           restartPolicy: OnFailure
@@ -22,7 +21,7 @@ spec:
                 sizeLimit: "50Mi"
           containers:
           - name: bitwarden-backup
-            image: ghcr.io/aumer-amr/bitwarden-backup:sha-72a2211
+            image: ghcr.io/aumer-amr/bitwarden-backup:sha-94bfc10
             volumeMounts:
               - name: bitwarden-backup
                 mountPath: /backup
