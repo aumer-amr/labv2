@@ -8,6 +8,7 @@ spec:
   jobTemplate:
     spec:
       template:
+        suspend: true
         spec:
           restartPolicy: OnFailure
           securityContext:
