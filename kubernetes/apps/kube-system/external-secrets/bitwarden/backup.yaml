@@ -21,7 +21,7 @@ spec:
                 sizeLimit: "50Mi"
           containers:
           - name: bitwarden-backup
-            image: ghcr.io/aumer-amr/bitwarden-backup:sha-97dfb1b
+            image: ghcr.io/aumer-amr/bitwarden-backup:sha-a333d36
             volumeMounts:
               - name: bitwarden-backup
                 mountPath: /backup
