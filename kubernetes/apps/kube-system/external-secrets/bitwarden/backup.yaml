@@ -7,8 +7,8 @@ spec:
   schedule: "0 0 * * *"
   jobTemplate:
     spec:
+      suspend: true
       template:
-        suspend: true
         spec:
           restartPolicy: OnFailure
           securityContext:
