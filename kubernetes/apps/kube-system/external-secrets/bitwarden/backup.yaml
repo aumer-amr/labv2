@@ -13,12 +13,12 @@ spec:
           volumes:
             - name: bitwarden-backup
               persistentVolumeClaim:
-                claimName: bitwarden-backup
+                claimName: bitwarden-backup-pvc
           containers:
           - name: bitwarden-backup
             image: ghcr.io/aumer-amr/bitwarden-backup:sha-becf86b
             volumeMounts:
-              - name: bitwarden-backup-pvc
+              - name: bitwarden-backup
                 mountPath: /backup
             envFrom:
             - secretRef:
