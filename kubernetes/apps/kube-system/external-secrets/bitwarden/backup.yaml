@@ -10,11 +10,6 @@ spec:
       template:
         spec:
           restartPolicy: OnFailure
-          securityContext:
-            runAsUser: 568
-            runAsGroup: 568
-            fsGroup: 568
-            fsGroupChangePolicy: "OnRootMismatch"
           volumes:
             - name: bitwarden-backup
               emptyDir: # emptyDir for testing
