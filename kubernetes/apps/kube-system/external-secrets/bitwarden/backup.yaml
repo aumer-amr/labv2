@@ -16,7 +16,7 @@ spec:
                 claimName: bitwarden-backup-pvc
           containers:
           - name: bitwarden-backup
-            image: ghcr.io/aumer-amr/bitwarden-backup:sha-becf86b
+            image: ghcr.io/aumer-amr/bitwarden-backup:sha-56e7008
             volumeMounts:
               - name: bitwarden-backup
                 mountPath: /backup
