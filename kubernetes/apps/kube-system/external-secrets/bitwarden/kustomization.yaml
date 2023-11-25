@@ -8,3 +8,4 @@ resources:
   - ./helmrelease.yaml
   - ./networkpolicy.yaml
   - ./backup.yaml
+  - ./backup-pvc.yaml

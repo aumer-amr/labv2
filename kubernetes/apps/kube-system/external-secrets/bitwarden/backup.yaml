@@ -12,13 +12,13 @@ spec:
           restartPolicy: OnFailure
           volumes:
             - name: bitwarden-backup
-              emptyDir: # emptyDir for testing
-                sizeLimit: "50Mi"
+              persistentVolumeClaim:
+                claimName: bitwarden-backup
           containers:
           - name: bitwarden-backup
             image: ghcr.io/aumer-amr/bitwarden-backup:sha-becf86b
             volumeMounts:
-              - name: bitwarden-backup
+              - name: bitwarden-backup-pvc
                 mountPath: /backup
             envFrom:
             - secretRef:
