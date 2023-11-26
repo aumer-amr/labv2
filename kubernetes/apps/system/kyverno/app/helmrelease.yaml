@@ -43,6 +43,7 @@ spec:
               resources:
                 - pods
                 - ingresses
+                - kustomization
               verbs:
                 - create
                 - update
