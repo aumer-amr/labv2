@@ -1,0 +1,36 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-volsync-resource
+  annotations:
+    policies.kyverno.io/title: Add volsync resource
+    policies.kyverno.io/subject: Kustomization
+    policies.kyverno.io/description: >-
+      Add volsync resource to kustomization if it does not exist.
+spec:
+  validationFailureAction: Enforce
+  mutateExistingOnPolicyUpdate: true
+  generateExisting: true
+  rules:
+    - name: volsync
+      match:
+        any:
+          - resources:
+              kinds: [Kustomization]
+              group: kustomize.config.k8s.io/v1beta1
+              labelSelector:
+                volsync.home.arpa/enabled: "true"
+      mutate:
+        targets:
+        - apiVersion: kustomize.config.k8s.io/v1beta1
+          kind: Kustomization
+          preconditions:
+            all:
+            - key: "{{ target.metadata.labels.\"volsync.home.arpa/enabled\" || false }}"
+              operator: Equals
+              value: "true"
+        patchesJson6902: |-
+          - path: "/resources/"
+            op: add
+            value: "../../../storage/volsync/templates/"

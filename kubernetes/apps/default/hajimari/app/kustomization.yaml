@@ -4,7 +4,7 @@ kind: Kustomization
 namespace: default
 metadata:
   labels:
-    volsync.home.arpa: "enabled"
+    volsync.home.arpa/enabled: "true"
 resources:
   - ./rbac.yaml
   - ./helmrelease.yaml
