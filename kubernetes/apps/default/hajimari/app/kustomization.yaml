@@ -2,12 +2,10 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: default
-metadata:
-  labels:
-    volsync.home.arpa/enabled: "true"
 resources:
   - ./rbac.yaml
   - ./helmrelease.yaml
+  - ./../../../storage/volsync/templates/
 configMapGenerator:
   - name: hajimari-configmap
     files:
