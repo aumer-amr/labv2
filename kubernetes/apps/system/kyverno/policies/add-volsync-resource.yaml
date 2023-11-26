@@ -17,9 +17,10 @@ spec:
       match:
         any:
           - resources:
-              kinds: [Kustomization]
+              kinds: [kustomize.config.k8s.io/v1beta1/Kustomization]
               selector:
-                volsync.home.arpa/enabled: "true"
+                matchLabels:
+                  volsync.home.arpa/enabled: "true"
       mutate:
         targets:
         - apiVersion: kustomize.config.k8s.io/v1beta1
