@@ -28,6 +28,7 @@ resources:
   - ./longhorn.yaml
   - ./mariadb-operator.yaml
   - ./metrics-server.yaml
+  - ./piraeus.yaml
   - ./prometheus-community.yaml
   - ./stakater.yaml
   - ./tyzbit.yaml
