@@ -44,10 +44,6 @@ spec:
       data:
         enabled: true
         type: emptyDir
-      test:
-        enabled: true
-        existingClaim: cluster-apps-hajimari
-        mountPath: /test
     ingress:
       main:
         enabled: true
