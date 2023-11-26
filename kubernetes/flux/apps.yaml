@@ -24,15 +24,6 @@ spec:
       - kind: Secret
         name: cluster-secrets-extra
   patches:
-    - target:
-        group: kustomize.config.k8s.io
-        version: v1beta1
-        kind: Kustomization
-        labelSelector: volsync.home.arpa/enabled in (true)
-      patch: |-
-        [
-          {"op": "add", "path": "/resources/", "../../../storage/volsync/templates/"}
-        ]
     - patch: |-
         apiVersion: kustomize.toolkit.fluxcd.io/v1
         kind: Kustomization

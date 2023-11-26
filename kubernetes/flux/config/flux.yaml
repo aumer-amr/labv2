@@ -84,3 +84,14 @@ spec:
       target:
         kind: Deployment
         name: helm-controller
+
+
+    - patch: |
+        - op: add
+          path: /resources/-
+          value: ../../../storage/volsync/templates/
+      target:
+        group: kustomize.config.k8s.io
+        version: v1beta1
+        kind: Kustomization
+        labelSelector: volsync.home.arpa/enabled in (true)
