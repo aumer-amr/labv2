@@ -25,6 +25,18 @@ spec:
         name: cluster-secrets-extra
   patches:
     - patch: |-
+        apiVersion: kustomize.config.k8s.io/v1beta1
+        kind: Kustomization
+        metadata:
+          name: not-used
+        resources:
+          - ../../../storage/volsync/templates/
+      target:
+        group: kustomize.config.k8s.io
+        version: v1beta1
+        kind: Kustomization
+        labelSelector: volsync.home.arpa/enabled in (true)
+    - patch: |-
         apiVersion: kustomize.toolkit.fluxcd.io/v1
         kind: Kustomization
         metadata:
