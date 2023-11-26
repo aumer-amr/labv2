@@ -8,6 +8,7 @@ metadata:
 resources:
   - ./rbac.yaml
   - ./helmrelease.yaml
+  - ../../../storage/volsync/templates/
 configMapGenerator:
   - name: hajimari-configmap
     files:
