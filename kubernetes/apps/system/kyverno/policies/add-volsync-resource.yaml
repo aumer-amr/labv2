@@ -19,7 +19,7 @@ spec:
           - resources:
               kinds: [Kustomization]
               group: kustomize.config.k8s.io/v1beta1
-              labelSelector:
+              selector:
                 volsync.home.arpa/enabled: "true"
       mutate:
         targets:
