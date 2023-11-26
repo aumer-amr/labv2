@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: storage
 resources:
   - ./helmrelease.yaml
+  - ./snapshotclass.yaml
 labels:
   - pairs:
       app.kubernetes.io/name: longhorn-recurring-jobs

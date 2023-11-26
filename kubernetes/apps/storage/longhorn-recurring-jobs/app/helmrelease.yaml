@@ -7,6 +7,11 @@ metadata:
 spec:
   targetNamespace: storage
   releaseName: longhorn-recurring-jobs
+  upgrade:
+    force: true # In case a StorageClass needs updating
+  dependsOn:
+    - name: longhorn
+      namespace: storage
   timeout: 120s
   chart:
     spec:
@@ -44,3 +49,10 @@ spec:
         backup:
           - interval: 24h
             retain: 7
+      "Snapshot":
+        options:
+          storageclass:
+            reclaimPolicy: Delete
+          parameters:
+            numberOfReplicas: "1"
+            dataLocality: disabled
