@@ -13,3 +13,5 @@ kubeconfig
 # Terraform
 .terraform
 terraform.tfstate*
+# Taskfile
+.tasks
