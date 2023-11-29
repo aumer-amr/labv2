@@ -13,3 +13,4 @@ resources:
   - ./reloader/ks.yaml
   #- ./tetragon/ks.yaml
   - ./snapshot-controller/ks.yaml
+  - ./spegel/ks.yaml

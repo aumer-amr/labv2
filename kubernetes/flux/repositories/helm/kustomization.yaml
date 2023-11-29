@@ -34,3 +34,4 @@ resources:
   - ./stakater.yaml
   - ./tyzbit.yaml
   - ./weave-gitops.yaml
+  - ./xenitab.yaml
