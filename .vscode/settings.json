@@ -1,10 +1,31 @@
 {
+    "ansible.ansible.path": ".venv/bin/ansible",
+    "ansible.python.activationScript": ".venv/bin/activate",
+    "ansible.python.interpreterPath": ".venv/bin/python3",
+    "ansible.validation.enabled": true,
+    "ansible.validation.lint.arguments": "-c ansible/.ansible-lint",
+    "ansible.validation.lint.enabled": true,
+    "ansible.validation.lint.path": ".venv/bin/ansible-lint",
     "files.associations": {
+<<<<<<< HEAD
         "*.yaml": "yaml"
+=======
+        "*.json5": "jsonc",
+        "./ansible/**/*.yaml": "ansible",
+        "./ansible/**/*.sops.yaml": "yaml",
+        "./ansible/**/inventory/**/*.yaml": "yaml",
+        "./kubernetes/**/*.sops.toml": "plaintext"
+>>>>>>> 08cea788b (chore: add k8s and ansible config to vscode settings)
     },
+    "sops.defaults.ageKeyFile": "age.key",
     "yaml.schemas": {
-        "ansible": "**/ansible/*.yaml",
-        "Kubernetes": "**/kubernetes/*.yaml"
+        "ansible": "./ansible/*.yaml",
+        "Kubernetes": "./kubernetes/*.yaml"
     },
-    "sops.defaults.ageKeyFile": "age.key"
+    "vs-kubernetes": {
+        "vs-kubernetes.kubeconfig": "./kubeconfig",
+        "vs-kubernetes.knownKubeconfigs": [
+          "./kubeconfig"
+      ]
+    }
 }
