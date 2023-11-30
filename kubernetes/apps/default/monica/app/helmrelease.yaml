@@ -73,6 +73,7 @@ spec:
             egress.home.arpa/mariadb: allow
             egress.home.arpa/kube-dns: allow
             egress.home.arpa/r2: allow
+            egress.home.arpa/google-smtp: allow
     service:
       main:
         ports:
