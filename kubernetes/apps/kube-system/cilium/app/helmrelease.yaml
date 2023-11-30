@@ -30,6 +30,9 @@ spec:
       masquerade: true
       tproxy: true
     l7proxy: true
+    nodePort:
+      enabled: true
+      range: "9993,32767"
     bgpControlPlane:
       enabled: false
     cluster:
