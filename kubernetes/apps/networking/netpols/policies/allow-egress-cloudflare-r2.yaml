@@ -8,11 +8,12 @@ spec:
     matchLabels:
       egress.home.arpa/r2: allow
   egress:
+    - toEntities:
+        - world
     - toFQDNs:
         - matchPattern: "*.r2.cloudflarestorage.com"
+        - matchPattern: "*.cloudflarestorage.com"
       toPorts:
         - ports:
             - port: "443"
-              protocol: "TCP"
-            - port: "443"
-              protocol: "UDP"
+              protocol: "ANY"
