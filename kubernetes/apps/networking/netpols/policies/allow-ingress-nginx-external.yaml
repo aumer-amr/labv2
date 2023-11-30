@@ -1,20 +1,15 @@
+---
 apiVersion: cilium.io/v2
-kind: CiliumNetworkPolicy
+kind: CiliumClusterwideNetworkPolicy
 metadata:
-  name: hajimari-policy
-  namespace: default
+  name: allow-ingress-nginx-external
 spec:
   endpointSelector:
     matchLabels:
-      instance: hajimari
+      ingress.home.arpa/nginx-external: allow
   ingress:
     - fromEndpoints:
         - matchLabels:
             namespace: networking
             instance: nginx-external
-      toPorts:
-        - ports:
-            - port: "3000"
-              protocol: TCP
-  egress:
-    - {}
+

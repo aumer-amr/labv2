@@ -30,6 +30,8 @@ spec:
     image:
       repository: ghcr.io/aumer-amr/hajimari
       tag: main-7cf2dec
+    podLabels:
+      ingress.home.arpa/nginx-external: allow
     env:
       TZ: "${TIMEZONE}"
       SECRET_INFRA_DOMAIN: ${SECRET_INFRA_DOMAIN}
