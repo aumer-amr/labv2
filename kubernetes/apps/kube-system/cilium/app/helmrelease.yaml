@@ -41,6 +41,9 @@ spec:
     containerRuntime:
       integration: containerd
       socketPath: /var/run/k3s/containerd/containerd.sock
+    endpointStatus:
+      enabled: true
+      policy: "policy"
     endpointRoutes:
       enabled: true
     hubble:
