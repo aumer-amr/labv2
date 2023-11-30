@@ -9,4 +9,5 @@ resources:
   - ./allow-egress-mariadb.yaml
   - ./allow-ingress-nginx-external.yaml
   - ./allow-ingress-nginx-internal.yaml
+  - ./cluster-default-kube-dns.yaml #jj test
   - ./deny-egress-all.yaml
