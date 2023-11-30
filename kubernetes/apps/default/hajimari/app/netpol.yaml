@@ -1,0 +1,20 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: hajimari-policy
+  namespace: default
+spec:
+  endpointSelector:
+    matchLabels:
+      instance: hajimari
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            namespace: networking
+            instance: nginx-external
+      toPorts:
+        - ports:
+            - port: "3000"
+              protocol: TCP
+  egress:
+    - {}
