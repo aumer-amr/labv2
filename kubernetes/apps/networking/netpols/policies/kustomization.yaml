@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: networking
 resources:
   - ./allow-egress-kube-apiserver.yaml
+  - ./allow-egress-kube-dns.yaml
   - ./allow-ingress-nginx-external.yaml
   - ./allow-ingress-nginx-internal.yaml
   - ./deny-egress-all.yaml
