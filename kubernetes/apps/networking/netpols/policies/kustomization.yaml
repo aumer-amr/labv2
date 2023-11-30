@@ -6,3 +6,4 @@ resources:
   - ./allow-egress-kube-apiserver.yaml
   - ./allow-ingress-nginx-external.yaml
   - ./allow-ingress-nginx-internal.yaml
+  - ./deny-egress-all.yaml

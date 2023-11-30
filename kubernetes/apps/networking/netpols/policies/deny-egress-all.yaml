@@ -1,0 +1,13 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: deny-egress-all
+spec:
+  description: "Deny all egress traffic"
+  endpointSelector:
+    matchLabels:
+      egress.home.arpa/all: deny
+  egress:
+    - {}
+
