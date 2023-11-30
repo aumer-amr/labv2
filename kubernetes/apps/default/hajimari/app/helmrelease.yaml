@@ -33,6 +33,7 @@ spec:
     podLabels:
       ingress.home.arpa/nginx-internal: allow
       egress.home.arpa/kube-apiserver: allow
+      egress.home.arpa/kube-dns: allow
     env:
       TZ: "${TIMEZONE}"
       SECRET_INFRA_DOMAIN: ${SECRET_INFRA_DOMAIN}
