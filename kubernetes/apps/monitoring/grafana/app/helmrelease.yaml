@@ -117,7 +117,6 @@ spec:
         apiVersion: 1
         deleteDatasources:
           - { name: Prometheus, orgId: 1 }
-          - { name: Influxdb, orgId: 1 }
         datasources:
           - name: Prometheus
             type: prometheus
@@ -127,17 +126,6 @@ spec:
             jsonData:
               prometheusType: Prometheus
             isDefault: true
-          - name: Influxdb
-            type: influxdb
-            uid: influxdb
-            access: proxy
-            url: http://influxdb.database.svc.cluster.local
-            jsonData:
-              version: Flux
-              organization: lab
-              defaultBucket: default
-            secureJsonData:
-              token: ${SECRET_INFLUX_DB_TOKEN}
     dashboards:
       default:
         cloudflared:
