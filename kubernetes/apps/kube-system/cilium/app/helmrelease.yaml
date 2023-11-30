@@ -28,6 +28,8 @@ spec:
     autoDirectNodeRoutes: true
     bpf:
       masquerade: true
+      tproxy: true
+    l7proxy: true
     bgpControlPlane:
       enabled: false
     cluster:
