@@ -121,6 +121,8 @@ spec:
       enabled: true
       annotations:
         grafana_folder: Cilium
+    dnsProxy:
+      dnsRejectResponseCode: nameError
     rollOutCiliumPods: true
     securityContext:
       privileged: true
