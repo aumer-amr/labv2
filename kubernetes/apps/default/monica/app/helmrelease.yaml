@@ -32,8 +32,6 @@ spec:
             image:
               repository: docker.io/monica
               tag: 4.0.0-apache
-            podLabels:
-              egress.home.arpa/mariadb: allow
             env:
               TZ: "${TIMEZONE}"
               APP_ENV: production
@@ -70,6 +68,8 @@ spec:
                 memory: 300Mi
         pod:
           enableServiceLinks: false
+          labels:
+            egress.home.arpa/mariadb: allow
     service:
       main:
         ports:
