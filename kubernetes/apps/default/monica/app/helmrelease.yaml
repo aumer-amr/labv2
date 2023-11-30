@@ -35,6 +35,7 @@ spec:
             env:
               TZ: "${TIMEZONE}"
               APP_ENV: production
+              APP_DEBUG: "true"
               DB_HOST: mariadb.database.svc.cluster.local
               DB_DATABASE: monica
               DB_USERNAME: monica
