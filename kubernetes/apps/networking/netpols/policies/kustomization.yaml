@@ -11,3 +11,4 @@ resources:
   - ./allow-ingress-nginx-external.yaml
   - ./allow-ingress-nginx-internal.yaml
   - ./deny-egress-all.yaml
+  - ./monitor-l7-https.yaml
