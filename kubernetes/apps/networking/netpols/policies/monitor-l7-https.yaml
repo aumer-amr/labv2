@@ -10,8 +10,16 @@ spec:
   egress:
     - toPorts:
       - ports:
+          - port: "53"
+            protocol: ANY
+        rules:
+          dns:
+            - matchPattern: "*"
+      - ports:
+        - port: "3306"
+          protocol: TCP
+      - ports:
         - port: "443"
           protocol: ANY
         rules:
-          http:
-            - host: "*"
+          http: [{}]

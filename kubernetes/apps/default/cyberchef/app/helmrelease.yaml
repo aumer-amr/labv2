@@ -29,6 +29,8 @@ spec:
     image:
       repository: docker.io/mpepping/cyberchef
       tag: v10.5.2
+    podLabels:
+      ingress.home.arpa/nginx-external: allow
     env:
       TZ: "${TIMEZONE}"
     service:
