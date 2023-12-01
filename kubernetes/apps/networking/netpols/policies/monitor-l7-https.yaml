@@ -13,4 +13,5 @@ spec:
         - port: "443"
           protocol: ANY
         rules:
-          http: [{}]
+          http:
+            - host: "*"
