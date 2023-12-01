@@ -22,6 +22,7 @@ includes:
   brew: .taskfiles/BrewTasks.yaml
   cluster: .taskfiles/ClusterTasks.yaml
   external-secret: .taskfiles/ExternalSecretTasks.yml
+  flux: .taskfiles/FluxTasks.yaml
 
 tasks:
 
