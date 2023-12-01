@@ -8,9 +8,7 @@ spec:
     matchLabels:
       monitor.home.arpa/https: enabled
   egress:
-    - toEntities:
-        - world
-      toPorts:
+    - toPorts:
       - ports:
         - port: "443"
           protocol: ANY
