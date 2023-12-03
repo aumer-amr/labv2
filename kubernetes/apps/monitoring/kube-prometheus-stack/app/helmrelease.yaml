@@ -104,6 +104,9 @@ spec:
             - match:
                 severity: critical
               receiver: discord
+            - match:
+                severity: critical
+              receiver: pushover
         inhibit_rules:
           - equal: ["alertname", "namespace"]
             source_matchers:
