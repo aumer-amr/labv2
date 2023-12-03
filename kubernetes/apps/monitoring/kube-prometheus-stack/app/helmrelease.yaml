@@ -38,68 +38,40 @@ spec:
       config:
         global:
           resolve_timeout: 5m
-        route:
-          group_by: ["alertname", "job"]
-          group_interval: 10m
-          group_wait: 1m
-          receiver: pushover
-          repeat_interval: 12h
-          routes:
-            - receiver: heartbeat
-              group_interval: 5m
-              group_wait: 0s
-              matchers:
-                - alertname =~ "Watchdog"
-              repeat_interval: 5m
-            - receiver: "null"
-              matchers:
-                - alertname =~ "InfoInhibitor"
-            - receiver: pushover
-              continue: true
-              matchers:
-                - severity = "critical"
-        inhibit_rules:
-          - equal: ["alertname", "namespace"]
-            source_matchers:
-              - severity = "critical"
-            target_matchers:
-              - severity = "warning"
         receivers:
           - name: "null"
-          - name: pushover
-            pushover_configs:
-              - html: true
-                # Compooters are hard
+          - name: discord
+            discord_configs:
+              - webhook_url: ${ALERTMANAGER_DISCORD_WEBHOOK_URL}
+                title: |-
+                  [{{ .Status | toUpper }}:{{ if eq .Status "firing" }}{{ .Alerts.Firing | len }}{{ else }}{{ .Alerts.Resolved | len }}{{ end }}]
                 message: |-
                   {{- range .Alerts }}
+                    **{{ .Labels.alertname }} {{ if ne .Labels.severity "" }}({{ .Labels.severity | title }}){{ end }} **
                     {{- if ne .Annotations.description "" }}
-                      {{ .Annotations.description }}
+                      **Description:** {{ .Annotations.description }}
                     {{- else if ne .Annotations.summary "" }}
-                      {{ .Annotations.summary }}
+                      **Summary:** {{ .Annotations.summary }}
                     {{- else if ne .Annotations.message "" }}
-                      {{ .Annotations.message }}
+                      **Message:** {{ .Annotations.message }}
                     {{- else }}
-                      Alert description not available
-                    {{- end }}
-                    {{- if gt (len .Labels.SortedPairs) 0 }}
-                      <small>
-                      {{- range .Labels.SortedPairs }}
-                        <b>{{ .Name }}:</b> {{ .Value }}
-                      {{- end }}
-                      </small>
+                      **Description:** N/A
                     {{- end }}
                   {{- end }}
-                priority: |-
-                  {{ if eq .Status "firing" }}1{{ else }}0{{ end }}
-                send_resolved: true
-                sound: gamelan
-                title: >-
-                  {{ .CommonLabels.alertname }}
-                  [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}]
-                token: "${ALERTMANAGER_PUSHOVER_TOKEN}"
-                url_title: View in Alertmanager
-                user_key: "${PUSHOVER_USER_KEY}"
-
+        route:
+          group_by:
+            - namespace
+          group_interval: 5m
+          group_wait: 30s
+          receiver: discord
+          repeat_interval: 12h
+          routes:
+            - matchers:
+                - alertname =~ "InfoInhibitor|Watchdog"
+              receiver: "null"
+            - match:
+                severity: critical
+              receiver: discord
       ingress:
         enabled: true
         ingressClassName: internal
