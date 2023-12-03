@@ -85,13 +85,6 @@ spec:
               - *host
       alertmanagerSpec:
         replicas: 3
-        storage:
-          volumeClaimTemplate:
-            spec:
-              storageClassName: local-path
-              resources:
-                requests:
-                  storage: 1Gi
     kube-state-metrics:
       metricLabelsAllowlist:
         - "deployments=[*]"

@@ -14,10 +14,6 @@ spec:
   interval: 30m
   retryInterval: 1m
   timeout: 5m
-  postBuild:
-    substituteFrom:
-      - kind: Secret
-        name: alertmanager-secret
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
