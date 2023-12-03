@@ -102,6 +102,10 @@ spec:
         annotations:
           hajimari.io/icon: pajamas:media
           nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+          gatus.home.arpa/enabled: "true"
+          gatus.home.arpa/name: "media share"
+          gatus.home.arpa/group: tools
+          gatus.home.arpa/url: "https://m.${SECRET_DOMAIN}/api/version"
         hosts:
           - host: &host zipline.${SECRET_DOMAIN}
             paths:

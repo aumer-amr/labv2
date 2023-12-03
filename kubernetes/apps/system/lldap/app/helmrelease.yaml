@@ -56,6 +56,7 @@ spec:
           hajimari.io/icon: mdi:user-lock
           hajimari.io/enable: "true"
           hajimari.io/group: "authentication"
+          gatus.home.arpa/enabled: "true"
         hosts:
           - host: &host "lldap.${SECRET_DOMAIN}"
             paths:

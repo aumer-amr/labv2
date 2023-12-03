@@ -8,6 +8,10 @@ metadata:
     hajimari.io/appName: nas
     hajimari.io/icon: simple-icons:truenas
     hajimari.io/group: storage
+    gatus.home.arpa/enabled: "true"
+    gatus.home.arpa/name: nas
+    gatus.home.arpa/group: storage
+    gatus.home.arpa/url: nas.${SECRET_DOMAIN}/ui/sessions/signin
 spec:
   ingressClassName: internal
   rules:

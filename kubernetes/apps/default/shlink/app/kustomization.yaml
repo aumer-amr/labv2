@@ -5,4 +5,3 @@ namespace: default
 resources:
   - ./external-secret.yaml
   - ./helmrelease.yaml
-  - ./gatus.yaml

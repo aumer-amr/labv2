@@ -6,7 +6,6 @@ resources:
   - ./external-secret.yaml
   - ./pvc.yaml
   - ./helmrelease.yaml
-  - ./gatus.yaml
 commonLabels:
   app.kubernetes.io/name: authelia
   app.kubernetes.io/instance: authelia

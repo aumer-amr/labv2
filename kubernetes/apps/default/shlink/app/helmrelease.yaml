@@ -83,6 +83,9 @@ spec:
           hajimari.io/group: "tools"
           hajimari.io/url: "https://app.shlink.io/"
           external-dns.alpha.kubernetes.io/target: "external.${SECRET_DOMAIN}"
+          gatus.home.arpa/enabled: "true"
+          gatus.home.arpa/group: tools
+          gatus.home.arpa/url: sh.${SECRET_DOMAIN}/jb6d5
         hosts:
           - host: *host
             paths:
