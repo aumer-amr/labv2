@@ -72,6 +72,12 @@ spec:
             - match:
                 severity: critical
               receiver: discord
+        inhibit_rules:
+          - equal: ["alertname", "namespace"]
+            source_matchers:
+              - severity = "critical"
+            target_matchers:
+              - severity = "warning"
       ingress:
         enabled: true
         ingressClassName: internal
