@@ -5,7 +5,7 @@ receivers:
   - name: "null"
   - name: discord
     discord_configs:
-      - webhook_url: {{ . ALERTMANAGER_DISCORD_WEBHOOK_URL }}
+      - webhook_url: {{ .ALERTMANAGER_DISCORD_WEBHOOK_URL }}
         title: |-
           [{{ .Status | toUpper }}:{{ if eq .Status "firing" }}{{ .Alerts.Firing | len }}{{ else }}{{ .Alerts.Resolved | len }}{{ end }}]
         message: |-
