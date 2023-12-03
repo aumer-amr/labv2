@@ -28,8 +28,7 @@ spec:
             jmesPath: 'to_string(@)'
         - name: GATUSHTTPCODE
           variable:
-            value: "{{ request.object.metadata.annotations.\"gatus.home.arpa/http-code\" }}"
-            default: "200"
+            value: "{{ request.object.metadata.annotations.\"gatus.home.arpa/http-code\" || \"200\" }}"
             jmesPath: 'to_string(@)'
       generate:
         apiVersion: "v1"
