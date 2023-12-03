@@ -7,15 +7,11 @@
     "ansible.validation.lint.enabled": true,
     "ansible.validation.lint.path": ".venv/bin/ansible-lint",
     "files.associations": {
-<<<<<<< HEAD
-        "*.yaml": "yaml"
-=======
         "*.json5": "jsonc",
         "./ansible/**/*.yaml": "ansible",
         "./ansible/**/*.sops.yaml": "yaml",
         "./ansible/**/inventory/**/*.yaml": "yaml",
         "./kubernetes/**/*.sops.toml": "plaintext"
->>>>>>> 08cea788b (chore: add k8s and ansible config to vscode settings)
     },
     "sops.defaults.ageKeyFile": "age.key",
     "yaml.schemas": {
