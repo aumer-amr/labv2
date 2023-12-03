@@ -5,22 +5,22 @@ receivers:
   - name: "null"
   - name: discord
     discord_configs:
-      - webhook_url: {{ .ALERTMANAGER_DISCORD_WEBHOOK_URL }}
+      - webhook_url: {{ . ALERTMANAGER_DISCORD_WEBHOOK_URL }}
         title: |-
-          [{{ .Status | toUpper }}:{{ if eq .Status "firing" }}{{ .Alerts.Firing | len }}{{ else }}{{ .Alerts.Resolved | len }}{{ end }}]
+          [{{ "{{" }}.Status | toUpper {{ "}}" }}:{{ "{{" }}if eq .Status "firing" {{ "}}" }}{{ "{{" }}.Alerts.Firing | len {{ "}}" }}{{ "{{" }}else {{ "}}" }}{{ "{{" }}.Alerts.Resolved | len {{ "}}" }}{{ "{{" }}end {{ "}}" }}]
         message: |-
-          {{- range .Alerts }}
-            **{{ .Labels.alertname }} {{ if ne .Labels.severity "" }}({{ .Labels.severity | title }}){{ end }} **
-            {{- if ne .Annotations.description "" }}
-              **Description:** {{ .Annotations.description }}
-            {{- else if ne .Annotations.summary "" }}
-              **Summary:** {{ .Annotations.summary }}
-            {{- else if ne .Annotations.message "" }}
-              **Message:** {{ .Annotations.message }}
-            {{- else }}
+          {{ "{{-" }} range .Alerts {{ "}}" }}
+            **{{ "{{" }}.Labels.alertname {{ "}}" }} {{ "{{" }}if ne .Labels.severity "" {{ "}}" }}({{ "{{" }}.Labels.severity | title {{ "}}" }}){{ "{{" }}end {{ "}}" }} **
+            {{ "{{-" }} if ne .Annotations.description "" {{ "}}" }}
+              **Description:** {{ "{{" }}.Annotations.description {{ "}}" }}
+            {{ "{{-" }} else if ne .Annotations.summary "" {{ "}}" }}
+              **Summary:** {{ "{{" }}.Annotations.summary {{ "}}" }}
+            {{ "{{-" }} else if ne .Annotations.message "" {{ "}}" }}
+              **Message:** {{ "{{" }}.Annotations.message {{ "}}" }}
+            {{ "{{-" }} else {{ "}}" }}
               **Description:** N/A
-            {{- end }}
-          {{- end }}
+            {{ "{{-" }} end {{ "}}" }}
+          {{ "{{-" }} end {{ "}}" }}
   - name: pushover
     pushover_configs:
       - html: true
@@ -52,7 +52,7 @@ receivers:
           [{{ "{{" }} .Status | toUpper {{ "}}" }}{{ "{{" }} if eq .Status "firing" {{ "}}" }}:{{ "{{" }} .Alerts.Firing | len {{ "}}" }}{{ "{{" }} end {{ "}}" }}]
         token: "{{ .ALERTMANAGER_PUSHOVER_TOKEN }}"
         url_title: View in Alertmanager
-        user_key: "{{ .PUSHOVER_USER_KEY }}"
+        user_key: "{{PUSHOVER_USER_KEY }}"
 route:
   group_by: ["alertname", "job"]
   group_interval: 10m
