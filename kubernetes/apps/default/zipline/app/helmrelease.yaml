@@ -106,6 +106,7 @@ spec:
           gatus.home.arpa/name: "media share"
           gatus.home.arpa/group: tools
           gatus.home.arpa/url: "m.${SECRET_DOMAIN}/api/version"
+          gatus.home.arpa/http-code: "401"
         hosts:
           - host: &host zipline.${SECRET_DOMAIN}
             paths:

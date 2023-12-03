@@ -26,6 +26,10 @@ spec:
           variable:
             value: "{{ request.object.metadata.annotations.\"gatus.home.arpa/url\" || request.object.spec.rules[0].host }}"
             jmesPath: 'to_string(@)'
+        - name: GATUSHTTPCODE
+          variable:
+            value: "{{ request.object.metadata.annotations.\"gatus.home.arpa/http-code\" || 200 }}"
+            jmesPath: 'to_string(@)'
       generate:
         apiVersion: "v1"
         kind: "ConfigMap"
@@ -46,7 +50,7 @@ spec:
                     interval: 1m
                     client:
                       dns-resolver: tcp://1.1.1.1:53
-                    conditions: ["[STATUS] == 200"]
+                    conditions: ["[STATUS] == {{ GATUSHTTPCODE }}"]
                     alerts: [{ type: discord }]
                     ui:
                       hide-hostname: true
