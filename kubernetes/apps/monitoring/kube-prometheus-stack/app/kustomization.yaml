@@ -5,9 +5,3 @@ namespace: monitoring
 resources:
   - ./external-secret.yaml
   - ./helmrelease.yaml
-configMapGenerator:
-  - name: alertmanager-config-tpl
-    files:
-      - alertmanager.yaml=./config/alertmanager.yaml
-generatorOptions:
-  disableNameSuffixHash: true
