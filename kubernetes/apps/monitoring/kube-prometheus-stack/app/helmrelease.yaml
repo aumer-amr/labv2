@@ -103,6 +103,7 @@ spec:
               receiver: "null"
             - match:
                 severity: critical
+              continue: true
               receiver: discord
             - match:
                 severity: critical
