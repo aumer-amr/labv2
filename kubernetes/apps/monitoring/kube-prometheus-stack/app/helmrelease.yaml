@@ -48,15 +48,6 @@ spec:
               - *host
       alertmanagerSpec:
         replicas: 2
-        useExistingSecret: false
-        configSecret: alertmanager-secret
-        storage:
-          volumeClaimTemplate:
-            spec:
-              storageClassName: local-path
-              resources:
-                requests:
-                  storage: 1Gi
     kube-state-metrics:
       metricLabelsAllowlist:
         - "deployments=[*]"
