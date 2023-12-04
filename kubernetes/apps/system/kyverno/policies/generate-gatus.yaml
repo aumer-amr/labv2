@@ -40,7 +40,9 @@ spec:
             kind: "ConfigMap"
             metadata:
               labels:
-                gatus.io/enabled: "true"
+                gatus.io/enabled: enabled
+              annotations:
+                "{{ request.object.metadata.annotations }}"
             data:
               config.yaml: |-
                 endpoints:
@@ -48,10 +50,30 @@ spec:
                     group: {{ GATUSGROUP }}
                     url: https://{{ GATUSURL }}
                     interval: 1m
-                    client:
-                      dns-resolver: tcp://1.1.1.1:53
                     conditions: ["[STATUS] == {{ GATUSHTTPCODE }}"]
                     alerts: [{ type: discord }]
                     ui:
                       hide-hostname: true
                       hide-url: true
+    - name: generated-gatus-dns-resolver
+      match:
+        any:
+          - resources:
+              kinds: ["ConfigMap"]
+              annotations:
+                gatus.io/enabled: "true"
+      mutate:
+        targets:
+          - apiVersion: v1
+            kind: ConfigMap
+            preconditions:
+              all:
+                - key: "{{ request.object.metadata.annotations.\"gatus.home.arpa/dns-resolver\" || false }}"
+                  operator: Equals
+                  value: "true"
+        patchStrategicMerge:
+          data:
+            config.yaml: |-
+              endpoints:
+                client:
+                  dns-resolver: tcp://1.1.1.1:53

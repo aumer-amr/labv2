@@ -12,6 +12,7 @@ metadata:
     gatus.home.arpa/name: nas
     gatus.home.arpa/group: storage
     gatus.home.arpa/url: nas.${SECRET_DOMAIN}/ui/sessions/signin
+    gatus.home.arpa/dns-resolver: "false"
 spec:
   ingressClassName: internal
   rules:
