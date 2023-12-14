@@ -75,9 +75,9 @@ spec:
           securityContext:
             runAsUser: 568
             runAsGroup: 568
-        service:
-          enabled: false
-        serviceAccount:
-          create: true
-          name: k8s-policy-control
+    service:
+      enabled: false
+    serviceAccount:
+      create: true
+      name: k8s-policy-control
 
