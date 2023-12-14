@@ -53,7 +53,6 @@ spec:
           policy-control.aumer.io/gatus-generate: "true"
           policy-control.aumer.io/gatus-group: main
           policy-control.aumer.io/gatus-dns: "true"
-          policy-control.aumer.io/gatus-host: "https://www.${SECRET_DOMAIN}"
         hosts:
           - host: &host "www.${SECRET_DOMAIN}"
             paths:

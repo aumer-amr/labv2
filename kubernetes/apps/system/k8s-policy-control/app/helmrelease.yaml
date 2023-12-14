@@ -32,7 +32,7 @@ spec:
           main:
             image:
               repository: ghcr.io/aumer-amr/k8s-policy-control
-              tag: "v1.0.0"
+              tag: "v1.0.1"
             probes:
               liveness:
                 enabled: true
