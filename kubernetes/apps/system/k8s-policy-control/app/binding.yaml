@@ -5,11 +5,19 @@ metadata:
   name: k8s-policy-control
 rules:
 - apiGroups:
-  - ""
   - networking.k8s.io
   resources:
-  - pods
   - ingresses
+  verbs:
+  - create
+  - update
+  - delete
+  - patch
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - pods
   - configmaps
   verbs:
   - create
