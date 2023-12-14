@@ -50,8 +50,9 @@ spec:
         annotations:
           hajimari.io/enable: "false"
           external-dns.alpha.kubernetes.io/target: "external.${SECRET_DOMAIN}"
-          gatus.home.arpa/enabled: "true"
-          gatus.home.arpa/group: main
+          policy-control.aumer.io/gatus-generate: "true"
+          policy-control.aumer.io/gatus-group: main
+          policy-control.aumer.io/gatus-dns: "true"
         hosts:
           - host: &host "www.${SECRET_DOMAIN}"
             paths:
