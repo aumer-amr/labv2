@@ -49,8 +49,9 @@ spec:
           hajimari.io/group: "tools"
           external-dns.alpha.kubernetes.io/target: "external.${SECRET_DOMAIN}"
           auth.home.arpa/enabled: "true"
-          gatus.home.arpa/enabled: "true"
-          gatus.home.arpa/group: tools
+          policy-control.aumer.io/gatus-generate: "true"
+          policy-control.aumer.io/gatus-group: tools
+          policy-control.aumer.io/gatus-dns: "true"
         hosts:
           - host: &host "cyberchef.${SECRET_DOMAIN}"
             paths:

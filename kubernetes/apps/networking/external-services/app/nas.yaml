@@ -8,11 +8,9 @@ metadata:
     hajimari.io/appName: nas
     hajimari.io/icon: simple-icons:truenas
     hajimari.io/group: storage
-    gatus.home.arpa/enabled: "true"
-    gatus.home.arpa/name: nas
-    gatus.home.arpa/group: storage
-    gatus.home.arpa/url: nas.${SECRET_DOMAIN}/ui/sessions/signin
-    gatus.home.arpa/dns-resolver: "false"
+    policy-control.aumer.io/gatus-generate: "true"
+    policy-control.aumer.io/gatus-path: "/ui/sessions/signin"
+    policy-control.aumer.io/gatus-group: storage
 spec:
   ingressClassName: internal
   rules:

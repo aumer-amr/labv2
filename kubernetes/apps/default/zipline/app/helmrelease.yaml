@@ -102,11 +102,12 @@ spec:
         annotations:
           hajimari.io/icon: pajamas:media
           nginx.ingress.kubernetes.io/proxy-body-size: "100m"
-          gatus.home.arpa/enabled: "true"
-          gatus.home.arpa/name: "media share"
-          gatus.home.arpa/group: tools
-          gatus.home.arpa/url: "m.${SECRET_DOMAIN}/api/version"
-          gatus.home.arpa/http-code: "401"
+          policy-control.aumer.io/gatus-generate: "true"
+          policy-control.aumer.io/gatus-name: "media share"
+          policy-control.aumer.io/gatus-group: tools
+          policy-control.aumer.io/gatus-path: "/api/version"
+          policy-control.aumer.io/gatus-dns: "true"
+          policy-control.aumer.io/gatus-conditions: "[STATUS] == 401"
         hosts:
           - host: &host zipline.${SECRET_DOMAIN}
             paths:
