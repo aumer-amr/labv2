@@ -10,7 +10,7 @@ rules:
   resources:
   - pods
   - ingresses
-  - configmap
+  - configmaps
   verbs:
   - create
   - update
