@@ -77,7 +77,14 @@ spec:
             runAsGroup: 568
     service:
       main:
-        enabled: false
+        enabled: true
+        ports:
+          metrics:
+            enabled: true
+            port: 8080
+          probe:
+            enabled: true
+            port: 8081
     serviceAccount:
       create: true
       name: k8s-policy-control
