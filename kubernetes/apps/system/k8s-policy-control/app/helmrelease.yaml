@@ -79,6 +79,8 @@ spec:
       main:
         enabled: true
         ports:
+          http:
+            enabled: false
           metrics:
             enabled: true
             port: 8080
