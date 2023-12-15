@@ -5,6 +5,5 @@ namespace: system
 resources:
   - ./apply-ingress-auth-annotations.yaml
   - ./apply-ingress-whitelist-annotations-internal.yaml
-  #- ./generate-gatus.yaml
   - ./remove-container-cpu-limit.yaml
   - ./validated-ingress-external-target.yaml
