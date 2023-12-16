@@ -10,6 +10,7 @@ resources:
   - ./external-dns-public/ks.yaml
   - ./external-services/ks.yaml
   - ./k8s-gateway/ks.yaml
+  - ./k8s-gateway-public/ks.yaml
   - ./netpols/ks.yaml
   - ./unifi/ks.yaml
   - ./nginx/ks.yaml
