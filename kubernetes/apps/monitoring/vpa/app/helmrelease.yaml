@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: vpa
-      version: 3.1.0
+      version: 4.0.0
       sourceRef:
         kind: HelmRepository
         name: fairwinds
@@ -29,9 +29,6 @@ spec:
   values:
     recommender:
       enabled: true
-      image:
-        repository: registry.k8s.io/autoscaling/vpa-recommender
-        tag: 1.0.0
       resources:
         requests:
           cpu: 10m
@@ -39,8 +36,6 @@ spec:
         limits:
           memory: 200M
       extraArgs:
-        pod-recommendation-min-cpu-millicores: 15
-        pod-recommendation-min-memory-mb: 61
         storage: prometheus
         prometheus-address: |-
           http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
