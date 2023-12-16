@@ -4,7 +4,11 @@ kind: Kustomization
 namespace: monitoring
 resources:
   - ./helmrelease.yaml
-labels:
-  - pairs:
-      app.kubernetes.io/name: karma
-      app.kubernetes.io/instance: karma
+configMapGenerator:
+  - name: karma-configmap
+    files:
+      - ./config/config.yaml
+generatorOptions:
+  disableNameSuffixHash: true
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled

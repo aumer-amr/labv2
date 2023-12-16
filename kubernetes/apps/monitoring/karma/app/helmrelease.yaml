@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 1.5.1
+      version: 2.4.0
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -25,11 +25,23 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    image:
-      repository: ghcr.io/prymitive/karma
-      tag: v0.118
-    env:
-      ALERTMANAGER_URI: http://kube-prometheus-stack-alertmanager.monitoring.svc.cluster.local:9093
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/prymitive/karma
+              tag: v0.118
+            env:
+              CONFIG_FILE: &config /config/config.yaml
+            resources:
+              requests:
+                cpu: 100m
+                memory: 100Mi
+              limits:
+                memory: 500Mi
     service:
       main:
         ports:
@@ -41,20 +53,27 @@ spec:
     ingress:
       main:
         enabled: true
-        ingressClassName: internal
+        className: internal
         annotations:
           hajimari.io/icon: file-icons:karma
         hosts:
           - host: &host karma.${SECRET_DOMAIN}
             paths:
               - path: /
-                pathType: Prefix
+                service:
+                  name: main
+                  port: http
         tls:
           - hosts:
               - *host
-    resources:
-      requests:
-        cpu: 100m
-        memory: 100Mi
-      limits:
-        memory: 500Mi
+    persistence:
+      config:
+        enabled: true
+        type: emptyDir
+      config-file:
+        type: configMap
+        name: karma-configmap
+        globalMounts:
+          - path: *config
+            subPath: config.yaml
+            readOnly: true
