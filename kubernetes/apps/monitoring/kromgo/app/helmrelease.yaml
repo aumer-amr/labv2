@@ -74,7 +74,8 @@ spec:
           external-dns.alpha.kubernetes.io/target: "external.${SECRET_PUBLIC_DOMAIN}"
           policy-control.aumer.io/gatus-generate: "true"
           policy-control.aumer.io/gatus-dns: "true"
-          policy-control.aumer.io/gatus-conditions: "[STATUS] == 404"
+          policy-control.aumer.io/gatus-conditions: "[STATUS] == 200"
+          policy-control.aumer.io/gatus-path: "/query?format=endpoint&metric=cluster_node_count"
         hosts:
           - host: &host kromgo.${SECRET_PUBLIC_DOMAIN}
             paths:
