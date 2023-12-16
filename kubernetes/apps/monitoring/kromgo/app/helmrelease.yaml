@@ -37,7 +37,7 @@ spec:
               repository: ghcr.io/kashalls/kromgo
               tag: 0.2.2@sha256:76581db1731ab682e11a422ba82b4fa2c46879f9ab88a61cabc8264fd17cf3e4
             env:
-              PROMETHEUS_URL: http://kube-prometheus-stack-alertmanager.monitoring.svc.cluster.local:9093
+              PROMETHEUS_URL: ttp://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
               PORT: &port 80
             securityContext:
               allowPrivilegeEscalation: false
@@ -74,6 +74,7 @@ spec:
           external-dns.alpha.kubernetes.io/target: "external.${SECRET_PUBLIC_DOMAIN}"
           policy-control.aumer.io/gatus-generate: "true"
           policy-control.aumer.io/gatus-dns: "true"
+          policy-control.aumer.io/gatus-conditions: "[STATUS] == 404"
         hosts:
           - host: &host kromgo.${SECRET_PUBLIC_DOMAIN}
             paths:
