@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - ./staging.yaml
   - ./production.yaml
+  - ./production-public.yaml
