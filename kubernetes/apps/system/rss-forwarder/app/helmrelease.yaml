@@ -45,10 +45,10 @@ spec:
               startup: *disabled
             resources:
               requests:
-                cpu: 5m
-                memory: 10M
+                cpu: 15m
+                memory: 100M
               limits:
-                memory: 64M
+                memory: 100M
     service:
       main: *disabled
     ingress:
