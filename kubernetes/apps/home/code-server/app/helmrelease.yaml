@@ -84,7 +84,9 @@ spec:
         enabled: true
         storageClass: "longhorn-config"
         size: 1Gi
+        accessMode: ReadWriteOnce
       data:
         enabled: true
         storageClass: "longhorn"
         size: 10Gi
+        accessMode: ReadWriteOnce
