@@ -16,9 +16,9 @@ spec:
     - name: TZ
       value: ${TIMEZONE}
 
-  bootstrapFrom:
-    backupRef:
-      name: mariabackup
+  # bootstrapFrom:
+  #   backupRef:
+  #     name: mariabackup
 
   volumeClaimTemplate:
     storageClassName: longhorn-database
