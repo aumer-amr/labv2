@@ -16,6 +16,10 @@ spec:
     - name: TZ
       value: ${TIMEZONE}
 
+  bootstrapFrom:
+    backupRef:
+      name: mariabackup
+
   volumeClaimTemplate:
     storageClassName: longhorn-database
     resources:
@@ -44,8 +48,9 @@ spec:
       io.cilium/lb-ipam-ips: "10.10.1.190"
 
   metrics:
+    enabled: true
     exporter:
-      image: "prom/mysqld-exporter:v0.14.0"
+      image: "prom/mysqld-exporter:v0.15.1"
       imagePullPolicy: IfNotPresent
       resources:
         requests:
