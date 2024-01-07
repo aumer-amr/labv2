@@ -49,13 +49,12 @@ spec:
 
   metrics:
     enabled: true
-    username: root
-    passwordSecretKeyRef:
-      name: mariadb-secret
-      key: password
     exporter:
       image: "prom/mysqld-exporter:v0.15.1"
       imagePullPolicy: IfNotPresent
+      envFrom:
+        - secretRef:
+            name: mariadb-secret
       resources:
         requests:
           cpu: 50m
