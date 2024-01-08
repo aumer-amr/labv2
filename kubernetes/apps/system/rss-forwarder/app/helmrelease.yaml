@@ -38,6 +38,9 @@ spec:
               tag: 0.6.1
             env:
               TZ: "${TIMEZONE}"
+            args:
+              - --debug
+              - --verbose
             probes:
               liveness: &disabled
                 enabled: false
