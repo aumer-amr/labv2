@@ -29,6 +29,7 @@ spec:
   values:
     controllers:
       main:
+        replicas: 0
         annotations:
           reloader.stakater.com/auto: "true"
         containers:
@@ -38,9 +39,6 @@ spec:
               tag: 0.6.1
             env:
               TZ: "${TIMEZONE}"
-            args:
-              - --debug
-              - --verbose
             probes:
               liveness: &disabled
                 enabled: false
