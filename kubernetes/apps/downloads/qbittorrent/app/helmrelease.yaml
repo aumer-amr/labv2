@@ -105,9 +105,9 @@ spec:
     resources:
       requests:
         cpu: 10m
-        memory: 8G
+        memory: 10G
       limits:
-        memory: 8G
+        memory: 10G
     sidecars:
       reannounce:
         image: ghcr.io/buroa/qbittools:v0.11.0
