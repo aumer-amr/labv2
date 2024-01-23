@@ -9,7 +9,7 @@ spec:
   accessModes:
     - ReadWriteMany
   nfs:
-    server: ${SECRET_NAS_IP}
+    server: 10.10.0.22
     path: /mnt/rpool/media
   mountOptions:
     - nfsvers=4.2

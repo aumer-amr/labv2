@@ -132,7 +132,7 @@ spec:
           - path: /cache
       media:
         type: nfs
-        server: ${SECRET_NAS_IP_STREAMING}
+        server: ${SECRET_NAS_IP}
         path: /mnt/rpool/media
         globalMounts:
           - path: /media
