@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ping": "^0.4.4",
+    "proxmox-for-node": "^0.1.2"
+  }
+}
