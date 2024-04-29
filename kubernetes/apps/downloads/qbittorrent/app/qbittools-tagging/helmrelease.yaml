@@ -42,9 +42,9 @@ spec:
       - --added-on
       - --last-activity
       - --tracker-down
-      - -server
+      - --server
       - qbittorrent.downloads.svc.cluster.local
-      - -port
+      - --port
       - "8080"
     service:
       main:
