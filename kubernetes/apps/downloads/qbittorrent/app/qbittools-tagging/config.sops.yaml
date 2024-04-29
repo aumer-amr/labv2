@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: qbtools-config-secret
+stringData:
+    config.yaml: ENC[AES256_GCM,data:9FqwpIBbYXal7ECv+PuvLifPiH+Iv2phTWx1cylxhJseSi753WYFR7fRaA2bgCoz/EytjlysbnJYPPdZJOvnRjGOOADOx62O7A1JbiCX8kjmQ5qxv0wxvmhoydfSDR4QoV8prtCfg7lHhCaovwBybdbm6hylAgq7dtkYC5cM0eI5OdhvtvbkY5AucXna1Gv43WUpv0Y=,iv:eg9FurfSiuf9t0Xxu1vno7QHJdHizkv/oXX0763uzQ4=,tag:EPjmtWyc813cZCmaqosRbg==,type:str]
+sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age:
+        - recipient: age1x05r8tdwj7ruzqffcuamt3v7gnf82ldcmrjq8zd3fnh9593grd8sktr4ws
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBHTStXc2VHV0JYRS9aMXZS
+            ZVZWMVZnUzN4OWNKY3ZCcUJJd2FyajlLS2hFClRuM3EydGtXeWViTzBINy9yVFoz
+            RSt0WG5sUkVKWWkxVVRxOVRIcHpCTXMKLS0tIDJNREMwSGdiVDRzbDlvUVF0eDUz
+            M2cyN1I1M1h6MTRndWhPcHZDYlJBYnMKny3qW2bhqjm8SdQHQPmjk45GvLIKxY0Y
+            NEg+yzxImDpy1+CQeKZf/ZuI7EJEyIHt2xh8Jtpvik0OcTi5VH644Q==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2024-04-29T09:55:56Z"
+    mac: ENC[AES256_GCM,data:FGZKTrbVBoKth6FCzZyaqXhb69ROPkUI9AA76FxafCkkmGnbC5OWGxk3cev+NQatNUkpq/d5nKwlnrAU8INQCF/1OJ8vJUSfojXn+AfMnJQ6AU/X1ENz+9FRIpBFz3sBaPOQBXYAlpOnQxaeghZoXUZ1SxJ75l1g2AGoxK77+EI=,iv:adCvbyrTkZxoMuve5d0kjHlqVIaM7ISJwv34VGhBVSw=,tag:57C7K8FJKM2n3UyTb/sGig==,type:str]
+    pgp: []
+    encrypted_regex: ^(data|stringData)$
+    version: 3.8.1

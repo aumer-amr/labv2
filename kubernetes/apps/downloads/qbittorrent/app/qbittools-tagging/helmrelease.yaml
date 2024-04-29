@@ -46,12 +46,22 @@ spec:
       - qbittorrent.downloads.svc.cluster.local
       - --port
       - "8080"
+      - --config
+      - "/config/config.yaml"
     service:
       main:
         enabled: false
     podSecurityContext:
       runAsUser: 568
       runAsGroup: 568
+    persistence:
+      config:
+        type: secret
+        name: qbtools-config-secret
+        globalMounts:
+          - path: /config/config.yaml
+            subPath: config.yaml
+            readOnly: true
     resources:
       requests:
         memory: 250Mi
