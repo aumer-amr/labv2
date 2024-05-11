@@ -31,7 +31,7 @@ spec:
           main:
             image:
               repository: docker.io/monica
-              tag: 4.0.0-apache
+              tag: 4.1.2-apache
             env:
               TZ: "${TIMEZONE}"
               APP_ENV: production
