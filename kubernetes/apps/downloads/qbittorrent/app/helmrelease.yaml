@@ -108,8 +108,3 @@ spec:
         memory: 10G
       limits:
         memory: 10G
-    sidecars:
-      reannounce:
-        image: ghcr.io/buroa/qbittools:v0.11.0
-        imagePullPolicy: IfNotPresent
-        args: ["reannounce", "--process-seeding", "-s", "localhost", "-p", "8080"]
