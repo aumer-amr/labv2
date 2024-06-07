@@ -34,6 +34,13 @@ spec:
         ports:
           http:
             port: 5000
+    probes:
+      liveness:
+        enabled: false
+      readiness:
+        enabled: true
+      startup:
+        enabled: false
     ingress:
       main:
         enabled: true
