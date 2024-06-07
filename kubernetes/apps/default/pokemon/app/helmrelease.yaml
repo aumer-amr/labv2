@@ -53,7 +53,7 @@ spec:
           policy-control.aumer.io/gatus-conditions: "[STATUS] == 200"
           policy-control.aumer.io/gatus-path: "/"
         hosts:
-          - host: &host "pokemon.${SECRET_DOMAIN}"
+          - host: &host "pokemon.${SECRET_PUBLIC_DOMAIN}"
             paths:
               - path: /
         tls:
