@@ -54,7 +54,11 @@ const k8sCustomApi = kc.makeApiClient(k8s.CustomObjectsApi);
     const notReadyPods = [];
     const pods = await k8sApi.listPodForAllNamespaces();
     pods.body.items.forEach((pod) => {
-      if (pod.status.conditions.filter((condition) => condition.type === 'Ready' && condition.status === 'False' && condition.reason !== "PodCompleted").length > 0) {
+      if (pod.status.conditions === undefined) {
+        console.log(`Pod ${pod.metadata.name} is not ready.`);
+        notReadyPods.push(pod.metadata.name);
+      }
+      else if (pod.status.conditions.filter((condition) => condition.type === 'Ready' && condition.status === 'False' && condition.reason !== "PodCompleted").length > 0) {
         console.log(`Pod ${pod.metadata.name} is not ready.`);
         notReadyPods.push(pod.metadata.name);
       }
@@ -116,7 +120,7 @@ const k8sCustomApi = kc.makeApiClient(k8s.CustomObjectsApi);
     const notReadyNodes = [];
     const nodes = await k8sApi.listNode();
     nodes.body.items.forEach((node) => {
-      if (node.status.conditions.filter((condition) => condition.type === 'Ready' && condition.status === 'False').length > 0) {
+      if (node.status.conditions.filter((condition) => condition.type === 'Ready' && (condition.status === 'False' || condition.status === 'Unknown')).length > 0) {
         console.log(`Node ${node.metadata.name} is not ready.`);
         notReadyNodes.push(node.metadata.name);
       }
