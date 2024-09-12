@@ -29,6 +29,11 @@ spec:
     image:
       repository: ghcr.io/aumer-amr/satisfactory
       tag: sha-5492cf3
+    service:
+      main:
+        ports:
+          http:
+            port: 5000
     envFrom:
       - secretRef:
           name: satisfactory-secret
