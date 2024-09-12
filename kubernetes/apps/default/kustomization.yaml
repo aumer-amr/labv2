@@ -9,6 +9,7 @@ resources:
   - ./monica/ks.yaml
   - ./paperless/ks.yaml
   - ./pokemon/ks.yaml
+  - ./satisfactory/ks.yaml
   - ./shlink/ks.yaml
   - ./site/ks.yaml
   - ./zipline/ks.yaml
