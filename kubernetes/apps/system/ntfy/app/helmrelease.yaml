@@ -1,6 +1,6 @@
 # curl -u user:password -d "Hello, from the CLI" "https://ntfy.example.com/test"
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta2
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: ntfy
