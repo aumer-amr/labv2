@@ -28,7 +28,7 @@ spec:
   values:
     image:
       repository: ghcr.io/aumer-amr/satisfactory
-      tag: sha-5492cf3
+      tag: sha-aaa544e
     service:
       main:
         ports:
