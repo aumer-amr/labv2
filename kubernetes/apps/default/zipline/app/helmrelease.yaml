@@ -21,7 +21,7 @@ spec:
       replicas: 1
     image:
       repository: ghcr.io/diced/zipline
-      tag: 3.7.8@sha256:7eab78e72023552bf241d0a3811bed483b24ece43739e44f6afb856926a1be66
+      tag: 3.7.10@sha256:b37532d90269267a47deac7f19149f69484c9e8693b20f3c17e9fa29d47dc7ae
     env:
       TZ: ${TZ}
       CORE_SECRET:
