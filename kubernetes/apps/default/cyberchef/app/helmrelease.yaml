@@ -28,7 +28,7 @@ spec:
   values:
     image:
       repository: docker.io/mpepping/cyberchef
-      tag: v10.5.2
+      tag: v10.19.4
     podLabels:
       ingress.home.arpa/nginx-external: allow
       egress.home.arpa/all: deny
