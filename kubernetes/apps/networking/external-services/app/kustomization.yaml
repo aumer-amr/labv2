@@ -5,3 +5,4 @@ namespace: networking
 resources:
   - ./nas.yaml
   - ./maltrail.yaml
+  - ./greenbone.yaml
