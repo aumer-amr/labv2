@@ -35,7 +35,7 @@ spec:
           main:
             image:
               repository: ghcr.io/kashalls/kromgo
-              tag: 0.2.4@sha256:2c1076986904babdcfed38ffcf848e7609f3e108ee350a46ce8ed201407a8b81
+              tag: v0.4.3@sha256:c9148045a3e211ad46d416c3e3bb7ffd4c169a8b6f8e56df03ea68ed1ed5571b
             env:
               PROMETHEUS_URL: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
               PORT: &port 80
