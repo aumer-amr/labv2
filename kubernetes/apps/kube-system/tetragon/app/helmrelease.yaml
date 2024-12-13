@@ -54,4 +54,4 @@ spec:
         enabled: true
       image:
         repository: quay.io/cilium/tetragon-operator
-        tag: v1.0.2
+        tag: v1.3.0
