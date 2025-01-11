@@ -26,22 +26,26 @@ const k8sCustomApi = kc.makeApiClient(k8s.CustomObjectsApi);
 
   await waitForNodesToBeReady();
 
-  await resetPostgresPassword();
+  const reset = setInterval(async () => {
+    await resetPostgresPassword();
+  }, 10000);
 
   await waitPodsToBeReady();
+
+  clearInterval(reset);
 
   async function waitPodsToBeReady() {
     return new Promise(async (resolve, reject) => {
       let tries = 0;
       let notReadyPods = await getNotReadyPods();
-      while (notReadyPods.length > 0 || tries > 48) {
+      while (notReadyPods.length > 0 && tries < 48) {
         tries++;
         console.log(`Waiting for pods ${notReadyPods} to be ready...`);
         await new Promise((resolve) => setTimeout(resolve, 10000));
         notReadyPods = await getNotReadyPods();
       }
 
-      if (tries > 48) {
+      if (tries >= 48) {
         return reject(new Error(`Pods ${notReadyPods} did not become ready in time.`));
       }
 
@@ -100,14 +104,14 @@ const k8sCustomApi = kc.makeApiClient(k8s.CustomObjectsApi);
     return new Promise(async (resolve, reject) => {
       let tries = 0;
       let notReadyNodes = await getK8sNotReadyNodes();
-      while (notReadyNodes.length > 0 || tries > 12) {
+      while (notReadyNodes.length > 0 && tries <= 12) {
         tries++;
         console.log(`Waiting for nodes ${notReadyNodes} to be ready...`);
         await new Promise((resolve) => setTimeout(resolve, 10000));
         notReadyNodes = await getK8sNotReadyNodes();
       }
 
-      if (tries > 12) {
+      if (tries >= 12) {
         return reject(new Error(`Nodes ${notReadyNodes} did not become ready in time.`));
       }
 
