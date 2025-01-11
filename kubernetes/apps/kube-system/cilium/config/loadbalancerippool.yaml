@@ -3,7 +3,7 @@
 apiVersion: cilium.io/v2alpha1
 kind: CiliumLoadBalancerIPPool
 metadata:
-  name: l3-pool
+  name: l2-pool
 spec:
   allowFirstLastIPs: "Yes"
   blocks:

@@ -1,7 +1,5 @@
 ---
 autoDirectNodeRoutes: true
-bgpControlPlane:
-  enabled: true
 bpf:
   masquerade: true
   # Ref: https://github.com/siderolabs/talos/issues/10002
@@ -19,7 +17,7 @@ envoy:
 dashboards:
   enabled: true
 hubble:
-  enabled: true
+  enabled: false
 ipam:
   mode: kubernetes
 ipv4NativeRoutingCIDR: "10.69.0.0/16"
@@ -28,7 +26,7 @@ k8sServicePort: 7445
 kubeProxyReplacement: true
 kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
 l2announcements:
-  enabled: false # https://github.com/cilium/cilium/issues/28985
+  enabled: true
 loadBalancer:
   algorithm: maglev
   mode: "dsr"
@@ -63,8 +61,6 @@ securityContext:
       - FOWNER
       - SETGID
       - SETUID
-      - PERFMON
-      - BPF
     cleanCiliumState:
       - NET_ADMIN
       - SYS_ADMIN
