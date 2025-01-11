@@ -12,5 +12,5 @@ resources:
   - ./k8s-gateway/ks.yaml
   - ./k8s-gateway-public/ks.yaml
   - ./netpols/ks.yaml
-  - ./unifi/ks.yaml
+  # - ./unifi/ks.yaml
   - ./nginx/ks.yaml
