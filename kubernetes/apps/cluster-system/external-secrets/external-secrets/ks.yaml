@@ -10,7 +10,7 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  path: ./kubernetes/main/apps/cluster-system/external-secrets/external-secrets/app
+  path: ./kubernetes/apps/cluster-system/external-secrets/external-secrets/app
   prune: true
   sourceRef:
     kind: GitRepository
@@ -33,7 +33,7 @@ spec:
   dependsOn:
     - name: external-secrets
     - name: onepassword-connect
-  path: ./kubernetes/main/apps/cluster-system/external-secrets/external-secrets/stores
+  path: ./kubernetes/apps/cluster-system/external-secrets/external-secrets/stores
   prune: true
   sourceRef:
     kind: GitRepository
