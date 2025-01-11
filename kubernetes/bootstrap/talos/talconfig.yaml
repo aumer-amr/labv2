@@ -26,7 +26,7 @@ nodes:
   - hostname: "ares"
     ipAddress: "10.10.1.100"
     installDiskSelector:
-      serial: "nvme0n1"
+      serial: "S6Z1NJ0W359184J"
     machineSpec:
       secureboot: false
     talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
@@ -46,7 +46,7 @@ nodes:
   - hostname: "hera"
     ipAddress: "10.10.1.101"
     installDiskSelector:
-      serial: "nvme0n1"
+      serial: "S6Z1NJ0W394624F"
     machineSpec:
       secureboot: false
     talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
@@ -64,9 +64,9 @@ nodes:
         vip:
           ip: "10.10.1.110"
   - hostname: "zeus"
-    ipAddress: "10.10.1.101"
+    ipAddress: "10.10.1.102"
     installDiskSelector:
-      serial: "nvme0n1"
+      serial: "S6Z1NJ0W394646H"
     machineSpec:
       secureboot: false
     talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
@@ -76,7 +76,7 @@ nodes:
           hardwareAddr: "48:21:0b:57:34:8f"
         dhcp: false
         addresses:
-          - "10.10.1.101/24"
+          - "10.10.1.102/24"
         routes:
           - network: "0.0.0.0/0"
             gateway: "10.10.1.1"
