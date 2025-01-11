@@ -3,18 +3,24 @@
 Thumbs.db
 # k8s
 kubeconfig
+talosconfig
 .decrypted~*.yaml
 .config.env
 *.agekey
 *.pub
 *.key
+# Private
+.private
+.bin
 # Ansible
 .venv*
-# Terraform
-.terraform
-terraform.tfstate*
 # Taskfile
-.tasks
-# Scripts
-scripts/node_modules
-scripts/.env
+.task
+# Brew
+Brewfile.lock.json
+# intellij
+.idea
+# wiki
+wiki
+# Bootstrap
+/config.yaml

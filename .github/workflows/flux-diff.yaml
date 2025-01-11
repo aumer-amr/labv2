@@ -1,4 +1,5 @@
 ---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: "Flux Diff"
 
 on:
@@ -22,20 +23,6 @@ jobs:
         paths: ["kubernetes"]
         resources: ["helmrelease", "kustomization"]
     steps:
-      - name: Generate Token
-        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
-        id: generate-token
-        with:
-          app_id: "${{ secrets.BOT_APP_ID }}"
-          private_key: "${{ secrets.BOT_APP_PRIVATE_KEY }}"
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
-        with:
-          registry: ghcr.io
-          username: "${{ secrets.BOT_APP_ID }}"
-          password: "${{ steps.generate-token.outputs.token }}"
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -48,17 +35,17 @@ jobs:
           path: default
 
       - name: Diff Resources
-        uses: docker://ghcr.io/allenporter/flux-local:main
+        uses: docker://ghcr.io/allenporter/flux-local:v7.0.0
         with:
           args: >-
             diff ${{ matrix.resources }}
             --unified 6
-            --path /github/workspace/pull/${{ matrix.paths }}
-            --path-orig /github/workspace/default/${{ matrix.paths }}
+            --path /github/workspace/pull/${{ matrix.paths }}/flux/cluster
+            --path-orig /github/workspace/default/${{ matrix.paths }}/flux/cluster
             --strip-attrs "helm.sh/chart,checksum/config,app.kubernetes.io/version,chart"
             --limit-bytes 10000
             --all-namespaces
-            --sources "home-kubernetes"
+            --sources "flux-system"
             --output-file diff.patch
 
       - name: Generate Diff
@@ -73,7 +60,6 @@ jobs:
         name: Add comment
         uses: mshick/add-pr-comment@v2
         with:
-          repo-token: "${{ steps.generate-token.outputs.token }}"
           message-id: "${{ github.event.pull_request.number }}/${{ matrix.paths }}/${{ matrix.resources }}"
           message-failure: Diff was not successful
           message: |
