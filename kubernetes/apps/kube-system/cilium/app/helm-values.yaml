@@ -1,5 +1,7 @@
 ---
 autoDirectNodeRoutes: true
+bgpControlPlane:
+  enabled: true
 bpf:
   masquerade: true
   # Ref: https://github.com/siderolabs/talos/issues/10002
@@ -26,7 +28,7 @@ k8sServicePort: 7445
 kubeProxyReplacement: true
 kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
 l2announcements:
-  enabled: true
+  enabled: false # https://github.com/cilium/cilium/issues/28985
 loadBalancer:
   algorithm: maglev
   mode: "dsr"

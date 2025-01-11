@@ -30,5 +30,5 @@ spec:
       port: 53
       annotations:
         lbipam.cilium.io/ips: "10.10.1.112"
-      externalTrafficPolicy: Cluster
+      externalTrafficPolicy: Local
     watchedResources: ["Ingress", "Service"]
