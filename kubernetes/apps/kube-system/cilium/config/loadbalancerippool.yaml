@@ -7,4 +7,5 @@ metadata:
 spec:
   allowFirstLastIPs: "Yes"
   blocks:
-    - cidr: ""
+    - start: 10.10.1.120
+      stop: 10.10.1.200
