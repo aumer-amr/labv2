@@ -39,7 +39,6 @@ data:
     theme: dark
     color: slate
     headerStyle: clean
-    language: en_NL
     quicklaunch:
       searchDescriptions: true
       hideInternetSearch: true
@@ -109,6 +108,7 @@ data:
         cache: 5
     - datetime:
         text_size: l
+        locale: en_NL
         format:
           timeStyle: short
           dateStyle: short
