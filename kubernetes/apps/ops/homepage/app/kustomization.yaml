@@ -5,3 +5,4 @@ kind: Kustomization
 resources:
   - ./rbac.yaml
   - ./helmrelease.yaml
+  - ./config/config.yaml
