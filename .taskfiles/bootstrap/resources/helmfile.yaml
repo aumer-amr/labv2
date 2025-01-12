@@ -1,0 +1,16 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/helmfile
+
+helmDefaults:
+  force: true
+  timeout: 600
+  wait: true
+  waitForJobs: true
+
+releases:
+  - name: wipe-rook
+    namespace: wipe-rook
+    chart: oci://ghcr.io/bjw-s/helm/app-template
+    version: 3.6.0
+    values:
+      - ./wipe-rook.yaml.gotmpl

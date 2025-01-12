@@ -7,6 +7,7 @@ vars:
   TALHELPER_CLUSTER_DIR: '{{.KUBERNETES_DIR}}/bootstrap/talos/clusterconfig'
   TALHELPER_SECRET_FILE: '{{.KUBERNETES_DIR}}/bootstrap/talos/talsecret.sops.yaml'
   TALHELPER_CONFIG_FILE: '{{.KUBERNETES_DIR}}/bootstrap/talos/talconfig.yaml'
+  BOOTSTRAP_RESOURCES_DIR: '{{.ROOT_DIR}}/.taskfiles/bootstrap/resources'
 
 env:
   TALOSCONFIG: '{{.TALHELPER_CLUSTER_DIR}}/talosconfig'
@@ -52,3 +53,20 @@ tasks:
       - test -f {{.KUBERNETES_DIR}}/bootstrap/helmfile.yaml
       - test -f {{.SOPS_AGE_KEY_FILE}}
       - which helmfile kubectl sops
+
+  wipe-rook:
+    desc: Wipe rook disks
+    prompt: Wipe all rook disks?
+    cmds:
+      - until kubectl wait --for=condition=Ready=False nodes --all --timeout=600s; do sleep 10; done
+      - helmfile --quiet --file {{.BOOTSTRAP_RESOURCES_DIR}}/helmfile.yaml apply --skip-diff-on-install --suppress-diff
+      - helmfile --quiet --file {{.BOOTSTRAP_RESOURCES_DIR}}/helmfile.yaml destroy --selector name=wipe-rook
+      - kubectl delete namespace wipe-rook
+    env:
+      NODE_COUNT:
+        sh: talosctl config info --output json | jq --raw-output '.nodes | length'
+    preconditions:
+      - talosctl config info
+      - test -f {{.BOOTSTRAP_RESOURCES_DIR}}/helmfile.yaml
+      - test -f {{.BOOTSTRAP_RESOURCES_DIR}}/wipe-rook.yaml.gotmpl
+      - which curl jq helmfile kubectl talosctl
