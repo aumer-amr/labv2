@@ -1,7 +1,0 @@
-- Git:
-  - kubesearch:
-      - icon: kubernetes-dashboard.png
-        href: 'https://kubesearch.dev/'
-  - labv2:
-      - icon: github.png
-        href: 'https://github.com/aumer-amr/labv2'

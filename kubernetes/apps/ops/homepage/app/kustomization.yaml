@@ -5,18 +5,3 @@ kind: Kustomization
 resources:
   - ./rbac.yaml
   - ./helmrelease.yaml
-configMapGenerator:
-  - name: homepage-bookmarks-configmap
-    files:
-      - ./config/bookmarks.yaml
-  - name: homepage-services-configmap
-    files:
-      - ./config/services.yaml
-  - name: homepage-settings-configmap
-    files:
-      - ./config/settings.yaml
-  - name: homepage-widgets-configmap
-    files:
-      - ./config/widgets.yaml
-generatorOptions:
-  disableNameSuffixHash: true
