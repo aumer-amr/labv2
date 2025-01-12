@@ -39,9 +39,6 @@ data:
     theme: dark
     color: slate
     headerStyle: clean
-    background:
-      image: https://www.instagram.com/p/DCbeUORNy8VWwQBN_8U9mrkOAb8jxRNcG-4AAs0/media/?size=l
-      opacity: 20
     quicklaunch:
       searchDescriptions: true
       hideInternetSearch: true
