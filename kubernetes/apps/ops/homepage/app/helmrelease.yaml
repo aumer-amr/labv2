@@ -58,25 +58,25 @@ spec:
     persistence:
       bookmarks:
         type: configMap
-        name: homepage-bookmarks-config
+        name: homepage-bookmarks-configmap
         globalMounts:
           - subPath: bookmarks.yaml
             path: /app/config/bookmarks.yaml
       services:
         type: configMap
-        name: homepage-services-config
+        name: homepage-services-configmap
         globalMounts:
           - subPath: services.yaml
             path: /app/config/services.yaml
       settings:
         type: configMap
-        name: homepage-settings-config
+        name: homepage-settings-configmap
         globalMounts:
           - subPath: settings.yaml
             path: /app/config/settings.yaml
       widgets:
         type: configMap
-        name: homepage-widgets-config
+        name: homepage-widgets-configmap
         globalMounts:
           - subPath: widgets.yaml
             path: /app/config/widgets.yaml
