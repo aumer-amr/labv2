@@ -10,10 +10,10 @@ data:
     - Communicate:
         - Gmail:
             - icon: gmail.png
-              href: 'http://gmail.com'
+              href: 'https://mail.google.com/mail/u/3/#inbox'
         - Google Calendar:
             - icon: google-calendar.png
-              href: 'https://calendar.google.com'
+              href: 'https://calendar.google.com/calendar/u/3/r'
     - Media:
         - YouTube:
             - icon: youtube.png
@@ -39,6 +39,9 @@ data:
     theme: dark
     color: slate
     headerStyle: clean
+    background:
+      image: https://www.instagram.com/p/DCbeUORNy8VWwQBN_8U9mrkOAb8jxRNcG-4AAs0/media/?size=l
+      opacity: 20
     quicklaunch:
       searchDescriptions: true
       hideInternetSearch: true
