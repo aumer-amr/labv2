@@ -39,6 +39,7 @@ data:
     theme: dark
     color: slate
     headerStyle: clean
+    language: en_NL
     quicklaunch:
       searchDescriptions: true
       hideInternetSearch: true
