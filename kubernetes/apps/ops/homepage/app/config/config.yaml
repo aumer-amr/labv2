@@ -8,9 +8,6 @@ metadata:
 data:
   bookmarks.yaml: |
     - Communicate:
-        - Discord:
-            - icon: discord.png
-              href: 'https://discord.com/app'
         - Gmail:
             - icon: gmail.png
               href: 'http://gmail.com'
@@ -22,7 +19,7 @@ data:
             - icon: youtube.png
               href: 'https://youtube.com/feed/subscriptions'
         - Youtube Music:
-            - icon: https://github.com/homarr-labs/dashboard-icons/blob/main/png/youtube-music.png
+            - icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/refs/heads/main/png/youtube-music.png
               href: 'https://music.youtube.com'
     - Git:
         - kubesearch:
