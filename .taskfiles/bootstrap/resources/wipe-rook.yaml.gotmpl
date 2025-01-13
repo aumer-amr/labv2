@@ -29,12 +29,13 @@ controllers:
           - -c
         args:
           - |
-            apk add e2fsprogs
+            apk add util-linux;
             DISK=$(find /dev/disk/by-id/ -iname "*CT1000MX500SSD1*" -not -name "*-part[0-9]");
             echo "=== Wiping $DISK ===";
-            echo -e "o\nn\np\n1\n\n\nw" | fdisk $DISK;
-            mkfs.ext4 -b 4096 $DISK;
+            echo -e "o\nw" | fdisk $DISK;
+            wipefs -a $DISK;
             ls -l /dev/disk/by-id;
+            lsblk -f;
         securityContext:
           privileged: true
     pod:
