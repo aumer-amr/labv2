@@ -30,7 +30,7 @@ data:
               href: 'https://github.com/aumer-amr/labv2'
     - Infrastructure:
         - Rook Dashboard:
-            - icon: ss-ceph
+            - icon: ceph.png
               href: 'https://rook.${SECRET_DOMAIN}'
   docker.yaml: ""
   kubernetes.yaml: |
