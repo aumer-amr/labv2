@@ -108,7 +108,7 @@ data:
         cache: 5
     - datetime:
         text_size: l
-        locale: en_NL
+        locale: en-NL
         format:
           timeStyle: short
           dateStyle: short
