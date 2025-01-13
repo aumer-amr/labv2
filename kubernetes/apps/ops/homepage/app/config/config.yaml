@@ -28,6 +28,10 @@ data:
         - home-ops:
             - icon: github.png
               href: 'https://github.com/aumer-amr/labv2'
+    - Infrastructure:
+        - Rook Dashboard:
+            - icon: ss-ceph
+              href: 'https://rook.${SECRET_DOMAIN}'
   docker.yaml: ""
   kubernetes.yaml: |
     mode: cluster
