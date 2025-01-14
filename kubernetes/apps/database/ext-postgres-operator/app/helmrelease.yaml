@@ -1,0 +1,34 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ext-postgres-operator
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: ext-postgres-operator
+      version: 1.2.6
+      sourceRef:
+        kind: HelmRepository
+        name: ext-postgres-operator
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  values:
+    podAnnotations:
+      reloader.stakater.com/auto: "true"
+    existingSecret: ext-postgres-operator
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64M
+      limits:
+        memory: 100M
