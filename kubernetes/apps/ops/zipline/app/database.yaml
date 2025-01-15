@@ -1,0 +1,27 @@
+---
+apiVersion: db.movetokube.com/v1alpha1
+kind: Postgres
+metadata:
+  name: zipline
+  namespace: ops
+  annotations:
+    postgres.db.movetokube.com/instance: postgres16
+spec:
+  database: zipline
+  masterRole: zipline-db-group
+  dropOnDelete: true
+  schemas:
+  - zipline
+---
+apiVersion: db.movetokube.com/v1alpha1
+kind: PostgresUser
+metadata:
+  name: zipline-user
+  namespace: ops
+  annotations:
+    postgres.db.movetokube.com/instance: postgres16
+spec:
+  role: username
+  database: zipline
+  secretName: db-zipline
+  privileges: OWNER
