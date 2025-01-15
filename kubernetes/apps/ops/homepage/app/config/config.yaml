@@ -21,6 +21,9 @@ data:
         - Youtube Music:
             - icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/refs/heads/main/png/youtube-music.png
               href: 'https://music.youtube.com'
+        - Zipline:
+            - icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/refs/heads/main/png/zipline.png
+              href: 'https://zipline.${SECRET_DOMAIN}'
     - Git:
         - kubesearch:
             - icon: kubernetes-dashboard.png
@@ -32,6 +35,9 @@ data:
         - Rook Dashboard:
             - icon: ceph.png
               href: 'https://rook.${SECRET_DOMAIN}'
+        - 1Password:
+            - icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/refs/heads/main/png/1password.png
+              href: 'https://1password.com'
   docker.yaml: ""
   kubernetes.yaml: |
     mode: cluster
