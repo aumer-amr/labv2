@@ -113,22 +113,22 @@ spec:
               - path: *shorten
                 pathType: Prefix
                 service:
-                  name: app
+                  name: zipline
                   port: *port
               - path: /file
                 pathType: Prefix
                 service:
-                  name: app
+                  name: zipline
                   port: *port
               - path: /api/version
                 pathType: Prefix
                 service:
-                  name: app
+                  name: zipline
                   port: *port
               - path: /robots.txt
                 pathType: Prefix
                 service:
-                  name: app
+                  name: zipline
                   port: *port
         tls:
           - hosts:
