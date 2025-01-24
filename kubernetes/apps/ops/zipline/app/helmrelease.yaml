@@ -49,6 +49,7 @@ spec:
                   secretKeyRef:
                     name: db-zipline
                     key: POSTGRES_URL
+              DEBUG: "true"
               DATASOURCE_TYPE: s3
               DATASOURCE_S3_BUCKET: zipline
               DATASOURCE_S3_ENDPOINT: ${SECRET_CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
