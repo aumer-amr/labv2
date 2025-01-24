@@ -118,11 +118,6 @@ spec:
                 service:
                   name: zipline
                   port: *port
-              - path: /file
-                pathType: Prefix
-                service:
-                  name: zipline
-                  port: *port
               - path: /api/version
                 pathType: Prefix
                 service:
