@@ -11,7 +11,7 @@ spec:
     labels:
       app.kubernetes.io/name: *app
   dependsOn:
-    - name: onepassword-store
+    - name: external-secrets-stores
       namespace: cluster-sustem
   path: ./kubernetes/apps/observability/gatus/app
   prune: true
