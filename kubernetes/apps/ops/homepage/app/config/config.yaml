@@ -45,6 +45,7 @@ data:
     - Infrastructure:
       - TrueNas:
         href: https://nas.${SECRET_DOMAIN}
+        description: TrueNAS Storage
         icon: truenas.png
         widget:
           type: truenas
