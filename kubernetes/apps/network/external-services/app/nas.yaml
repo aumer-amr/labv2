@@ -5,12 +5,17 @@ metadata:
   name: external-service-nas
   namespace: networking
   annotations:
-    hajimari.io/appName: nas
-    hajimari.io/icon: simple-icons:truenas
-    hajimari.io/group: storage
-    policy-control.aumer.io/gatus-generate: "true"
-    policy-control.aumer.io/gatus-path: "/ui/sessions/signin"
-    policy-control.aumer.io/gatus-group: storage
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: Infrastructure
+    gethomepage.dev/name: TrueNas
+    gethomepage.dev/icon: truenas.png
+    gethomepage.dev/href: https://nas.${SECRET_DOMAIN}
+    gethomepage.dev/description: TrueNAS Storage
+    gethomepage.dev/widget.type: truenas
+    gethomepage.dev/widget.url: https://nas.${SECRET_DOMAIN}
+    gethomepage.dev/widget.key: ${TRUENAS_KEY}
+    gethomepage.dev/widget.enablePools: "true"
+    gethomepage.dev/widget.nasType: "core"
 spec:
   ingressClassName: internal
   rules:

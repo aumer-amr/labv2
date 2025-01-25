@@ -41,18 +41,7 @@ data:
   docker.yaml: ""
   kubernetes.yaml: |
     mode: cluster
-  services.yaml: |
-    - Infrastructure:
-      - TrueNas:
-          href: https://nas.${SECRET_DOMAIN}
-          description: TrueNAS Storage
-          icon: truenas.png
-          widget:
-            type: truenas
-            url: https://nas.${SECRET_DOMAIN}
-            key: ${TRUENAS_KEY}
-            enablePools: true
-            nasType: core
+  services.yaml: ""
   settings.yaml: |
     title: Dashboard
     favicon: https://github.com/homarr-labs/dashboard-icons/blob/main/png/clash.png
@@ -61,7 +50,7 @@ data:
     color: slate
     headerStyle: clean
     background:
-      image: https://zipline.aumer.dev/view/6m3M2a.jpg
+      image: https://zipline.aumer.dev/r/6m3M2a.jpg?compress=false
       opacity: 20
     quicklaunch:
       searchDescriptions: true
