@@ -1,0 +1,27 @@
+---
+apiVersion: db.movetokube.com/v1alpha1
+kind: Postgres
+metadata:
+  name: gatus
+  namespace: observability
+  annotations:
+    postgres.db.movetokube.com/instance: postgres16
+spec:
+  database: gatus
+  masterRole: gatus-db-group
+  dropOnDelete: true
+  schemas:
+  - gatus
+---
+apiVersion: db.movetokube.com/v1alpha1
+kind: PostgresUser
+metadata:
+  name: gatus-user
+  namespace: observability
+  annotations:
+    postgres.db.movetokube.com/instance: postgres16
+spec:
+  role: username
+  database: gatus
+  secretName: db-gatus
+  privileges: OWNER
