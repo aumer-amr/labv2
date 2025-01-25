@@ -31,7 +31,7 @@ data:
         - home-ops:
             - icon: github.png
               href: 'https://github.com/aumer-amr/labv2'
-    - Infrastructure:
+    - Cluster:
         - Rook Dashboard:
             - icon: ceph.png
               href: 'https://rook.${SECRET_DOMAIN}'
@@ -60,6 +60,9 @@ data:
     theme: dark
     color: slate
     headerStyle: clean
+    background:
+      image: https://zipline.aumer.dev/view/6m3M2a.jpg
+      opacity: 20
     quicklaunch:
       searchDescriptions: true
       hideInternetSearch: true
@@ -70,20 +73,9 @@ data:
         style: row
         columns: 3
         icon: mdi-network
-      Games:
-        style: row
-        columns: 3
-        icon: mdi-minecraft
       Calendar:
         style: column
         icon: mdi-calendar
-      Video:
-        style: column
-        icon: mdi-play-circle
-      Books:
-        style: row
-        columns: 2
-        icon: mdi-book
       Infrastructure:
         style: row
         columns: 5
@@ -92,14 +84,6 @@ data:
         style: row
         columns: 5
         icon: mdi-chart-line
-      Home:
-        style: row
-        columns: 5
-        icon: mdi-home-analytics
-      Downloads:
-        style: row
-        columns: 3
-        icon: mdi-download-circle
   widgets.yaml: |
     - logo:
         icon: https://raw.githubusercontent.com/aumer-amr/labv2/refs/heads/main/raw/amr.png
