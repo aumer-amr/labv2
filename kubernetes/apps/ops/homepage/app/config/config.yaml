@@ -37,11 +37,21 @@ data:
               href: 'https://rook.${SECRET_DOMAIN}'
         - 1Password:
             - icon: https://raw.githubusercontent.com/homarr-labs/dashboard-icons/refs/heads/main/png/1password.png
-              href: 'https://1password.com'
+              href: 'https://start.1password.com/signin?l=en'
   docker.yaml: ""
   kubernetes.yaml: |
     mode: cluster
-  services.yaml: ""
+  services.yaml: |
+    - Infrastructure:
+      - TrueNas:
+        href: https://nas.${SECRET_DOMAIN}
+        icon: truenas.png
+        widget:
+          type: truenas
+          url: https://nas.${SECRET_DOMAIN}
+          key: ${TRUENAS_KEY}
+          enablePools: true
+          nasType: core
   settings.yaml: |
     title: Dashboard
     favicon: https://github.com/homarr-labs/dashboard-icons/blob/main/png/clash.png

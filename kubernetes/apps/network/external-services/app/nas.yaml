@@ -1,0 +1,53 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: external-service-nas
+  namespace: networking
+  annotations:
+    hajimari.io/appName: nas
+    hajimari.io/icon: simple-icons:truenas
+    hajimari.io/group: storage
+    policy-control.aumer.io/gatus-generate: "true"
+    policy-control.aumer.io/gatus-path: "/ui/sessions/signin"
+    policy-control.aumer.io/gatus-group: storage
+spec:
+  ingressClassName: internal
+  rules:
+    - host: &host nas.${SECRET_DOMAIN}
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: external-service-nas
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - *host
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: external-service-nas
+  namespace: networking
+subsets:
+  - addresses:
+      - ip: ${SECRET_NAS_IP}
+    ports:
+      - name: http
+        port: 80
+        protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-service-nas
+  namespace: networking
+spec:
+  ports:
+    - name: http
+      port: 80
+  type: ClusterIP
