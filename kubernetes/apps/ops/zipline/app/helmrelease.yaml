@@ -123,6 +123,11 @@ spec:
                 service:
                   name: zipline
                   port: *port
+              - path: /r
+                pathType: Prefix
+                service:
+                  name: zipline
+                  port: *port
               - path: /file
                 pathType: Prefix
                 service:
