@@ -59,6 +59,7 @@ spec:
               GATUS_CONFIG_PATH: /config
               GATUS_DELAY_START_SECONDS: 5
               WEB_PORT: &port 80
+              SECRET_DOMAIN: ${SECRET_DOMAIN}
               POSTGRES_URL:
                 valueFrom:
                   secretKeyRef:
