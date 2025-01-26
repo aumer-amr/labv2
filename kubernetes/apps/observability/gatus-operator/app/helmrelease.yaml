@@ -24,7 +24,7 @@ spec:
       retries: 3
   values:
     controllers:
-      gatus:
+      gatus-operator:
         replicas: 1
         strategy: RollingUpdate
         annotations:
