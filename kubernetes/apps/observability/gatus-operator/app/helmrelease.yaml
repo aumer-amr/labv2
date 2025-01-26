@@ -80,5 +80,4 @@ spec:
           http:
             port: 8081
     serviceAccount:
-      create: true
-      name: *app
+      name: gatus-manager
