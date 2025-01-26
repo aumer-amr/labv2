@@ -1,0 +1,15 @@
+---
+apiVersion: gatus.io/v1alpha1
+kind: Gatus
+metadata:
+  name: &name echo-server
+  namespace: network
+spec:
+  endpoint:
+    enabled: true
+    name: *name
+    url: https://echo-server.${SECRET_DOMAIN}
+    interval: 1m
+    conditions: ["[STATUS] == 200"]
+    client:
+      dns-resolver: tcp://1.1.1.1:53
