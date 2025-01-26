@@ -34,6 +34,7 @@ spec:
             image:
               repository: ghcr.io/aumer-amr/gatus-operator
               tag: rolling@sha256:9d6c676e00c1cf8003b0b7217e48d2bc553322e143cb1857c864f08d6c3f37b8
+              pullPolicy: Always
             resources:
               requests:
                 cpu: 5m
