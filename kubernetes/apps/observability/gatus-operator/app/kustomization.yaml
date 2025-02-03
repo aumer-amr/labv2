@@ -9,3 +9,7 @@ configMapGenerator:
   - name: gatus-endpoint-defaults
     files:
       - defaults.yaml=./config/defaults.yaml
+generatorOptions:
+  disableNameSuffixHash: true
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
