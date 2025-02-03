@@ -8,4 +8,4 @@ spec:
   endpoint:
     name: *name
     url: https://echo-server.${SECRET_DOMAIN}
-    interval: 2m
+    interval: 1m
