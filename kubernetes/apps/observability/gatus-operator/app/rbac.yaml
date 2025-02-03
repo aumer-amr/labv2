@@ -4,7 +4,7 @@ kind: ServiceAccount
 metadata:
   labels:
     app.kubernetes.io/name: gatus-operator
-  name: gatus-manager
+  name: gatus-operator
   namespace: observability
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -12,7 +12,7 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/name: gatus-operator
-  name: gatus-manager-role
+  name: gatus-operator-role
 rules:
 - apiGroups: [""]
   resources:
@@ -45,12 +45,12 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/name: gatus-operator
-  name: gatus-manager-rolebinding
+  name: gatus-operator-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: gatus-manager-role
+  name: gatus-operator-role
 subjects:
 - kind: ServiceAccount
-  name: gatus-manager
+  name: gatus-operator
   namespace: observability

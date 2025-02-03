@@ -5,3 +5,7 @@ kind: Kustomization
 resources:
   - ./rbac.yaml
   - ./helmrelease.yaml
+configMapGenerator:
+  - name: gatus-endpoint-defaults
+    files:
+      - defaults.yaml=./config/defaults.yaml

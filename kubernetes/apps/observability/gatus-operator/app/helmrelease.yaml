@@ -33,7 +33,7 @@ spec:
           app:
             image:
               repository: ghcr.io/aumer-amr/gatus-operator
-              tag: rolling@sha256:05f4f33245e4653d1756babbc81a8026d9f5cd76a2b4cf1236f5b7a6ecebf90c
+              tag: pr-3@sha256:4740542f3b8f42a46bd09ce30836317743c111fce84f439ac8aaeca6c4daf0b8
               pullPolicy: Always
             resources:
               requests:
@@ -41,6 +41,8 @@ spec:
                 memory: 10M
               limits:
                 memory: 64M
+            env:
+              CONFIG_PATH: &configPath /config/defaults.yaml
             probes:
               liveness:
                 enabled: true
@@ -80,4 +82,12 @@ spec:
           http:
             port: 8081
     serviceAccount:
-      name: gatus-manager
+      name: *app
+    persistence:
+      config:
+        type: configMap
+        name: gatus-endpoint-defaults
+        globalMounts:
+          - path: *configPath
+            subPath: defaults.yaml
+            readOnly: true
