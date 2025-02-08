@@ -1,5 +1,6 @@
 ---
 enabled: true
+group: external
 interval: 5m
 conditions: ["[STATUS] == 200"]
 client:

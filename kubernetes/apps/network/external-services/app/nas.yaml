@@ -56,3 +56,19 @@ spec:
     - name: http
       port: 80
   type: ClusterIP
+---
+apiVersion: gatus.io/v1alpha1
+kind: Gatus
+metadata:
+  name: &name nas
+  namespace: ops
+spec:
+  endpoint:
+    name: *name
+    group: guarded
+    ui:
+      hide-url: true
+      hide-hostname: true
+    url: https://nas.${SECRET_DOMAIN}
+    interval: 1m
+

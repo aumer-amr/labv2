@@ -1,0 +1,15 @@
+---
+apiVersion: gatus.io/v1alpha1
+kind: Gatus
+metadata:
+  name: &name hubble
+  namespace: kube-system
+spec:
+  endpoint:
+    name: *name
+    group: guarded
+    ui:
+      hide-url: true
+      hide-hostname: true
+    url: https://hubble.${SECRET_DOMAIN}
+    interval: 1m
