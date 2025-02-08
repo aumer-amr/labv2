@@ -71,4 +71,6 @@ spec:
       hide-hostname: true
     url: https://nas.${SECRET_DOMAIN}
     interval: 1m
+    client:
+      dns-resolver: ""
 
