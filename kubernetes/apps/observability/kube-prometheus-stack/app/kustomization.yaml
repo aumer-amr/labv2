@@ -6,3 +6,4 @@ resources:
   - ./config/alertmanagerconfig.yaml
   - ./externalsecret.yaml
   - ./helmrelease.yaml
+  - ./gatus.yaml
