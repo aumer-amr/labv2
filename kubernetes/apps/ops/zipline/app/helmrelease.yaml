@@ -33,7 +33,7 @@ spec:
           app:
             image:
               repository: ghcr.io/diced/zipline
-              tag: trunk-3.7.11@sha256:3ea215c7af8a75179df4622d5a2fc75017fea75ec18cdc85972b36ebe58c69ce
+              tag: trunk-3.7.11@sha256:b3cc87cbb8fd50c3df08b9006e60235d544b7b7f1155a6bbd549a166a2961a29
             resources:
               requests:
                 cpu: 10m
