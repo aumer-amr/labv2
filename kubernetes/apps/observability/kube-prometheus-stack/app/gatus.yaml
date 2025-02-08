@@ -1,0 +1,30 @@
+---
+apiVersion: gatus.io/v1alpha1
+kind: Gatus
+metadata:
+  name: alertmanager
+  namespace: observbility
+spec:
+  endpoint:
+    name: alertmanager
+    group: guarded
+    ui:
+      hide-url: true
+      hide-hostname: true
+    url: https://alertmanager.${SECRET_DOMAIN}
+    interval: 1m
+---
+apiVersion: gatus.io/v1alpha1
+kind: Gatus
+metadata:
+  name: prometheus
+  namespace: observbility
+spec:
+  endpoint:
+    name: prometheus
+    group: guarded
+    ui:
+      hide-url: true
+      hide-hostname: true
+    url: https://prometheus.${SECRET_DOMAIN}
+    interval: 1m
