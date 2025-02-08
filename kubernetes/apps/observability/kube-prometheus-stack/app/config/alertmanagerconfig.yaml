@@ -39,7 +39,9 @@ spec:
     - name: "null"
     - name: discord
       discordConfigs:
-        - apiURL: ${DISCORD_WEBHOOK_URL}
+        - apiURL:
+            key: DISCORD_WEBHOOK_URL
+            name: kube-prometheus-stack-alertmanager
           title: |-
             [{{ .Status | toUpper }}:{{ if eq .Status "firing" }}{{ .Alerts.Firing | len }}{{ else }}{{ .Alerts.Resolved | len }}{{ end }}]
           message: |-
