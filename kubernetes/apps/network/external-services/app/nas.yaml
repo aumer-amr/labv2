@@ -72,5 +72,8 @@ spec:
     url: https://nas.${SECRET_DOMAIN}
     interval: 1m
     client:
-      dns-resolver: ""
+      insecure: false
+      ignore-redirect: false
+      timeout: 10s
+      network: ip
 
