@@ -69,11 +69,8 @@ spec:
     ui:
       hide-url: true
       hide-hostname: true
-    url: https://nas.${SECRET_DOMAIN}
+    url: http://${SECRET_NAS_IP}/ui/sessions/signin
     interval: 1m
     client:
-      insecure: false
-      ignore-redirect: false
-      timeout: 10s
-      network: ip
+      insecure: true
 
