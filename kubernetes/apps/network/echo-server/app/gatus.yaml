@@ -7,5 +7,9 @@ metadata:
 spec:
   endpoint:
     name: *name
+    group: external
+    ui:
+      hide-url: true
+      hide-hostname: true
     url: https://echo-server.${SECRET_DOMAIN}
     interval: 1m

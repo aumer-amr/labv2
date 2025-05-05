@@ -181,7 +181,7 @@ spec:
       enabled: true
     ingress:
         enabled: true
-        ingressClassName: internal
+        ingressClassName: external
         hosts: ["grafana.${SECRET_DOMAIN}"]
         pathType: Prefix
     persistence:
