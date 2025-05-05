@@ -179,14 +179,11 @@ spec:
       - vonage-status-panel
     serviceMonitor:
       enabled: true
-    route:
-      main:
+    ingress:
         enabled: true
-        hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
-        parentRefs:
-          - name: internal
-            namespace: kube-system
-            sectionName: https
+        ingressClassName: internal
+        hosts: ["prometheus.${SECRET_DOMAIN}"]
+        pathType: Prefix
     persistence:
       enabled: false
     testFramework:
