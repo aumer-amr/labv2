@@ -182,7 +182,7 @@ spec:
     ingress:
         enabled: true
         ingressClassName: internal
-        hosts: ["prometheus.${SECRET_DOMAIN}"]
+        hosts: ["grafana.${SECRET_DOMAIN}"]
         pathType: Prefix
     persistence:
       enabled: false
