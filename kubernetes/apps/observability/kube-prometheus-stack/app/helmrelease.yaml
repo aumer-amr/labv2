@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: *app
-      version: 70.10.0
+      version: 78.5.0
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
