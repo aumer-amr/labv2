@@ -1,3 +1,9 @@
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/aumer-amr/labv2/refs/heads/main/raw/amr.png" align="center" width="144px" height="144px"/>
+
+</div>
+
 # labv2
 
 Personal Talos Kubernetes cluster managed through Flux GitOps. Core services include Cilium, Hubble, Envoy Gateway, cert-manager, External Secrets, Spegel, Reloader, and Gatus.
