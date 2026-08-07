@@ -39,6 +39,17 @@ spec:
         enabled: true
       ui:
         enabled: true
+        service:
+          annotations:
+            gatus.home-operations.com/enabled: "true"
+            gatus.home-operations.com/endpoint: |-
+              name: hubble
+              group: internal
+              url: https://hubble.${SECRET_DOMAIN}
+              conditions: ["[STATUS] == 200"]
+              ui:
+                hide-hostname: true
+                hide-url: true
     ipam:
       mode: kubernetes
     ipv4NativeRoutingCIDR: "10.42.0.0/16"

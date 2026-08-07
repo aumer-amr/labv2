@@ -16,6 +16,9 @@ spec:
         - "10.42.0.0/16"
     httpRoute:
       enabled: true
+      annotations:
+        gatus.home-operations.com/endpoint: |-
+          conditions: ["[STATUS] == 200"]
       hostnames:
         - "{{ .Release.Name }}.${SECRET_DOMAIN}"
       parentRefs:

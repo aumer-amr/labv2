@@ -1,0 +1,22 @@
+---
+ui:
+  title: Health Status
+  header: Health Status
+  logo: https://raw.githubusercontent.com/aumer-amr/labv2/refs/heads/main/raw/amr.png
+
+alerting:
+  discord:
+    webhook-url: ${DISCORD_WEBHOOK_URL}
+    default-alert:
+      description: health-check failed
+      send-on-resolved: true
+      failure-threshold: 3
+      success-threshold: 3
+
+metrics: true
+
+storage:
+  type: memory
+
+web:
+  port: ${GATUS_WEB_PORT}
