@@ -1,0 +1,45 @@
+---
+clusterName: kubernetes
+clusterEndpoint: https://10.10.1.110:6443
+
+# renovate: datasource=docker depName=ghcr.io/siderolabs/installer
+talosVersion: v1.13.7
+# renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
+kubernetesVersion: v1.36.3
+
+secretsPath: secrets.sops.yaml
+
+nodes:
+  - host: "deathscythe"
+    ip: "10.10.1.100"
+    role: control-plane
+    schematicId: "ab86bd395e263b78e5f54c800e4d319dae786d9ae25ecb129462a9e0e9491615"
+    data:
+      installDisk: "/dev/nvme0n1"
+      installDiskSerial: ""
+      macAddr: "48:21:0b:55:d7:e3"
+      mtu: 1500
+      encryptDisk: false
+      kernelModules: []
+  - host: "epyon"
+    ip: "10.10.1.101"
+    role: control-plane
+    schematicId: "ab86bd395e263b78e5f54c800e4d319dae786d9ae25ecb129462a9e0e9491615"
+    data:
+      installDisk: "/dev/nvme0n1"
+      installDiskSerial: ""
+      macAddr: "48:21:0b:57:32:ed"
+      mtu: 1500
+      encryptDisk: false
+      kernelModules: []
+  - host: "heavyarms"
+    ip: "10.10.1.102"
+    role: control-plane
+    schematicId: "ab86bd395e263b78e5f54c800e4d319dae786d9ae25ecb129462a9e0e9491615"
+    data:
+      installDisk: "/dev/nvme0n1"
+      installDiskSerial: ""
+      macAddr: "48:21:0b:57:34:8f"
+      mtu: 1500
+      encryptDisk: false
+      kernelModules: []
