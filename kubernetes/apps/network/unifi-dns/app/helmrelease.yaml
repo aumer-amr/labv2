@@ -17,9 +17,17 @@ spec:
         image:
           repository: ghcr.io/home-operations/external-dns-unifi-webhook
           tag: 0.10.9@sha256:30ae224e23bb7c303d72901a85aea77060288872716b8bc50589216c1f9d0df0
-        envFrom:
-          - secretRef:
-              name: unifi-dns-secret
+        env:
+          - name: UNIFI_HOST
+            valueFrom:
+              secretKeyRef:
+                name: unifi-dns-secret
+                key: UNIFI_HOST
+          - name: UNIFI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: unifi-dns-secret
+                key: UNIFI_API_KEY
         livenessProbe:
           httpGet:
             path: /healthz
