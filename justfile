@@ -5,13 +5,13 @@ set default-script
 set shell := ['bash', '-euo', 'pipefail', '-c']
 set script-interpreter := ['bash', '-euo', 'pipefail']
 
-[group: 'bootstrap']
+[group('bootstrap')]
 mod? bootstrap 'bootstrap'
 
-[group: 'kubernetes']
+[group('kubernetes')]
 mod? kube 'kubernetes'
 
-[group: 'talos']
+[group('talos')]
 mod? talos 'talos'
 
 [private]
@@ -21,18 +21,3 @@ log lvl msg *args:
 [private]
 kustomize file *args:
     minijinja-cli "{{ file }}" {{ args }} | op inject
-
-# === template ===
-
-[group: 'template']
-mod template 'template'
-
-[doc('Render and validate configuration files')]
-[group('template')]
-configure:
-    just template configure
-
-[doc('Initialize configuration files (cluster.toml, age key, deploy key, webhook token)')]
-[group('template')]
-init:
-    just template init

@@ -619,45 +619,6 @@ provenance = "github-attestations"
 version = "0.62.0"
 backend = "npm:oxfmt"
 
-[[tools.sd]]
-version = "1.1.0"
-backend = "aqua:chmln/sd"
-
-[tools.sd."platforms.linux-arm64"]
-checksum = "sha256:ec8c93c0533ff21f4851d11566808d4082544baf063d9b96ea77c27e98b7cd99"
-url = "https://github.com/chmln/sd/releases/download/v1.1.0/sd-v1.1.0-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/chmln/sd/releases/assets/362325535"
-
-[tools.sd."platforms.linux-arm64-musl"]
-checksum = "sha256:ec8c93c0533ff21f4851d11566808d4082544baf063d9b96ea77c27e98b7cd99"
-url = "https://github.com/chmln/sd/releases/download/v1.1.0/sd-v1.1.0-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/chmln/sd/releases/assets/362325535"
-
-[tools.sd."platforms.linux-x64"]
-checksum = "sha256:02f00f4777d43e8e95b7b8d49e1a0d6e502fed4b8e79c1c8b8063857a30caa2e"
-url = "https://github.com/chmln/sd/releases/download/v1.1.0/sd-v1.1.0-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/chmln/sd/releases/assets/362325321"
-
-[tools.sd."platforms.linux-x64-musl"]
-checksum = "sha256:02f00f4777d43e8e95b7b8d49e1a0d6e502fed4b8e79c1c8b8063857a30caa2e"
-url = "https://github.com/chmln/sd/releases/download/v1.1.0/sd-v1.1.0-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/chmln/sd/releases/assets/362325321"
-
-[tools.sd."platforms.macos-arm64"]
-checksum = "sha256:4bd3c09226376ca0a1d69589c91e86276fae36c5fbaaee669afce583f6682030"
-url = "https://github.com/chmln/sd/releases/download/v1.1.0/sd-v1.1.0-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/chmln/sd/releases/assets/362325451"
-
-[tools.sd."platforms.macos-x64"]
-checksum = "sha256:1fca1e9c91813a8aac6821063c923107ba0f66a83309e095edcd3b202f67f97e"
-url = "https://github.com/chmln/sd/releases/download/v1.1.0/sd-v1.1.0-x86_64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/chmln/sd/releases/assets/362325430"
-
-[tools.sd."platforms.windows-x64"]
-checksum = "sha256:59837c2e7c911099aca1cc46b663bcdc5a949fd3e9fbbaf34fc73e5d5d71007c"
-url = "https://github.com/chmln/sd/releases/download/v1.1.0/sd-v1.1.0-x86_64-pc-windows-msvc.zip"
-url_api = "https://api.github.com/repos/chmln/sd/releases/assets/362325573"
-
 [[tools.sops]]
 version = "3.13.3"
 backend = "aqua:getsops/sops"
@@ -763,52 +724,6 @@ checksum = "sha256:a42fb71c4f8d5b6148ac996b109bce708986e44354910c3a533942342536e
 url = "https://github.com/siderolabs/talos/releases/download/v1.13.7/talosctl-windows-amd64.exe"
 url_api = "https://api.github.com/repos/siderolabs/talos/releases/assets/484644290"
 provenance = "cosign"
-
-[[tools.uv]]
-version = "0.12.1"
-backend = "aqua:astral-sh/uv"
-
-[tools.uv."platforms.linux-arm64"]
-checksum = "sha256:ce218dad9eb48a39dd86160bec6291fac7275f20a9cabcc4bc10dd2c757208f8"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.1/uv-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/497097080"
-provenance = "github-attestations"
-
-[tools.uv."platforms.linux-arm64-musl"]
-checksum = "sha256:ce218dad9eb48a39dd86160bec6291fac7275f20a9cabcc4bc10dd2c757208f8"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.1/uv-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/497097080"
-provenance = "github-attestations"
-
-[tools.uv."platforms.linux-x64"]
-checksum = "sha256:47823f814693bab8623308341369190de30b5c621eec5b1ee20352eae8c7982c"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.1/uv-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/497097157"
-provenance = "github-attestations"
-
-[tools.uv."platforms.linux-x64-musl"]
-checksum = "sha256:47823f814693bab8623308341369190de30b5c621eec5b1ee20352eae8c7982c"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.1/uv-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/497097157"
-provenance = "github-attestations"
-
-[tools.uv."platforms.macos-arm64"]
-checksum = "sha256:77d2906988e8074fd43f2f329ec452ebbf9b0c257ba1c66451c71de70a6baf42"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.1/uv-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/497097062"
-provenance = "github-attestations"
-
-[tools.uv."platforms.macos-x64"]
-checksum = "sha256:69d9f9a00337f25a50dcb13882052da08b8469bac11091c98c5694c3c6721467"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.1/uv-x86_64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/497097144"
-provenance = "github-attestations"
-
-[tools.uv."platforms.windows-x64"]
-checksum = "sha256:8fcb0cb46e1229065e344758980924e569bef5882ef45f46fada8fb24e06b74a"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.1/uv-x86_64-pc-windows-msvc.zip"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/497097149"
-provenance = "github-attestations"
 
 [[tools.yq]]
 version = "4.53.3"
