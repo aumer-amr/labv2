@@ -18,6 +18,10 @@ mod? talos 'talos'
 log lvl msg *args:
     gum log -t rfc3339 -s -l "{{ lvl }}" "{{ msg }}" {{ args }}
 
+[private]
+kustomize file *args:
+    minijinja-cli "{{ file }}" {{ args }} | op inject
+
 # === template ===
 
 [group: 'template']

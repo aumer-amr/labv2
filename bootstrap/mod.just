@@ -92,7 +92,7 @@ apps-secrets:
 [private]
 apps-secrets-op:
     just log info "Injecting 1Password secrets for apps" stage "{{ recipe_name() }}"
-    if ! kustomize build {{ source_directory() }}/kustomize | just template - | kubectl apply --server-side --force-conflicts -f -; then
+    if ! kustomize build {{ source_directory() }}/kustomize | just kustomize - | kubectl apply --server-side --force-conflicts -f -; then
         just log fatal "Failed to apply kustomize manifests" "stage" "{{ recipe_name() }}"
     fi
 
