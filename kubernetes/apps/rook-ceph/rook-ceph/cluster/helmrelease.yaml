@@ -50,6 +50,9 @@ spec:
       enabled: true
     route:
       dashboard:
+        annotations:
+          gatus.home-operations.com/endpoint: |-
+            conditions: ["[STATUS] == 200"]
         host:
           name: rook.${SECRET_DOMAIN}
           path: /
