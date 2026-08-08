@@ -4,7 +4,7 @@ kind: HTTPRoute
 metadata:
   name: hubble
   annotations:
-    gatus.home-operations.com/enabled: "false"
+    gatus.home-operations.com/enabled: "true"
 spec:
   hostnames: ["hubble.${SECRET_DOMAIN}"]
   parentRefs:
