@@ -8,6 +8,7 @@ alerting:
   discord:
     webhook-url: ${DISCORD_WEBHOOK_URL}
     default-alert:
+      enabled: true
       description: health-check failed
       send-on-resolved: true
       failure-threshold: 3

@@ -39,6 +39,9 @@ spec:
         enabled: true
       ui:
         enabled: true
+        service:
+          annotations:
+            gatus.home-operations.com/enabled: "false"
     ipam:
       mode: kubernetes
     ipv4NativeRoutingCIDR: "10.42.0.0/16"
