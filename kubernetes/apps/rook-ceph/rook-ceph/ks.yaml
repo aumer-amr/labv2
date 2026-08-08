@@ -5,6 +5,10 @@ kind: Kustomization
 metadata:
   name: rook-ceph
 spec:
+  postBuild:
+    substituteFrom:
+      - name: cluster-secrets
+        kind: Secret
   dependsOn:
     - name: onepassword-connect
       namespace: external-secrets
@@ -24,6 +28,10 @@ kind: Kustomization
 metadata:
   name: rook-ceph-cluster
 spec:
+  postBuild:
+    substituteFrom:
+      - name: cluster-secrets
+        kind: Secret
   dependsOn:
     - name: rook-ceph
     - name: onepassword-connect
