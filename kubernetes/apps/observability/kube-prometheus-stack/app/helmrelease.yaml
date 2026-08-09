@@ -45,6 +45,10 @@ spec:
       route:
         main:
           enabled: true
+          annotations:
+            gatus.home-operations.com/endpoint: |-
+              path: /-/healthy
+              conditions: ["[STATUS] == 200"]
           hostnames:
             - prometheus.${SECRET_DOMAIN}
           parentRefs:

@@ -25,6 +25,10 @@ spec:
       retentionPeriod: 14d
       route:
         enabled: true
+        annotations:
+          gatus.home-operations.com/endpoint: |-
+            path: /health
+            conditions: ["[STATUS] == 200"]
         hostnames:
           - logs.${SECRET_DOMAIN}
         parentRefs:

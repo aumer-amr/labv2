@@ -58,6 +58,11 @@ spec:
               persistentVolumeClaim:
                 claimName: grafana-pvc
   httpRoute:
+    metadata:
+      annotations:
+        gatus.home-operations.com/endpoint: |-
+          path: /api/health
+          conditions: ["[STATUS] == 200"]
     spec:
       hostnames:
         - grafana.${SECRET_DOMAIN}
