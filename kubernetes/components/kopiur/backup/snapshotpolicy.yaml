@@ -5,25 +5,28 @@ kind: SnapshotPolicy
 metadata:
   name: ${APP}
 spec:
-  compression:
-    compressor: zstd
   mover:
     cache:
       capacity: ${KOPIUR_CAPACITY:=5Gi}
-      mode: Persistent
-      storageClassName: miroir-slow
+      mode: Ephemeral
     securityContext:
       runAsUser: ${KOPIUR_PUID:=1000}
       runAsGroup: ${KOPIUR_PGID:=1000}
   repository:
     kind: ClusterRepository
-    name: expanse
+    name: cloudflare
   retention:
     keepLatest: 3
     keepHourly: 24
     keepDaily: 7
-    keepWeekly: 4
   sources:
     - pvc:
         name: ${APP}
+  verification:
+    deep:
+      schedule:
+        cron: H 5 1 * *
+    quick:
+      schedule:
+        cron: H 3 * * *
   volumeSnapshotClassName: ${KOPIUR_SNAPSHOTCLASS:=csi-ceph-blockpool}
