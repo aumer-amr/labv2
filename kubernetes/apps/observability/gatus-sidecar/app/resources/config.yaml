@@ -16,6 +16,17 @@ alerting:
 
 metrics: true
 
+endpoints:
+  - name: P1
+    group: internal
+    url: http://10.40.123.98/
+    interval: 1m
+    conditions:
+      - "[STATUS] == 401"
+    ui:
+      hide-url: true
+      hide-hostname: true
+
 storage:
   type: sqlite
   caching: true
