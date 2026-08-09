@@ -10,3 +10,4 @@ resources:
   - ./namespace.yaml
   - ./gatus-sidecar/ks.yaml
   - ./grafana-operator/ks.yaml
+  - ./kube-prometheus-stack/ks.yaml
