@@ -11,3 +11,4 @@ resources:
   - ./gatus-sidecar/ks.yaml
   - ./grafana-operator/ks.yaml
   - ./kube-prometheus-stack/ks.yaml
+  - ./victoria-logs/ks.yaml

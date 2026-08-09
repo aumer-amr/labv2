@@ -1,0 +1,34 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: victoria-logs
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: victoria-logs
+  interval: 1h
+  values:
+    dashboards:
+      enabled: true
+      grafanaOperator:
+        enabled: true
+        spec:
+          folderRef: victoria-logs
+    server:
+      fullnameOverride: victoria-logs
+      persistentVolume:
+        enabled: true
+        storageClassName: ceph-block
+        size: 20Gi
+      retentionPeriod: 14d
+      route:
+        enabled: true
+        hostnames:
+          - logs.${SECRET_DOMAIN}
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+      serviceMonitor:
+        enabled: true
