@@ -17,7 +17,9 @@ alerting:
 metrics: true
 
 storage:
-  type: memory
+  type: sqlite
+  caching: true
+  path: ${GATUS_CONFIG_PATH}/gatus.db
 
 web:
   port: ${GATUS_WEB_PORT}

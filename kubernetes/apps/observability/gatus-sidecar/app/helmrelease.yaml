@@ -45,7 +45,10 @@ spec:
         - key: config.yaml
           path: config.yaml
     persistence:
-      enabled: false
+      enabled: true
+      storageClass: ceph-block
+      accessMode: ReadWriteOnce
+      size: 5Gi
     resources:
       requests:
         cpu: 100m
