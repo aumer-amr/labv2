@@ -13,13 +13,13 @@ spec:
       - name: cluster-secrets
         kind: Secret
   interval: 1h
-  path: ./kubernetes/apps/o11y/victoria-logs/app
+  path: ./kubernetes/apps/observability/victoria-logs/app
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
     namespace: flux-system
-  targetNamespace: o11y
+  targetNamespace: observability
   wait: false
 ---
 # yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kustomize.toolkit.fluxcd.io/kustomization_v1.json
@@ -31,11 +31,11 @@ spec:
   dependsOn:
     - name: victoria-logs
   interval: 1h
-  path: ./kubernetes/apps/o11y/victoria-logs/collector
+  path: ./kubernetes/apps/observability/victoria-logs/collector
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
     namespace: flux-system
-  targetNamespace: o11y
+  targetNamespace: observability
   wait: false
