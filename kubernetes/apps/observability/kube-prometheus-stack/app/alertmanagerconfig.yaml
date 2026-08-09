@@ -1,0 +1,64 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/monitoring.coreos.com/alertmanagerconfig_v1alpha1.json
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: alertmanager
+spec:
+  route:
+    receiver: discord
+    repeatInterval: 12h
+    routes:
+      - receiver: blackhole
+        matchers:
+          - name: alertname
+            value: InfoInhibitor
+            matchType: =
+      - receiver: discord
+        matchers:
+          - name: severity
+            value: critical
+            matchType: =
+    groupBy:
+      - alertname
+      - cluster
+      - job
+    groupInterval: 5m
+    groupWait: 1m
+
+  inhibitRules:
+    - equal:
+        - alertname
+        - namespace
+      sourceMatch:
+        - name: severity
+          value: critical
+          matchType: =
+      targetMatch:
+        - name: severity
+          value: warning
+          matchType: =
+
+  receivers:
+    - name: blackhole
+    - name: discord
+      discordConfigs:
+        - apiURL:
+            key: DISCORD_WEBHOOK_URL
+            name: alertmanager-secret
+          title: |-
+            [{{ .Status | toUpper }}:{{ if eq .Status "firing" }}{{ .Alerts.Firing | len }}{{ else }}{{ .Alerts.Resolved | len }}{{ end }}]
+          username: Alertmanager
+          content: |-
+            {{- range .Alerts }}
+              **{{ .Labels.alertname }} {{ if ne .Labels.severity "" }}({{ .Labels.severity | title }}){{ end }} **
+              {{- if ne .Annotations.description "" }}
+                **Description:** {{ .Annotations.description }}
+              {{- else if ne .Annotations.summary "" }}
+                **Summary:** {{ .Annotations.summary }}
+              {{- else if ne .Annotations.message "" }}
+                **Message:** {{ .Annotations.message }}
+              {{- else }}
+                **Description:** N/A
+              {{- end }}
+            {{- end }}
