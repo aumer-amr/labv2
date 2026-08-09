@@ -15,11 +15,11 @@ spec:
     env:
       - name: HOMEASSISTANT_URL
         value: https://hass.${SECRET_DOMAIN}
-      - name: HOME_ASSISTANT_TOKEN
+      - name: HOMEASSISTANT_TOKEN
         valueFrom:
           secretKeyRef:
             name: ha-mcp-secret
-            key: HOME_ASSISTANT_TOKEN
+            key: HOMEASSISTANT_TOKEN
     volumes:
       - name: tmp
         emptyDir: {}
