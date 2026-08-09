@@ -10,9 +10,6 @@ spec:
     name: kopiur
   interval: 1h
   values:
-    features:
-      kopiaUi:
-        enabled: true
     monitoring:
       serviceMonitor:
         enabled: true
