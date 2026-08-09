@@ -12,7 +12,7 @@ spec:
     type: victoriametrics-logs-datasource
     name: victoria-logs
     access: proxy
-    url: http://victoria-logs-server.observability.svc.cluster.local:9428
+    url: http://victoria-logs.observability.svc.cluster.local:9428
   plugins:
     - name: victoriametrics-logs-datasource
       version: 0.26.3
