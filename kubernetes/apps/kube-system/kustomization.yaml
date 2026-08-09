@@ -5,6 +5,7 @@ namespace: kube-system
 
 components:
   - ../../components/sops
+  - ../../components/kopiur/secret
 
 resources:
   - ./namespace.yaml
@@ -15,3 +16,4 @@ resources:
   - ./reloader/ks.yaml
   - ./spegel/ks.yaml
   - ./snapshot-controller/ks.yaml
+  - ./kopiur/ks.yaml

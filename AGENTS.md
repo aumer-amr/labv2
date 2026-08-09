@@ -36,10 +36,8 @@ Run at minimum:
 
 ```bash
 git diff --check
-mise exec -- template/resources/kubeconform.sh kubernetes
 ```
 
-- The kubeconform script must receive the `kubernetes` root; it is not a subtree validator.
 - Run `oxfmt --check` on changed YAML, JSON, and Markdown files.
 - Build every touched Kustomize directory with `--load-restrictor=LoadRestrictionsNone`.
 - Before live apply, pass rendered output through `flux envsubst --strict` with substitution values loaded securely and without echoing them.

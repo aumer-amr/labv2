@@ -1,18 +1,19 @@
 {
-    "editor.bracketPairColorization.enabled": true,
-    "files.associations": {
-        "**/*.json5": "json5"
-    },
-    "files.trimTrailingWhitespace": true,
-    "sops.defaults.ageKeyFile": "age.key",
-    "vs-kubernetes": {
-        "vs-kubernetes.kubeconfig": "./kubeconfig",
-        "vs-kubernetes.knownKubeconfigs": [
-          "./kubeconfig"
-      ]
-    },
-    "yaml.schemaStore.enable": true,
-    "yaml.schemas": {
-        "kubernetes": "./kubernetes/**/*.yaml"
-    }
+  "editor.bracketPairColorization.enabled": true,
+  "files.associations": {
+    "**/*.json5": "json5"
+  },
+  "files.trimTrailingWhitespace": true,
+  "sops.binPath": "/home/aumer/.local/share/mise/shims/sops",
+  "sops.defaults.ageKeyFile": "/mnt/e/code/private/labv2/age.key",
+  "vs-kubernetes": {
+    "vs-kubernetes.kubeconfig": "./kubeconfig",
+    "vs-kubernetes.knownKubeconfigs": ["./kubeconfig"]
+  },
+  "yaml.schemaStore.enable": true,
+  "yaml.schemas": {
+    "kubernetes": "./kubernetes/**/*.yaml"
+  },
+  "sops.configPath": "/mnt/e/code/private/labv2/.sops.yaml",
+  "sops.defaults.ignoreMac": true
 }
