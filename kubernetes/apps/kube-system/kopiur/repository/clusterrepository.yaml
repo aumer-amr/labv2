@@ -16,8 +16,6 @@ spec:
       bucket: kopiur
       endpoint: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
       region: WEUR
-      tls:
-        disableTls: true
   encryption:
     passwordSecretRef:
       name: kopiur-repository-secret
