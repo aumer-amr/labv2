@@ -3,10 +3,14 @@ ui:
   title: Health Status
   header: Health Status
   logo: https://raw.githubusercontent.com/aumer-amr/labv2/refs/heads/main/raw/amr.png
+  default-sort-by: group
 
 alerting:
   discord:
     webhook-url: ${DISCORD_WEBHOOK_URL}
+    overrides:
+      - group: external-tlb
+        webhook-url: ${DISCORD_TLB_WEBHOOK_URL}
     default-alert:
       enabled: true
       description: health-check failed
@@ -17,6 +21,69 @@ alerting:
 metrics: true
 
 endpoints:
+  - name: tlbmilsim.com
+    group: external-tlb
+    url: https://tlbmilsim.com
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts:
+      - type: discord
+
+  - name: panel
+    group: external-tlb
+    url: https://panel.tlbmilsim.com
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts:
+      - type: discord
+
+  - name: mods
+    group: external-tlb
+    url: https://mods.tlbmilsim.com
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts:
+      - type: discord
+
+  - name: images
+    group: external-tlb
+    url: https://images.tlbmilsim.com
+    interval: 1m
+    conditions:
+      - "[STATUS] == 404"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts:
+      - type: discord
+
+  - name: docs
+    group: external-tlb
+    url: https://docs.tlbmilsim.com
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts:
+      - type: discord
+
+  - name: server
+    group: external-tlb
+    url: https://server.tlbmilsim.com
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts:
+      - type: discord
+    ui:
+      hide-url: true
+      hide-hostname: true
+
   - name: P1
     group: internal
     url: http://10.40.123.98/
