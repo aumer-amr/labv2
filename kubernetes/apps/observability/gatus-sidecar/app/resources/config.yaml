@@ -30,6 +30,7 @@ endpoints:
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts:
       - type: discord
+        failure-threshold: 6
 
   - name: panel
     group: external-tlb
@@ -40,6 +41,7 @@ endpoints:
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts:
       - type: discord
+        failure-threshold: 6
 
   - name: mods
     group: external-tlb
@@ -50,6 +52,7 @@ endpoints:
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts:
       - type: discord
+        failure-threshold: 6
 
   - name: images
     group: external-tlb
@@ -60,6 +63,7 @@ endpoints:
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts:
       - type: discord
+        failure-threshold: 6
 
   - name: docs
     group: external-tlb
@@ -70,6 +74,7 @@ endpoints:
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts:
       - type: discord
+        failure-threshold: 6
 
   - name: server
     group: external-tlb
@@ -80,6 +85,7 @@ endpoints:
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts:
       - type: discord
+        failure-threshold: 6
     ui:
       hide-url: true
       hide-hostname: true
