@@ -1,0 +1,101 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: flux-operator
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: flux-operator
+      app.kubernetes.io/name: flux-operator
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 8080
+          protocol: TCP
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: notification-controller
+      ports:
+        - port: 9090
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: flux-operator-control-plane
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: flux-operator
+      app.kubernetes.io/name: flux-operator
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchPattern: github.com.*
+              - matchName: ghcr.io
+              - matchPattern: ghcr.io.*
+              - matchName: pkg-containers.githubusercontent.com
+              - matchPattern: pkg-containers.githubusercontent.com.*
+              - matchName: quay.io
+              - matchPattern: quay.io.*
+              - matchName: mirror.gcr.io
+              - matchPattern: mirror.gcr.io.*
+              - matchName: notification-controller.flux-system.svc.cluster.local
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchPattern: github.com.*
+              - matchName: ghcr.io
+              - matchPattern: ghcr.io.*
+              - matchName: pkg-containers.githubusercontent.com
+              - matchPattern: pkg-containers.githubusercontent.com.*
+              - matchName: quay.io
+              - matchPattern: quay.io.*
+              - matchName: mirror.gcr.io
+              - matchPattern: mirror.gcr.io.*
+              - matchName: notification-controller.flux-system.svc.cluster.local
+    - toFQDNs:
+        - matchName: github.com
+        - matchName: ghcr.io
+        - matchName: pkg-containers.githubusercontent.com
+        - matchName: quay.io
+        - matchName: mirror.gcr.io
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

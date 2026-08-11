@@ -1,0 +1,314 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: helm-controller
+spec:
+  podSelector:
+    matchLabels:
+      app: helm-controller
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: source-controller
+      ports:
+        - port: 9090
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: notification-controller
+      ports:
+        - port: 9090
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: helm-controller-api
+spec:
+  endpointSelector:
+    matchLabels:
+      app: helm-controller
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kustomize-controller
+spec:
+  podSelector:
+    matchLabels:
+      app: kustomize-controller
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: source-controller
+      ports:
+        - port: 9090
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: notification-controller
+      ports:
+        - port: 9090
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: kustomize-controller-api
+spec:
+  endpointSelector:
+    matchLabels:
+      app: kustomize-controller
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: source-controller
+spec:
+  podSelector:
+    matchLabels:
+      app: source-controller
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: helm-controller
+      ports:
+        - port: 9090
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: kustomize-controller
+      ports:
+        - port: 9090
+          protocol: TCP
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: notification-controller
+      ports:
+        - port: 9090
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-external
+      ports:
+        - port: 10443
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: source-controller-external
+spec:
+  endpointSelector:
+    matchLabels:
+      app: source-controller
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchPattern: "*.github.com"
+              - matchName: ghcr.io
+              - matchPattern: "*.ghcr.io"
+              - matchName: pkg-containers.githubusercontent.com
+              - matchPattern: "*.pkg-containers.githubusercontent.com"
+              - matchName: quay.io
+              - matchPattern: "*.quay.io"
+              - matchName: mirror.gcr.io
+              - matchPattern: "*.mirror.gcr.io"
+              - matchName: notification-controller.flux-system.svc.cluster.local
+              - matchName: ocharted.${SECRET_DOMAIN}
+              - matchPattern: "*.ocharted.${SECRET_DOMAIN}"
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchPattern: "*.github.com"
+              - matchName: ghcr.io
+              - matchPattern: "*.ghcr.io"
+              - matchName: pkg-containers.githubusercontent.com
+              - matchPattern: "*.pkg-containers.githubusercontent.com"
+              - matchName: quay.io
+              - matchPattern: "*.quay.io"
+              - matchName: mirror.gcr.io
+              - matchPattern: "*.mirror.gcr.io"
+              - matchName: notification-controller.flux-system.svc.cluster.local
+              - matchName: ocharted.${SECRET_DOMAIN}
+              - matchPattern: "*.ocharted.${SECRET_DOMAIN}"
+    - toFQDNs:
+        - matchName: github.com
+        - matchPattern: "*.github.com"
+        - matchName: ghcr.io
+        - matchPattern: "*.ghcr.io"
+        - matchName: pkg-containers.githubusercontent.com
+        - matchPattern: "*.pkg-containers.githubusercontent.com"
+        - matchName: quay.io
+        - matchPattern: "*.quay.io"
+        - matchName: mirror.gcr.io
+        - matchPattern: "*.mirror.gcr.io"
+        - matchName: ocharted.${SECRET_DOMAIN}
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: notification-controller
+spec:
+  podSelector:
+    matchLabels:
+      app: notification-controller
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: helm-controller
+      ports:
+        - port: 9090
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: kustomize-controller
+      ports:
+        - port: 9090
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: source-controller
+      ports:
+        - port: 9090
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: flux-operator
+              app.kubernetes.io/name: flux-operator
+      ports:
+        - port: 9090
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-external
+      ports:
+        - port: 9292
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: notification-controller-api
+spec:
+  endpointSelector:
+    matchLabels:
+      app: notification-controller
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
