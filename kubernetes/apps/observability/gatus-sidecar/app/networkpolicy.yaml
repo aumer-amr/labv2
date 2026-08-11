@@ -1,0 +1,114 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/networking.k8s.io/networkpolicy_v1.json
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gatus-sidecar
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: gatus-sidecar
+      app.kubernetes.io/name: gatus-sidecar
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 8080
+          protocol: TCP
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+            except:
+              - 10.42.0.0/16
+              - 10.43.0.0/16
+        - ipBlock:
+            cidr: 172.16.0.0/12
+        - ipBlock:
+            cidr: 192.168.0.0/16
+      ports:
+        - port: 80
+          protocol: TCP
+        - port: 443
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: gatus-sidecar-external
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: gatus-sidecar
+      app.kubernetes.io/name: gatus-sidecar
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 0.0.0.0/8
+            - 10.0.0.0/8
+            - 100.64.0.0/10
+            - 127.0.0.0/8
+            - 169.254.0.0/16
+            - 172.16.0.0/12
+            - 192.0.0.0/24
+            - 192.0.2.0/24
+            - 192.168.0.0/16
+            - 198.18.0.0/15
+            - 198.51.100.0/24
+            - 203.0.113.0/24
+            - 224.0.0.0/4
+            - 240.0.0.0/4
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 0.0.0.0/8
+            - 10.0.0.0/8
+            - 100.64.0.0/10
+            - 127.0.0.0/8
+            - 169.254.0.0/16
+            - 172.16.0.0/12
+            - 192.0.0.0/24
+            - 192.0.2.0/24
+            - 192.168.0.0/16
+            - 198.18.0.0/15
+            - 198.51.100.0/24
+            - 203.0.113.0/24
+            - 224.0.0.0/4
+            - 240.0.0.0/4
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    - toCIDR:
+        - 1.1.1.1/32
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP

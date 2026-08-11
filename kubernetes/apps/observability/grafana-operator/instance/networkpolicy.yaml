@@ -1,0 +1,64 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/networking.k8s.io/networkpolicy_v1.json
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: grafana
+spec:
+  podSelector:
+    matchLabels:
+      app: grafana
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: grafana-operator
+              app.kubernetes.io/name: grafana-operator
+      ports:
+        - port: 3000
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 3000
+          protocol: TCP
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 9090
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: alertmanager
+      ports:
+        - port: 9093
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: victoria-logs
+              app.kubernetes.io/name: victoria-logs-single
+      ports:
+        - port: 9428
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
