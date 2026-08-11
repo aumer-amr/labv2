@@ -98,6 +98,7 @@ spec:
           rules:
             dns:
               - matchName: hubble-peer.kube-system.svc.cluster.local
+              - matchName: _grpc_config.hubble-peer.kube-system.svc.cluster.local
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -109,6 +110,7 @@ spec:
           rules:
             dns:
               - matchName: hubble-peer.kube-system.svc.cluster.local
+              - matchName: _grpc_config.hubble-peer.kube-system.svc.cluster.local
     - toEntities:
         - host
       toPorts:
