@@ -81,6 +81,9 @@ spec:
               app.kubernetes.io/managed-by: kopiur
         - podSelector:
             matchLabels:
+              k8s-app: hubble-ui
+        - podSelector:
+            matchLabels:
               app.kubernetes.io/component: controller
               app.kubernetes.io/instance: kopiur
               app.kubernetes.io/name: kopiur
