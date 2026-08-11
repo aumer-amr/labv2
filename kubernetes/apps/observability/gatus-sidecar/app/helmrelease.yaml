@@ -10,6 +10,10 @@ spec:
     name: gatus-sidecar
   interval: 1h
   values:
+    podLabels:
+      network.home.arpa/from-envoy-external: allow
+      network.home.arpa/to-envoy-external: allow
+      network.home.arpa/to-envoy-internal: allow
     deploymentAnnotations:
       reloader.stakater.com/auto: "true"
     gatus:

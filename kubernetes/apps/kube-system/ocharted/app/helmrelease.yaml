@@ -10,6 +10,8 @@ spec:
     name: ocharted
   interval: 1h
   values:
+    podLabels:
+      network.home.arpa/from-envoy-external: allow
     replicaCount: 2
     podDisruptionBudget:
       enabled: true

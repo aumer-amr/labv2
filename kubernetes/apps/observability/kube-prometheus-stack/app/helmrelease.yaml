@@ -25,6 +25,9 @@ spec:
             - name: envoy-internal
               namespace: network
       alertmanagerSpec:
+        podMetadata:
+          labels:
+            network.home.arpa/from-envoy-internal: allow
         alertmanagerConfiguration:
           name: alertmanager
         externalUrl: https://${SECRET_DOMAIN}
@@ -55,6 +58,9 @@ spec:
             - name: envoy-internal
               namespace: network
       prometheusSpec:
+        podMetadata:
+          labels:
+            network.home.arpa/from-envoy-internal: allow
         externalUrl: https://prometheus.${SECRET_DOMAIN}
         podMonitorSelectorNilUsesHelmValues: false
         probeSelectorNilUsesHelmValues: false

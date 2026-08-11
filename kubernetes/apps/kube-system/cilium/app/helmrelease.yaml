@@ -39,6 +39,8 @@ spec:
         enabled: true
       ui:
         enabled: true
+        podLabels:
+          network.home.arpa/from-envoy-internal: allow
         service:
           annotations:
             gatus.home-operations.com/enabled: "false"

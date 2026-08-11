@@ -7,6 +7,8 @@ metadata:
 spec:
   alias: ha_mcp
   workload:
+    podLabels:
+      network.home.arpa/to-envoy-external: allow
     # renovate: datasource=docker depName=ghcr.io/homeassistant-ai/ha-mcp
     image: ghcr.io/homeassistant-ai/ha-mcp:8.1.1
     port: 8086

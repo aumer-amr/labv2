@@ -18,6 +18,8 @@ spec:
           folderRef: victoria-logs
     server:
       fullnameOverride: victoria-logs
+      podLabels:
+        network.home.arpa/from-envoy-internal: allow
       persistentVolume:
         enabled: true
         storageClassName: ceph-block

@@ -51,6 +51,8 @@ spec:
               limits:
                 memory: 256Mi
     defaultPodOptions:
+      labels:
+        network.home.arpa/to-envoy-external: allow
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534

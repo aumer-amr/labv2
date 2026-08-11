@@ -29,6 +29,22 @@ spec:
           app.kubernetes.io/name: flux
       kustomize:
         patches:
+          - # Allow source-controller to use the external Gateway
+            patch: |
+              - op: add
+                path: /spec/template/metadata/labels/network.home.arpa~1to-envoy-external
+                value: allow
+            target:
+              kind: Deployment
+              name: source-controller
+          - # Allow the external Gateway to reach notification-controller
+            patch: |
+              - op: add
+                path: /spec/template/metadata/labels/network.home.arpa~1from-envoy-external
+                value: allow
+            target:
+              kind: Deployment
+              name: notification-controller
           - # Increase the number of workers
             patch: |
               - op: add
