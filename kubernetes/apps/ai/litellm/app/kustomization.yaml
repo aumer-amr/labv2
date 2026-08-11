@@ -7,4 +7,5 @@ resources:
   - ./httproute.yaml
   - ./litellmproxy.yaml
   - ./models/
+  - ./networkpolicy.yaml
   - ./servicemonitor.yaml
