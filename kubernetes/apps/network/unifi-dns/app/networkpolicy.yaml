@@ -1,0 +1,56 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: unifi-dns
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: unifi-dns
+      app.kubernetes.io/name: external-dns
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 7979
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 8080
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: unifi-dns-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: unifi-dns
+      app.kubernetes.io/name: external-dns
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+    - toCIDR:
+        - 10.10.1.1/32
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

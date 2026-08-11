@@ -1,0 +1,61 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: k8s-gateway-dns
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: k8s-gateway
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: k8s-gateway
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: k8s-gateway
+  ingress:
+    - fromEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "1053"
+              protocol: UDP
+    - fromEntities:
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "1053"
+              protocol: UDP
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
