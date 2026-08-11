@@ -81,6 +81,9 @@ spec:
               app.kubernetes.io/managed-by: kopiur
         - podSelector:
             matchLabels:
+              k8s-app: hubble-relay
+        - podSelector:
+            matchLabels:
               k8s-app: hubble-ui
         - podSelector:
             matchLabels:
