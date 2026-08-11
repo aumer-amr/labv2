@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roll Out Network Policies"
+  short_description: "Stage and recover NetworkPolicy changes safely"
+  default_prompt: "Use $rollout-network-policies to stage, test, and recover these network policies safely."

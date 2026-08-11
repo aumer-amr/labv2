@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Network Policies"
+  short_description: "Review Kubernetes policies for least privilege"
+  default_prompt: "Use $review-network-policies to review these Kubernetes network policies against repository and live evidence."

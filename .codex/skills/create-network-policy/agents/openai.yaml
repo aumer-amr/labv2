@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Network Policy"
+  short_description: "Research and author least-privilege netpols"
+  default_prompt: "Use $create-network-policy to research and create a least-privilege policy for this workload."
