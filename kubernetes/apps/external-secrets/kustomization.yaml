@@ -7,4 +7,5 @@ namespace: external-secrets
 resources:
   - ./namespace.yaml
   - ./external-secrets/ks.yaml
+  - ./network-policies/ks.yaml
   - ./onepassword-connect/ks.yaml

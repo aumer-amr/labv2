@@ -1,0 +1,65 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: onepassword-connect
+spec:
+  podSelector:
+    matchLabels:
+      app: onepassword-connect
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: external-secrets
+              app.kubernetes.io/name: external-secrets
+      ports:
+        - port: 80
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 80
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: onepassword-connect-external
+spec:
+  endpointSelector:
+    matchLabels:
+      app: onepassword-connect
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*.1password.com"
+              - matchPattern: "*.1password.eu"
+              - matchPattern: "*.1passwordservices.com"
+              - matchPattern: "*.1passwordusercontent.com"
+              - matchPattern: "*.1passwordusercontent.eu"
+    - toFQDNs:
+        - matchPattern: "*.1password.com"
+        - matchPattern: "*.1password.eu"
+        - matchPattern: "*.1passwordservices.com"
+        - matchPattern: "*.1passwordusercontent.com"
+        - matchPattern: "*.1passwordusercontent.eu"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
