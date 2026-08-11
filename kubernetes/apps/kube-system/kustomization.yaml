@@ -9,6 +9,7 @@ components:
 
 resources:
   - ./namespace.yaml
+  - ./network-policies/ks.yaml
   - ./cilium/ks.yaml
   - ./coredns/ks.yaml
   - ./ocharted/ks.yaml
