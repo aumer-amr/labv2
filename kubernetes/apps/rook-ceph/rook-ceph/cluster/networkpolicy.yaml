@@ -1,0 +1,756 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/networking.k8s.io/networkpolicy_v1.json
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: rook-ceph-detect-version-api
+spec:
+  endpointSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - ceph-file-controller-detect-version
+          - rook-ceph-detect-version
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rook-ceph-mon
+spec:
+  podSelector:
+    matchLabels:
+      app: rook-ceph-mon
+      rook_cluster: rook-ceph
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-operator
+      ports:
+        - port: 3300
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-osd
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mgr
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mds
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-crashcollector
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-tools
+      ports:
+        - port: 3300
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph.rbd.csi.ceph.com-ctrlplugin
+      ports:
+        - port: 3300
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph.cephfs.csi.ceph.com-ctrlplugin
+      ports:
+        - port: 3300
+          protocol: TCP
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mgr
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-osd
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mds
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: rook-ceph-mon-nodes
+spec:
+  endpointSelector:
+    matchLabels:
+      app: rook-ceph-mon
+      rook_cluster: rook-ceph
+  ingress:
+    - fromEntities:
+        - host
+      toPorts:
+        - ports:
+            - port: "3300"
+              protocol: TCP
+    - fromEntities:
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "3300"
+              protocol: TCP
+    - fromEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "3300"
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rook-ceph-mgr
+spec:
+  podSelector:
+    matchLabels:
+      app: rook-ceph-mgr
+      rook_cluster: rook-ceph
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-operator
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mgr
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-osd
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mds
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph.cephfs.csi.ceph.com-ctrlplugin
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph.rbd.csi.ceph.com-ctrlplugin
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-tools
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 9283
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-internal
+      ports:
+        - port: 7000
+          protocol: TCP
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mgr
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-osd
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mds
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: rook-ceph-mgr-api
+spec:
+  endpointSelector:
+    matchLabels:
+      app: rook-ceph-mgr
+      rook_cluster: rook-ceph
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: rook-ceph-mgr-nodes
+spec:
+  endpointSelector:
+    matchLabels:
+      app: rook-ceph-mgr
+      rook_cluster: rook-ceph
+  ingress:
+    - fromEntities:
+        - host
+      toPorts:
+        - ports:
+            - port: "6800"
+              endPort: 7568
+              protocol: TCP
+    - fromEntities:
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "6800"
+              endPort: 7568
+              protocol: TCP
+    - fromEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6800"
+              endPort: 7568
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rook-ceph-osd
+spec:
+  podSelector:
+    matchLabels:
+      app: rook-ceph-osd
+      rook_cluster: rook-ceph
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mgr
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-osd
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mds
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph.rbd.csi.ceph.com-ctrlplugin
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph.cephfs.csi.ceph.com-ctrlplugin
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-tools
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mgr
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-osd
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mds
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: rook-ceph-osd-api
+spec:
+  endpointSelector:
+    matchLabels:
+      app: rook-ceph-osd
+      rook_cluster: rook-ceph
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: rook-ceph-osd-nodes
+spec:
+  endpointSelector:
+    matchLabels:
+      app: rook-ceph-osd
+      rook_cluster: rook-ceph
+  ingress:
+    - fromEntities:
+        - host
+      toPorts:
+        - ports:
+            - port: "6800"
+              endPort: 7568
+              protocol: TCP
+    - fromEntities:
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "6800"
+              endPort: 7568
+              protocol: TCP
+    - fromEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6800"
+              endPort: 7568
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: rook-ceph-osd-prepare-api
+spec:
+  endpointSelector:
+    matchLabels:
+      app: rook-ceph-osd-prepare
+      rook_cluster: rook-ceph
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rook-ceph-mds
+spec:
+  podSelector:
+    matchLabels:
+      app: rook-ceph-mds
+      rook_cluster: rook-ceph
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mgr
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-osd
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mds
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph.cephfs.csi.ceph.com-ctrlplugin
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-tools
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mgr
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-osd
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mds
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: rook-ceph-mds-nodes
+spec:
+  endpointSelector:
+    matchLabels:
+      app: rook-ceph-mds
+      rook_cluster: rook-ceph
+  ingress:
+    - fromEntities:
+        - host
+      toPorts:
+        - ports:
+            - port: "6800"
+              endPort: 7568
+              protocol: TCP
+    - fromEntities:
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "6800"
+              endPort: 7568
+              protocol: TCP
+    - fromEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6800"
+              endPort: 7568
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rook-ceph-crashcollector
+spec:
+  podSelector:
+    matchLabels:
+      app: rook-ceph-crashcollector
+      rook_cluster: rook-ceph
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rook-ceph-tools
+spec:
+  podSelector:
+    matchLabels:
+      app: rook-ceph-tools
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mgr
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-osd
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mds
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rook-ceph-exporter
+spec:
+  podSelector:
+    matchLabels:
+      app: rook-ceph-exporter
+      rook_cluster: rook-ceph
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 9926
+          protocol: TCP

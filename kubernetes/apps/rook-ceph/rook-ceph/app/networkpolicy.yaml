@@ -1,0 +1,197 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/networking.k8s.io/networkpolicy_v1.json
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rook-ceph-operator
+spec:
+  podSelector:
+    matchLabels:
+      app: rook-ceph-operator
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mgr
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: rook-ceph-operator-api
+spec:
+  endpointSelector:
+    matchLabels:
+      app: rook-ceph-operator
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: ceph-csi-controller-manager-api
+spec:
+  endpointSelector:
+    matchLabels:
+      control-plane: ceph-csi-op-controller-manager
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: ceph-csi-controller-manager-health-probes
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: rook-ceph
+      app.kubernetes.io/name: ceph-csi
+      control-plane: ceph-csi-op-controller-manager
+  ingress:
+    - fromEntities:
+        - host
+      toPorts:
+        - ports:
+            - port: "8081"
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rbd-ctrlplugin
+spec:
+  podSelector:
+    matchLabels:
+      app: rook-ceph.rbd.csi.ceph.com-ctrlplugin
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-osd
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mgr
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: rbd-ctrlplugin-api
+spec:
+  endpointSelector:
+    matchLabels:
+      app: rook-ceph.rbd.csi.ceph.com-ctrlplugin
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cephfs-ctrlplugin
+spec:
+  podSelector:
+    matchLabels:
+      app: rook-ceph.cephfs.csi.ceph.com-ctrlplugin
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mds
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mgr
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-osd
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: cephfs-ctrlplugin-api
+spec:
+  endpointSelector:
+    matchLabels:
+      app: rook-ceph.cephfs.csi.ceph.com-ctrlplugin
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP

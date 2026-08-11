@@ -9,3 +9,4 @@ components:
 resources:
   - ./namespace.yaml
   - ./rook-ceph/ks.yaml
+  - ./network-policies/ks.yaml
