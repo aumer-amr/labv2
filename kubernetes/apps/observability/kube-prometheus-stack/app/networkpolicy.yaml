@@ -559,6 +559,21 @@ spec:
     - toEntities: [host]
       toPorts:
         - ports:
+            - port: "9965"
+              protocol: TCP
+    - toEntities: [remote-node]
+      toPorts:
+        - ports:
+            - port: "9965"
+              protocol: TCP
+    - toEntities: [kube-apiserver]
+      toPorts:
+        - ports:
+            - port: "9965"
+              protocol: TCP
+    - toEntities: [host]
+      toPorts:
+        - ports:
             - port: "2381"
               protocol: TCP
     - toEntities: [remote-node]
