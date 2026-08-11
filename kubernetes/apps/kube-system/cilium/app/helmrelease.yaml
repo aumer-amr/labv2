@@ -35,6 +35,12 @@ spec:
       enabled: false
     hubble:
       enabled: true
+      metrics:
+        enableOpenMetrics: true
+        enabled:
+          - drop:labelsContext=source_namespace,source_workload,destination_namespace,destination_workload,traffic_direction
+        serviceMonitor:
+          enabled: true
       relay:
         enabled: true
       ui:
