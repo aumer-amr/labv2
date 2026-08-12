@@ -21,6 +21,8 @@ spec:
               app.kubernetes.io/instance: spegel
               app.kubernetes.io/name: spegel
       ports:
+        - port: 5000
+          protocol: TCP
         - port: 5001
           protocol: TCP
     - from:
