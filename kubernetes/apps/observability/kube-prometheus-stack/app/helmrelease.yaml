@@ -110,7 +110,7 @@ spec:
                       source_namespace="home",
                       source_workload="home-assistant",
                       protocol="UDP",
-                      destination_ip=~"^(239[.]255[.]255[.]250|255[.]255[.]255[.]255)$"
+                      destination_ip=~"^(224[.]0[.]0[.]251|239[.]255[.]255[.]250|255[.]255[.]255[.]255)$"
                     }[5m])
                   ) >= 3
                 for: 2m
