@@ -122,6 +122,7 @@ Also inspect affected HelmRelease, deployment/DaemonSet, pod, route `Accepted` a
 ## Git Conventions
 
 - Preserve unrelated user changes and stage explicit paths.
+- Never stage, commit, or push documentation files unless the user explicitly authorizes including them. A generic request to commit or push does not authorize documentation files.
 - Split commits by Kubernetes namespace when practical.
 - Use Conventional Commits with the namespace as scope for `feat`, `fix`, and `chore`, for example `feat(observability): deploy Gatus sidecar`.
 - Keep subjects imperative and concise. Add a body only when the reason is not obvious.
