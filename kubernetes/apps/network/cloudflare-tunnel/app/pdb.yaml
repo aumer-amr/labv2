@@ -1,0 +1,12 @@
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cloudflare-tunnel
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: cloudflare-tunnel
+      app.kubernetes.io/instance: cloudflare-tunnel
+      app.kubernetes.io/name: cloudflare-tunnel

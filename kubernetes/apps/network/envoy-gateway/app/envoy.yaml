@@ -34,6 +34,8 @@ spec:
               cpu: 100m
             limits:
               memory: 1Gi
+      envoyPDB:
+        maxUnavailable: 1
       envoyService:
         externalTrafficPolicy: Cluster
   shutdown:

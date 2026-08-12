@@ -21,6 +21,8 @@ spec:
     replicaCount: 2
     podLabels:
       platform.home.arpa/tier: "0"
+    podDisruptionBudget:
+      maxUnavailable: 1
     priorityClassName: system-cluster-critical
     topologySpreadConstraints:
       - labelSelector:

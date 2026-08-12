@@ -1,0 +1,20 @@
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: rook-ceph-rbd-csi-controller
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: rook-ceph.rbd.csi.ceph.com-ctrlplugin
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: rook-ceph-cephfs-csi-controller
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: rook-ceph.cephfs.csi.ceph.com-ctrlplugin
