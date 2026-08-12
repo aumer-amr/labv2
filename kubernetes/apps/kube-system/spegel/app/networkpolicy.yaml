@@ -44,6 +44,47 @@ spec:
         - port: 5001
           protocol: TCP
 ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: spegel-registry-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: spegel
+      app.kubernetes.io/instance: spegel
+      app.kubernetes.io/name: spegel
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: spegel
+              app.kubernetes.io/instance: spegel
+              app.kubernetes.io/name: spegel
+      ports:
+        - port: 5000
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: spegel-registry
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: spegel
+      app.kubernetes.io/instance: spegel
+      app.kubernetes.io/name: spegel
+  ingress:
+    - fromEntities:
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "5000"
+              protocol: TCP
+---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
