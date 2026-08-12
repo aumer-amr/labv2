@@ -28,6 +28,15 @@ spec:
       ports:
         - port: 3300
           protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-osd
+              rook_cluster: rook-ceph
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy

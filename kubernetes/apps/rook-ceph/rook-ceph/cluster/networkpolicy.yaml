@@ -370,6 +370,14 @@ spec:
     - from:
         - podSelector:
             matchLabels:
+              app: rook-ceph-operator
+      ports:
+        - port: 6800
+          endPort: 7568
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
               app: rook-ceph-mon
               rook_cluster: rook-ceph
       ports:
