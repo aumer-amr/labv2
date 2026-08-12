@@ -19,7 +19,17 @@ spec:
       name: kube-dns
       clusterIP: "10.43.0.10"
     replicaCount: 2
+    podLabels:
+      platform.home.arpa/tier: "0"
     priorityClassName: system-cluster-critical
+    topologySpreadConstraints:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/instance: coredns
+            app.kubernetes.io/name: coredns
+        maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
     servers:
       - zones:
           - zone: .

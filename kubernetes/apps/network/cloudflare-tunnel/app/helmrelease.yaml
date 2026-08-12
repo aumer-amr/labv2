@@ -11,6 +11,7 @@ spec:
   values:
     controllers:
       cloudflare-tunnel:
+        replicas: 2
         strategy: RollingUpdate
         annotations:
           reloader.stakater.com/auto: "true"
@@ -53,6 +54,16 @@ spec:
     defaultPodOptions:
       labels:
         network.home.arpa/to-envoy-external: allow
+        platform.home.arpa/tier: "0"
+      topologySpreadConstraints:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/controller: cloudflare-tunnel
+              app.kubernetes.io/instance: cloudflare-tunnel
+              app.kubernetes.io/name: cloudflare-tunnel
+          maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534

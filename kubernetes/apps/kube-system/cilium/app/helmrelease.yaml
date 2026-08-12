@@ -79,6 +79,8 @@ spec:
       serviceMonitor:
         enabled: true
         trustCRDsExist: true
+    podLabels:
+      platform.home.arpa/tier: "0"
     rollOutCiliumPods: true
     routingMode: native
     securityContext:

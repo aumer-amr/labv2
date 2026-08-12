@@ -12,6 +12,21 @@ spec:
     kubernetes:
       envoyDeployment:
         replicas: 2
+        pod:
+          labels:
+            platform.home.arpa/tier: "0"
+          topologySpreadConstraints:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: proxy
+                  app.kubernetes.io/managed-by: envoy-gateway
+                  app.kubernetes.io/name: envoy
+              matchLabelKeys:
+                - gateway.envoyproxy.io/owning-gateway-name
+                - gateway.envoyproxy.io/owning-gateway-namespace
+              maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
         container:
           imageRepository: mirror.gcr.io/envoyproxy/envoy
           resources:

@@ -15,6 +15,11 @@ spec:
       labels:
         mgr:
           network.home.arpa/from-envoy-internal: allow
+          platform.home.arpa/tier: "0"
+        mon:
+          platform.home.arpa/tier: "0"
+        osd:
+          platform.home.arpa/tier: "0"
       cephConfig:
         mon:
           mon_cluster_log_level: info
@@ -110,6 +115,8 @@ spec:
           metadataServer:
             activeCount: 1
             activeStandby: true
+            labels:
+              platform.home.arpa/tier: "0"
             placement:
               topologySpreadConstraints:
                 - maxSkew: 1

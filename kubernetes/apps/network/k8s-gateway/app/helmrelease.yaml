@@ -9,6 +9,8 @@ spec:
     name: k8s-gateway
   interval: 1h
   values:
+    customLabels:
+      platform.home.arpa/tier: "0"
     fullnameOverride: k8s-gateway
     domain: "${SECRET_DOMAIN}"
     ttl: 1
@@ -19,3 +21,12 @@ spec:
         lbipam.cilium.io/ips: "10.10.1.112"
       externalTrafficPolicy: Cluster
     watchedResources: ["HTTPRoute", "Service"]
+    replicaCount: 2
+    topologySpreadConstraints:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/instance: k8s-gateway
+            app.kubernetes.io/name: k8s-gateway
+        maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule

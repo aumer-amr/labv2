@@ -62,6 +62,16 @@ Also inspect affected HelmRelease, deployment/DaemonSet, pod, route `Accepted` a
 - Cross-namespace `dependsOn` entries must include `namespace`. Example: dependencies on `onepassword-connect` use `namespace: external-secrets`.
 - Reuse existing OCIRepository, HelmRelease, ExternalSecret, HTTPRoute, monitoring, and resource conventions before adding new structure.
 
+## Availability Tiers
+
+- `platform.home.arpa/tier: "0"` identifies a workload whose existing service must remain available during a planned single-node drain.
+- Never infer or assign Tier 0 silently. If a new or existing workload appears to require Tier 0 availability, explain the failure impact and ask the user to confirm the classification before changing it.
+- After the user confirms Tier 0, add the label to the workload's pod template and add a per-workload PodDisruptionBudget when the controller type and replica topology make a PDB effective.
+- Do not select multiple independent workloads with one shared Tier 0 PodDisruptionBudget. Each availability unit needs its own budget and stable workload-specific selector.
+- A PDB is not high availability. Before adding one, ensure the workload has enough replicas on distinct nodes; do not add a blocking PDB to a singleton. DaemonSets normally do not need PDBs because node drains do not evict their pods through the eviction API.
+- Use `maxUnavailable: 1` for an approved two-or-more-replica Tier 0 workload unless the user explicitly approves a different disruption policy.
+- Rook-generated Ceph MON, MGR, MDS, and OSD budgets remain operator-owned; do not duplicate or override them.
+
 ## Namespace and Helm Safety
 
 - Namespace omission is high risk. Rendering a HelmRelease or application into `default` can create duplicate workloads and cluster-scoped RBAC ownership conflicts.
