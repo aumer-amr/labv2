@@ -56,12 +56,14 @@ spec:
           rules:
             dns:
               - matchName: grafana.com
+              - matchName: raw.githubusercontent.com
               - matchName: grafana-service
               - matchName: grafana-service.observability
               - matchName: grafana-service.observability.svc
               - matchName: grafana-service.observability.svc.cluster.local
     - toFQDNs:
         - matchName: grafana.com
+        - matchName: raw.githubusercontent.com
       toPorts:
         - ports:
             - port: "443"
