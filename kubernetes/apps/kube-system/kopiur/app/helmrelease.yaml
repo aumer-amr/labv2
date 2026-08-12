@@ -11,6 +11,14 @@ spec:
   interval: 1h
   values:
     monitoring:
+      dashboards:
+        enabled: true
+        grafanaOperator:
+          enabled: true
+          matchLabels:
+            dashboards: grafana
+      prometheusRule:
+        enabled: true
       serviceMonitor:
         enabled: true
     podSecurityContext:

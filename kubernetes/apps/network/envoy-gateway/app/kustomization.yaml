@@ -5,6 +5,8 @@ resources:
   - ./networkpolicy.yaml
   - ./certificate.yaml
   - ./envoy.yaml
+  - ./grafanadashboard.yaml
   - ./helmrelease.yaml
   - ./ocirepository.yaml
   - ./podmonitor.yaml
+  - ./servicemonitor.yaml

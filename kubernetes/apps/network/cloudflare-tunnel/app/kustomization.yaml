@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - ./networkpolicy.yaml
   - ./dnsendpoint.yaml
+  - ./grafanadashboard.yaml
   - ./secret.sops.yaml
   - ./helmrelease.yaml
   - ./ocirepository.yaml

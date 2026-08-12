@@ -11,6 +11,16 @@ spec:
     - Ingress
   ingress:
     - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 19001
+          protocol: TCP
+    - from:
         - podSelector:
             matchLabels:
               gateway.envoyproxy.io/owning-gateway-name: envoy-external
