@@ -101,6 +101,14 @@ spec:
       ports:
         - port: 3300
           protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-exporter
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
   egress:
     - to:
         - podSelector:
@@ -751,6 +759,7 @@ spec:
       rook_cluster: rook-ceph
   policyTypes:
     - Ingress
+    - Egress
   ingress:
     - from:
         - namespaceSelector:
@@ -761,4 +770,13 @@ spec:
               app.kubernetes.io/name: prometheus
       ports:
         - port: 9926
+          protocol: TCP
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
           protocol: TCP
