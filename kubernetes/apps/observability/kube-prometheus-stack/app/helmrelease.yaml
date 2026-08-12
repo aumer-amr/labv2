@@ -104,6 +104,14 @@ spec:
                 expr: |
                   sum by (source_namespace, source_workload, destination_namespace, destination_workload, traffic_direction, protocol) (
                     increase(hubble_drop_total{reason=~"(?i)policy[ _]denied"}[5m])
+                    unless on (source_namespace, source_workload, protocol, destination_ip)
+                    increase(hubble_drop_total{
+                      reason=~"(?i)policy[ _]denied",
+                      source_namespace="home",
+                      source_workload="home-assistant",
+                      protocol="UDP",
+                      destination_ip=~"^(239[.]255[.]255[.]250|255[.]255[.]255[.]255)$"
+                    }[5m])
                   ) >= 3
                 for: 2m
                 labels:
