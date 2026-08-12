@@ -49,5 +49,5 @@ jobs:
           RENOVATE_AUTODISCOVER: "true"
           RENOVATE_AUTODISCOVER_FILTER: ${{ github.repository }}
           RENOVATE_HOST_RULES: >-
-            [{"hostType":"github","matchHost":"https://api.github.com","readOnly":true,"token":"${{ secrets.RENOVATE_GITHUB_COM_TOKEN }}"}]
+            [{"hostType":"github","matchHost":"https://api.github.com/repos","readOnly":true,"token":"${{ secrets.RENOVATE_GITHUB_COM_TOKEN }}"}]
           RENOVATE_PLATFORM: github
