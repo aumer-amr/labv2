@@ -79,6 +79,12 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/managed-by: kopiur
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: security
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: kopiur
         - podSelector:
             matchLabels:
               k8s-app: hubble-relay

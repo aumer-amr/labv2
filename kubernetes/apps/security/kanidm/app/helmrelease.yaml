@@ -1,0 +1,105 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kanidm
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: kanidm
+  interval: 1h
+  values:
+    controllers:
+      kanidm:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        replicas: 1
+        type: statefulset
+        containers:
+          app:
+            image:
+              repository: docker.io/kanidm/server
+              tag: 1.11.0@sha256:381fc49d0779e43f39dd9111e0b430d13c5bc27912138dbc5ed516f3923354d7
+            env:
+              KANIDM_ADMIN_BIND_PATH: /var/run/kanidmd.sock
+              KANIDM_BINDADDRESS: "[::]:8443"
+              KANIDM_DB_PATH: /data/kanidm.db
+              KANIDM_DOMAIN: idm.${SECRET_DOMAIN}
+              KANIDM_ONLINE_BACKUP_PATH: /data/backups
+              KANIDM_ONLINE_BACKUP_SCHEDULE: "03 */6 * * *"
+              KANIDM_ONLINE_BACKUP_VERSIONS: "7"
+              KANIDM_ORIGIN: https://idm.${SECRET_DOMAIN}
+              KANIDM_TLS_CHAIN: /certs/tls.crt
+              KANIDM_TLS_KEY: /certs/tls.key
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /sbin/kanidmd
+                      - scripting
+                      - healthcheck
+                  timeoutSeconds: 10
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /sbin/kanidmd
+                      - scripting
+                      - healthcheck
+                  timeoutSeconds: 10
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /sbin/kanidmd
+                      - scripting
+                      - healthcheck
+                  failureThreshold: 30
+                  timeoutSeconds: 10
+            resources:
+              requests:
+                cpu: 10m
+              limits:
+                memory: 1Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      labels:
+        network.home.arpa/from-envoy-external: allow
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    service:
+      app:
+        ports:
+          https:
+            port: 8443
+    persistence:
+      data:
+        existingClaim: "{{ .Release.Name }}"
+        globalMounts:
+          - path: /data
+      certs:
+        type: secret
+        name: kanidm-tls
+        defaultMode: 0400
+        globalMounts:
+          - path: /certs
+            readOnly: true
+      run:
+        type: emptyDir
+        globalMounts:
+          - path: /var/run
