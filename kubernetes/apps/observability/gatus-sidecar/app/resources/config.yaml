@@ -7,10 +7,12 @@ ui:
 
 alerting:
   discord:
-    webhook-url: ${DISCORD_WEBHOOK_URL}
-    overrides:
-      - group: external-tlb
-        webhook-url: ${DISCORD_TLB_WEBHOOK_URL}
+    webhook-url: ${DISCORD_TLB_WEBHOOK_URL}
+  pushover:
+    application-token: ${PUSHOVER_API_KEY}
+    user-key: ${PUSHOVER_USER_KEY}
+    priority: 0
+    resolved-priority: 0
     default-alert:
       enabled: true
       description: health-check failed
@@ -96,6 +98,8 @@ endpoints:
     interval: 1m
     conditions:
       - "[STATUS] == 401"
+    alerts:
+      - type: pushover
     ui:
       hide-url: true
       hide-hostname: true

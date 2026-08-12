@@ -96,7 +96,7 @@ Also inspect affected HelmRelease, deployment/DaemonSet, pod, route `Accepted` a
 
 - Gatus lives in the correctly spelled `observability` namespace.
 - Keep it stateless with memory storage and `TZ: Europe/Amsterdam` unless explicitly changed.
-- Use Discord alerting. Do not create a PrometheusRule or Buddy integration unless explicitly requested.
+- Use Pushover as the default alert provider. Keep the `external-tlb` group on Discord through `DISCORD_TLB_WEBHOOK_URL`; do not add another Discord webhook integration unless explicitly requested.
 - Monitoring is per-resource opt-in through `gatus.home-operations.com/endpoint` annotations.
 - External Gateway defaults group endpoints as `external` and uses its configured public DNS resolver.
 - Internal Gateway defaults are `group: internal`, `guarded: true`, and UI `hide-hostname`/`hide-url` enabled. Preserve these defaults.

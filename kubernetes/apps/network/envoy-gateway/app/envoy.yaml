@@ -66,7 +66,7 @@ metadata:
     external-dns.alpha.kubernetes.io/target: external.${SECRET_DOMAIN}
     gatus.home-operations.com/endpoint: |-
       alerts:
-        - type: discord
+        - type: pushover
       client:
         dns-resolver: tcp://1.1.1.1:53
       group: external
@@ -102,7 +102,7 @@ metadata:
     external-dns.alpha.kubernetes.io/target: internal.${SECRET_DOMAIN}
     gatus.home-operations.com/endpoint: |-
       alerts:
-        - type: discord
+        - type: pushover
       group: internal
       ui:
         hide-hostname: true

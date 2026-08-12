@@ -116,7 +116,7 @@ spec:
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: alertmanager-discord
+  name: alertmanager-pushover
 spec:
   endpointSelector:
     matchLabels:
@@ -132,9 +132,9 @@ spec:
               protocol: ANY
           rules:
             dns:
-              - matchName: discord.com
+              - matchName: api.pushover.net
     - toFQDNs:
-        - matchName: discord.com
+        - matchName: api.pushover.net
       toPorts:
         - ports:
             - port: "443"

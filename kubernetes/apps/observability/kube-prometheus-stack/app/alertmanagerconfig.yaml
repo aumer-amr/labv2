@@ -6,7 +6,7 @@ metadata:
   name: alertmanager
 spec:
   route:
-    receiver: discord
+    receiver: pushover
     repeatInterval: 12h
     routes:
       - receiver: blackhole
@@ -14,7 +14,7 @@ spec:
           - name: alertname
             value: InfoInhibitor
             matchType: =
-      - receiver: discord
+      - receiver: pushover
         matchers:
           - name: severity
             value: critical
@@ -41,24 +41,28 @@ spec:
 
   receivers:
     - name: blackhole
-    - name: discord
-      discordConfigs:
-        - apiURL:
-            key: DISCORD_WEBHOOK_URL
+    - name: pushover
+      pushoverConfigs:
+        - token:
+            key: PUSHOVER_API_KEY
             name: alertmanager-secret
+          userKey:
+            key: PUSHOVER_USER_KEY
+            name: alertmanager-secret
+          priority: "0"
+          sendResolved: true
           title: |-
             [{{ .Status | toUpper }}:{{ if eq .Status "firing" }}{{ .Alerts.Firing | len }}{{ else }}{{ .Alerts.Resolved | len }}{{ end }}]
-          username: Alertmanager
-          content: |-
+          message: |-
             {{- range .Alerts }}
-              **{{ .Labels.alertname }} {{ if ne .Labels.severity "" }}({{ .Labels.severity | title }}){{ end }} **
+              {{ .Labels.alertname }} {{ if ne .Labels.severity "" }}({{ .Labels.severity | title }}){{ end }}
               {{- if ne .Annotations.description "" }}
-                **Description:** {{ .Annotations.description }}
+                Description: {{ .Annotations.description }}
               {{- else if ne .Annotations.summary "" }}
-                **Summary:** {{ .Annotations.summary }}
+                Summary: {{ .Annotations.summary }}
               {{- else if ne .Annotations.message "" }}
-                **Message:** {{ .Annotations.message }}
+                Message: {{ .Annotations.message }}
               {{- else }}
-                **Description:** N/A
+                Description: N/A
               {{- end }}
             {{- end }}
