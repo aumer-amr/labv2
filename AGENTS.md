@@ -90,6 +90,9 @@ Also inspect affected HelmRelease, deployment/DaemonSet, pod, route `Accepted` a
     - Hubble, relay, and UI enabled
 - Do not enable Cilium's Envoy or Gateway API merely because Envoy Gateway exists in `network`; these are different controllers and data planes.
 - Internal routes attach to `network/envoy-internal`; external routes attach to `network/envoy-external`.
+- For every HTTPRoute attached to `network/envoy-external`, except routes classified as `external-tlb`, ask whether access should be protected by Kanidm before implementing or changing the route.
+- When Kanidm protection is requested, first check whether the application supports OAuth 2.0, OpenID Connect, or LDAP natively. Prefer the application's native integration and help create and configure its dedicated Kanidm OAuth2/OIDC client or LDAP integration. If the application has no suitable native support, protect the HTTPRoute with an Envoy Gateway OIDC `SecurityPolicy` and help create its dedicated Kanidm OAuth2 client.
+- Never share one Kanidm OAuth2/OIDC client between independent applications. Store generated client credentials through the repository's existing ExternalSecret provider; never place them in manifests or output their values.
 - After Envoy changes, require both Gateways to report `Accepted=True` and `Programmed=True`, then verify affected HTTPRoutes.
 
 ## Gatus Conventions
