@@ -118,6 +118,12 @@ spec:
       app.kubernetes.io/managed-by: kopiur
       kopiur.home-operations.com/maintenance: cloudflare
   egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
