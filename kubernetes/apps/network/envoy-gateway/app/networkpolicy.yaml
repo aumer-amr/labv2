@@ -72,13 +72,6 @@ spec:
               - matchName: idm.${SECRET_DOMAIN}.network.svc.cluster.local
               - matchName: idm.${SECRET_DOMAIN}.svc.cluster.local
               - matchName: idm.${SECRET_DOMAIN}.cluster.local
-    - toFQDNs:
-        - matchName: idm.${SECRET_DOMAIN}
-        - matchName: external.${SECRET_DOMAIN}
-      toPorts:
-        - ports:
-            - port: "443"
-              protocol: TCP
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
