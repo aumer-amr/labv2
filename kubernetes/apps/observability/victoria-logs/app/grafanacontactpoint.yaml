@@ -1,0 +1,16 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/grafana.integreatly.org/grafanacontactpoint_v1beta1.json
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaContactPoint
+metadata:
+  name: kanidm-security-alertmanager
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  name: kanidm-security-alertmanager
+  receivers:
+    - uid: kanidm-alertmanager
+      type: prometheus-alertmanager
+      settings:
+        url: http://alertmanager-operated.observability.svc.cluster.local:9093

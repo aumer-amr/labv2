@@ -9,3 +9,5 @@ resources:
   - ./ocirepository.yaml
   - ./grafanadatasource.yaml
   - ./grafanafolder.yaml
+  - ./grafanacontactpoint.yaml
+  - ./grafanaalertrulegroup.yaml

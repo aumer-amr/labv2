@@ -9,6 +9,7 @@ spec:
     matchLabels:
       dashboards: grafana
   datasource:
+    uid: 0c7a5d1b-d7fa-4155-847a-a17d9a002be3
     type: victoriametrics-logs-datasource
     name: victoria-logs
     access: proxy

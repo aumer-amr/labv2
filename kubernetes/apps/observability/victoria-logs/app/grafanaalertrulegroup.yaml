@@ -1,0 +1,99 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/grafana.integreatly.org/grafanaalertrulegroup_v1beta1.json
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaAlertRuleGroup
+metadata:
+  name: kanidm-auth-alerts
+spec:
+  folderRef: victoria-logs
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  interval: 1m
+  rules:
+    - uid: kanidm-auth-failure-spike
+      title: KanidmAuthFailureSpike
+      condition: C
+      for: 0s
+      noDataState: OK
+      execErrState: Error
+      annotations:
+        description: "{{ $values.B.Value }} denied authentication events in the last 5 minutes."
+        summary: Kanidm authentication failure spike
+      labels:
+        category: security
+        namespace: security
+        severity: "{{ if gt $values.B.Value 20.0 }}critical{{ else }}warning{{ end }}"
+      notificationSettings:
+        receiver: kanidm-security-alertmanager
+      data:
+        - refId: A
+          datasourceUid: 0c7a5d1b-d7fa-4155-847a-a17d9a002be3
+          relativeTimeRange:
+            from: 300
+            to: 0
+          model:
+            datasource:
+              type: victoriametrics-logs-datasource
+              uid: 0c7a5d1b-d7fa-4155-847a-a17d9a002be3
+            editorMode: code
+            expr: >-
+              kubernetes.pod_name:"kanidm-0" AND "AuthenticationDenied"
+              | stats count() as failures
+            intervalMs: 60000
+            maxDataPoints: 43200
+            queryType: stats
+            refId: A
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            conditions:
+              - evaluator:
+                  params: [0, 0]
+                  type: gt
+                operator:
+                  type: and
+                query:
+                  params: [B]
+                reducer:
+                  params: []
+                  type: last
+                type: query
+            datasource:
+              type: __expr__
+              uid: __expr__
+            expression: A
+            intervalMs: 1000
+            maxDataPoints: 43200
+            reducer: last
+            refId: B
+            type: reduce
+        - refId: C
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            conditions:
+              - evaluator:
+                  params: [5, 0]
+                  type: gt
+                operator:
+                  type: and
+                query:
+                  params: [C]
+                reducer:
+                  params: []
+                  type: last
+                type: query
+            datasource:
+              type: __expr__
+              uid: __expr__
+            expression: B
+            intervalMs: 1000
+            maxDataPoints: 43200
+            refId: C
+            type: threshold
