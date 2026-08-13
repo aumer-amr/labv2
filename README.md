@@ -27,6 +27,20 @@ mise install
 just --list
 ```
 
+### Private Codex instructions
+
+Codex must be launched through the repository's private-instruction wrapper. Add this to WSL `~/.bashrc` on every workstation:
+
+```bash
+if [[ -f /mnt/e/code/private/labv2/scripts/codex-shell.sh ]]; then
+  source /mnt/e/code/private/labv2/scripts/codex-shell.sh
+fi
+```
+
+Reload the shell with `source ~/.bashrc`. Running `codex` anywhere inside this repository then uses `scripts/codex-private`; elsewhere it uses the normal Codex executable.
+
+Edit `.codex-private/AGENTS.private.sops.yaml` through the VS Code SOPS extension or with `mise exec -- sops .codex-private/AGENTS.private.sops.yaml`. SOPS uses the repository's ignored `age.key` for decryption.
+
 Fresh deployment:
 
 ```sh

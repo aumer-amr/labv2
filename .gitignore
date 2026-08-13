@@ -20,6 +20,7 @@ __pycache__/
 .claude/
 .private/
 .venv/
+/AGENTS.override.md
 .DS_Store
 Thumbs.db
 /talos/output/
