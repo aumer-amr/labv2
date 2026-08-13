@@ -23,6 +23,7 @@ spec:
       api_url: https://idm.${SECRET_DOMAIN}/oauth2/openid/grafana/userinfo
       auth_url: https://idm.${SECRET_DOMAIN}/ui/oauth2
       client_id: grafana
+      email_attribute_path: preferred_username
       enabled: "true"
       groups_attribute_path: groups
       login_attribute_path: preferred_username
