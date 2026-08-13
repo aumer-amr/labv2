@@ -7,8 +7,18 @@ metadata:
 spec:
   alias: ha_mcp
   workload:
+    automountServiceAccountToken: false
     podLabels:
       network.home.arpa/to-envoy-external: allow
+    podSecurityContext:
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      readOnlyRootFilesystem: true
     # renovate: datasource=docker depName=ghcr.io/homeassistant-ai/ha-mcp
     image: ghcr.io/homeassistant-ai/ha-mcp:8.1.1
     port: 8086
