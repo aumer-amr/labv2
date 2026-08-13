@@ -21,6 +21,8 @@ __pycache__/
 .private/
 .venv/
 /AGENTS.override.md
+/assessment-update.md
+/.agents/skills/assess-upstream-template/
 .DS_Store
 Thumbs.db
 /talos/output/
