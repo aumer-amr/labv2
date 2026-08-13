@@ -27,7 +27,7 @@ spec:
       groups_attribute_path: groups
       login_attribute_path: preferred_username
       name: Kanidm
-      role_attribute_path: "contains(grafana_role[*], 'GrafanaAdmin') && 'GrafanaAdmin' || contains(grafana_role[*], 'Admin') && 'Admin' || contains(grafana_role[*], 'Editor') && 'Editor' || 'Viewer'"
+      role_attribute_path: "grafana_role == 'GrafanaAdmin' && 'GrafanaAdmin' || 'Viewer'"
       scopes: openid,profile,email,groups
       token_url: https://idm.${SECRET_DOMAIN}/oauth2/token
       use_pkce: "true"
