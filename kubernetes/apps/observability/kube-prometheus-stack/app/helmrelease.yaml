@@ -100,9 +100,9 @@ spec:
             rules:
               - alert: CiliumPolicyDenied
                 annotations:
-                  summary: Cilium denied {{ $value }} flows from {{ $labels.source_namespace }}/{{ $labels.source_workload }} to {{ $labels.destination_namespace }}/{{ $labels.destination_workload }} in the last 5 minutes.
+                  summary: Cilium denied {{ $value }} flows from {{ $labels.source_namespace }}/{{ $labels.source_workload }} to {{ $labels.destination_namespace }}/{{ $labels.destination_workload }} ({{ $labels.destination_ip }}) in the last 5 minutes.
                 expr: |
-                  sum by (source_namespace, source_workload, destination_namespace, destination_workload, traffic_direction, protocol) (
+                  sum by (source_namespace, source_workload, destination_ip, destination_namespace, destination_workload, traffic_direction, protocol) (
                     increase(hubble_drop_total{reason=~"(?i)policy[ _]denied"}[5m])
                     unless on (source_namespace, source_workload, protocol, destination_ip)
                     increase(hubble_drop_total{
