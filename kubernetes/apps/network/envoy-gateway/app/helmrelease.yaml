@@ -11,10 +11,6 @@ spec:
   values:
     global:
       imageRegistry: mirror.gcr.io
-    deployment:
-      pod:
-        labels:
-          network.home.arpa/to-envoy-external: allow
     config:
       envoyGateway:
         provider:
