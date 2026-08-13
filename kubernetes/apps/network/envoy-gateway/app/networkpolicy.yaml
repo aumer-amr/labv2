@@ -68,8 +68,10 @@ spec:
           rules:
             dns:
               - matchName: idm.${SECRET_DOMAIN}
+              - matchName: external.${SECRET_DOMAIN}
     - toFQDNs:
         - matchName: idm.${SECRET_DOMAIN}
+        - matchName: external.${SECRET_DOMAIN}
       toPorts:
         - ports:
             - port: "443"
