@@ -9,3 +9,4 @@ resources:
   - ./httproute.yaml
   - ./networkpolicy.yaml
   - ./ocirepository.yaml
+  - ./referencegrant.yaml

@@ -23,6 +23,16 @@ spec:
       ports:
         - port: 8443
           protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-internal
+      ports:
+        - port: 8443
+          protocol: TCP
   egress: []
 ---
 apiVersion: cilium.io/v2
