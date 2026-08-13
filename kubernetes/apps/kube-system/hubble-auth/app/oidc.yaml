@@ -1,0 +1,44 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external-secrets.io/externalsecret_v1.json
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: hubble-oidc
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword-connect
+  target:
+    name: hubble-oidc-client
+    template:
+      data:
+        client-secret: "{{ .clientSecret }}"
+  data:
+    - secretKey: clientSecret
+      remoteRef:
+        key: kanidm-hubble
+        property: KANIDM_CLIENT_SECRET
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: hubble-oidc
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: hubble
+      sectionName: ui
+  oidc:
+    provider:
+      issuer: https://idm.${SECRET_DOMAIN}/oauth2/openid/hubble
+      backendRefs:
+        - name: kanidm
+          namespace: security
+          port: 8443
+    clientID: hubble
+    clientSecret:
+      name: hubble-oidc-client
+    redirectURL: https://hubble.${SECRET_DOMAIN}/oauth2/callback
+    logoutPath: /logout
+    scopes: [openid]

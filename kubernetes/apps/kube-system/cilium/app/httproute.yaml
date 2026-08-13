@@ -4,7 +4,9 @@ kind: HTTPRoute
 metadata:
   name: hubble
   annotations:
-    gatus.home-operations.com/enabled: "true"
+    gatus.home-operations.com/endpoint: |-
+      path: /healthz
+      conditions: ["[STATUS] == 200"]
 spec:
   hostnames: ["hubble.${SECRET_DOMAIN}"]
   parentRefs:
@@ -12,6 +14,19 @@ spec:
       namespace: network
       sectionName: https
   rules:
-    - backendRefs:
+    - name: health
+      matches:
+        - path:
+            type: Exact
+            value: /healthz
+      backendRefs:
+        - name: hubble-ui
+          port: 80
+    - name: ui
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
         - name: hubble-ui
           port: 80

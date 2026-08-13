@@ -11,6 +11,7 @@ resources:
   - ./namespace.yaml
   - ./network-policies/ks.yaml
   - ./cilium/ks.yaml
+  - ./hubble-auth/ks.yaml
   - ./coredns/ks.yaml
   - ./ocharted/ks.yaml
   - ./metrics-server/ks.yaml
