@@ -53,6 +53,7 @@ spec:
         metadata:
           labels:
             network.home.arpa/from-envoy-internal: allow
+            network.home.arpa/to-envoy-external: allow
         spec:
           containers:
             - name: grafana
