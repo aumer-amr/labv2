@@ -22,7 +22,9 @@ __pycache__/
 .venv/
 /AGENTS.override.md
 /assessment-update.md
+/renovate-assessment.md
 /.agents/skills/assess-upstream-template/
+/.agents/skills/assess-renovate-prs/
 .DS_Store
 Thumbs.db
 /talos/output/
