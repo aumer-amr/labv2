@@ -64,10 +64,8 @@ spec:
             dns:
               - matchName: api.openai.com
               - matchName: ha-mcp.ai.svc.cluster.local
-              - matchName: idm.${SECRET_DOMAIN}
     - toFQDNs:
         - matchName: api.openai.com
-        - matchName: idm.${SECRET_DOMAIN}
       toPorts:
         - ports:
             - port: "443"

@@ -23,27 +23,6 @@ spec:
     drop_params: true
     merge_reasoning_content_in_choices: true
   env:
-    - name: GENERIC_AUTHORIZATION_ENDPOINT
-      value: https://idm.${SECRET_DOMAIN}/ui/oauth2
-    - name: GENERIC_CLIENT_ID
-      value: litellm
-    - name: GENERIC_CLIENT_SECRET
-      valueFrom:
-        secretKeyRef:
-          name: litellm-oidc-client
-          key: client-secret
-    - name: GENERIC_CLIENT_USE_PKCE
-      value: "true"
-    - name: GENERIC_SCOPE
-      value: openid profile email groups
-    - name: GENERIC_TOKEN_ENDPOINT
-      value: https://idm.${SECRET_DOMAIN}/oauth2/token
-    - name: GENERIC_USERINFO_ENDPOINT
-      value: https://idm.${SECRET_DOMAIN}/oauth2/openid/litellm/userinfo
-    - name: GENERIC_USER_ID_ATTRIBUTE
-      value: sub
-    - name: GENERIC_USER_ROLE_ATTRIBUTE
-      value: litellm_role
     - name: LITELLM_LOG
       value: INFO
     - name: LITELLM_MODE
@@ -53,8 +32,6 @@ spec:
         secretKeyRef:
           name: litellm-secret
           key: LITELLM_MASTER_KEY
-    - name: PROXY_BASE_URL
-      value: https://litellm.${SECRET_DOMAIN}
   resources:
     requests:
       cpu: 100m
