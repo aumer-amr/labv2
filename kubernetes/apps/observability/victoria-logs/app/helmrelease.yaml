@@ -31,6 +31,19 @@ spec:
           gatus.home-operations.com/endpoint: |-
             path: /health
             conditions: ["[STATUS] == 200"]
+        matches:
+          - path:
+              type: Exact
+              value: /health
+        extraRules:
+          - name: ui
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+            backendRefs:
+              - name: victoria-logs
+                port: 9428
         hostnames:
           - logs.${SECRET_DOMAIN}
         parentRefs:

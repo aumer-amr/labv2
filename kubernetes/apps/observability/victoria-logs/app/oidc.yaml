@@ -1,0 +1,44 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external-secrets.io/externalsecret_v1.json
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: victoria-logs-oidc
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword-connect
+  target:
+    name: victoria-logs-oidc-client
+    template:
+      data:
+        client-secret: "{{ .clientSecret }}"
+  data:
+    - secretKey: clientSecret
+      remoteRef:
+        key: kanidm-victoria-logs
+        property: KANIDM_CLIENT_SECRET
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: victoria-logs-oidc
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: victoria-logs
+      sectionName: ui
+  oidc:
+    provider:
+      issuer: https://idm.${SECRET_DOMAIN}/oauth2/openid/victoria-logs
+      backendRefs:
+        - name: kanidm
+          namespace: security
+          port: 8443
+    clientID: victoria-logs
+    clientSecret:
+      name: victoria-logs-oidc-client
+    redirectURL: https://logs.${SECRET_DOMAIN}/oauth2/callback
+    logoutPath: /logout
+    scopes: [openid]

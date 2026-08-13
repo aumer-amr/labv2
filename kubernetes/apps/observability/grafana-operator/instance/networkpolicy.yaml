@@ -62,3 +62,30 @@ spec:
           protocol: UDP
         - port: 53
           protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: grafana-oidc
+spec:
+  endpointSelector:
+    matchLabels:
+      app: grafana
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchName: idm.${SECRET_DOMAIN}
+    - toFQDNs:
+        - matchName: idm.${SECRET_DOMAIN}
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

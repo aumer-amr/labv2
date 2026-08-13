@@ -8,6 +8,7 @@ resources:
   - ./grafanadashboard.yaml
   - ./helmrelease.yaml
   - ./networkpolicy.yaml
+  - ./oidc.yaml
   - ./ocirepository.yaml
 configMapGenerator:
   - name: flux-metrics-configmap

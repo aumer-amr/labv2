@@ -1,0 +1,88 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external-secrets.io/externalsecret_v1.json
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: prometheus-oidc
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword-connect
+  target:
+    name: prometheus-oidc-client
+    template:
+      data:
+        client-secret: "{{ .clientSecret }}"
+  data:
+    - secretKey: clientSecret
+      remoteRef:
+        key: kanidm-prometheus
+        property: KANIDM_CLIENT_SECRET
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external-secrets.io/externalsecret_v1.json
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: alertmanager-oidc
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword-connect
+  target:
+    name: alertmanager-oidc-client
+    template:
+      data:
+        client-secret: "{{ .clientSecret }}"
+  data:
+    - secretKey: clientSecret
+      remoteRef:
+        key: alertmanager
+        property: KANIDM_CLIENT_SECRET
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: prometheus-oidc
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: kube-prometheus-stack-prometheus
+      sectionName: ui
+  oidc:
+    provider:
+      issuer: https://idm.${SECRET_DOMAIN}/oauth2/openid/prometheus
+      backendRefs:
+        - name: kanidm
+          namespace: security
+          port: 8443
+    clientID: prometheus
+    clientSecret:
+      name: prometheus-oidc-client
+    redirectURL: https://prometheus.${SECRET_DOMAIN}/oauth2/callback
+    logoutPath: /logout
+    scopes: [openid]
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: alertmanager-oidc
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: kube-prometheus-stack-alertmanager
+      sectionName: ui
+  oidc:
+    provider:
+      issuer: https://idm.${SECRET_DOMAIN}/oauth2/openid/alertmanager
+      backendRefs:
+        - name: kanidm
+          namespace: security
+          port: 8443
+    clientID: alertmanager
+    clientSecret:
+      name: alertmanager-oidc-client
+    redirectURL: https://alertmanager.${SECRET_DOMAIN}/oauth2/callback
+    logoutPath: /logout
+    scopes: [openid]

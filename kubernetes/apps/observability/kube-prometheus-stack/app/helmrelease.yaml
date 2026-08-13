@@ -19,6 +19,19 @@ spec:
       route:
         main:
           enabled: true
+          matches:
+            - path:
+                type: Exact
+                value: /-/healthy
+          additionalRules:
+            - name: ui
+              matches:
+                - path:
+                    type: PathPrefix
+                    value: /
+              backendRefs:
+                - name: kube-prometheus-stack-alertmanager
+                  port: 9093
           hostnames:
             - alertmanager.${SECRET_DOMAIN}
           parentRefs:
@@ -52,6 +65,19 @@ spec:
             gatus.home-operations.com/endpoint: |-
               path: /-/healthy
               conditions: ["[STATUS] == 200"]
+          matches:
+            - path:
+                type: Exact
+                value: /-/healthy
+          additionalRules:
+            - name: ui
+              matches:
+                - path:
+                    type: PathPrefix
+                    value: /
+              backendRefs:
+                - name: kube-prometheus-stack-prometheus
+                  port: 9090
           hostnames:
             - prometheus.${SECRET_DOMAIN}
           parentRefs:
