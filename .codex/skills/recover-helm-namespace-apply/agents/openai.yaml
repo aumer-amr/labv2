@@ -1,0 +1,4 @@
+interface:
+  display_name: "Recover Helm Namespace Apply"
+  short_description: "Recover a Helm apply made in the wrong namespace"
+  default_prompt: "Use $recover-helm-namespace-apply to inspect and recover this mistaken Helm namespace apply."

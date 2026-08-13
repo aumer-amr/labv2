@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manage Gatus Monitoring"
+  short_description: "Configure and verify Gatus endpoint discovery"
+  default_prompt: "Use $manage-gatus-monitoring to configure and verify Gatus monitoring for this resource."

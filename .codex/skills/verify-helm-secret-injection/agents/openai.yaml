@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify Helm Secret Injection"
+  short_description: "Verify ExternalSecret data reaches a workload"
+  default_prompt: "Use $verify-helm-secret-injection to verify this ExternalSecret and Helm workload integration."

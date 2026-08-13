@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manage Gateway Route"
+  short_description: "Configure and verify Gateway API routes"
+  default_prompt: "Use $manage-gateway-route to configure and verify this Gateway API route."

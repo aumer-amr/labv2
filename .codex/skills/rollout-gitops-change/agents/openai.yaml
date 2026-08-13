@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roll Out GitOps Change"
+  short_description: "Stage and verify Flux-managed changes"
+  default_prompt: "Use $rollout-gitops-change to stage and verify this Flux-managed change safely."

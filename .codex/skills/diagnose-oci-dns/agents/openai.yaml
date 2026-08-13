@@ -1,0 +1,4 @@
+interface:
+  display_name: "Diagnose OCI and DNS"
+  short_description: "Trace Flux OCI, DNS, and registry failures"
+  default_prompt: "Use $diagnose-oci-dns to diagnose this Flux OCI or registry connectivity failure."
