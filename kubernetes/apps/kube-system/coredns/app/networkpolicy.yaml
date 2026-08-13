@@ -119,6 +119,12 @@ spec:
               kubernetes.io/metadata.name: network
           podSelector:
             matchLabels:
+              control-plane: envoy-gateway
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
               gateway.envoyproxy.io/owning-gateway-name: envoy-external
         - namespaceSelector:
             matchLabels:
