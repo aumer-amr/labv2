@@ -82,6 +82,8 @@ Also inspect affected HelmRelease, deployment/DaemonSet, pod, route `Accepted` a
 
 ## Networking Architecture
 
+- Preserve each namespace's dedicated `network-policies` Flux child `Kustomization` and its `dependsOn` gates. These gates ensure application allow policies are ready before namespace-wide default-deny is enforced during bootstrap and recovery.
+- Keep namespace-wide default-deny owned by that child. Do not move it into a shared component consumed by the namespace root, because `cluster-apps` would then enforce it before child application policies are guaranteed ready. Per-application policies remain with their applications.
 - Envoy Gateway is owned by `network/envoy-gateway` and serves `envoy-external` and `envoy-internal`.
 - Cilium L7 policy support is separate from Envoy Gateway. Preserve current Cilium intent unless explicitly redesigning it:
     - `l7Proxy: true`
