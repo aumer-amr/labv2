@@ -71,7 +71,7 @@ spec:
             {{- end }}
           monospace: false
           priority: |-
-            {{ if eq .Status "firing" }}1{{ else }}0{{ end }}
+            {{ if and (eq .Status "firing") (eq .CommonLabels.severity "critical") }}1{{ else }}0{{ end }}
           sendResolved: true
           sound: gamelan
           title: >-
