@@ -32,6 +32,8 @@ spec:
   oidc:
     provider:
       issuer: https://idm.${SECRET_DOMAIN}/oauth2/openid/hubble
+      authorizationEndpoint: https://idm.${SECRET_DOMAIN}/ui/oauth2
+      tokenEndpoint: https://idm.${SECRET_DOMAIN}/oauth2/token
       backendRefs:
         - name: kanidm
           namespace: security
