@@ -277,6 +277,16 @@ spec:
               kubernetes.io/metadata.name: flux-system
           podSelector:
             matchLabels:
+              app.kubernetes.io/name: konflate
+      ports:
+        - port: 8081
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flux-system
+          podSelector:
+            matchLabels:
               app.kubernetes.io/part-of: flux
       ports:
         - port: 8080
