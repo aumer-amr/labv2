@@ -85,6 +85,11 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/managed-by: kopiur
+        - namespaceSelector: {}
+          podSelector:
+            matchExpressions:
+              - key: cnpg.io/cluster
+                operator: Exists
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: security
