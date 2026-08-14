@@ -525,6 +525,17 @@ spec:
       ports:
         - port: 9283
           protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: system-upgrade
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: tuppr
+              app.kubernetes.io/name: tuppr
+      ports:
+        - port: 8081
+          protocol: TCP
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
