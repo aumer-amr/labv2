@@ -4,6 +4,9 @@ kind: Kustomization
 metadata:
   name: envoy-gateway
 spec:
+  dependsOn:
+    - name: cert-manager
+      namespace: cert-manager
   interval: 1h
   path: ./kubernetes/apps/network/envoy-gateway/app
   postBuild:

@@ -4,6 +4,8 @@ kind: Kustomization
 metadata:
   name: echo
 spec:
+  dependsOn:
+    - name: envoy-gateway
   interval: 1h
   path: ./kubernetes/apps/network/echo/app
   postBuild:
