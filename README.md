@@ -14,6 +14,7 @@ This repository contains rendered cluster configuration. Initial template setup 
 
 - [Deployment](docs/deployment.md) — bootstrap Talos and applications, then verify the rollout.
 - [GitOps](docs/gitops.md) — change applications, reconcile Flux, and operate network routes.
+- [Application databases](docs/database.md) — add, connect, verify, upgrade, and recover per-application PostgreSQL clusters.
 - [Reset](docs/reset.md) — return one or all Talos nodes to maintenance mode.
 - [Maintenance](docs/maintenance.md) — apply and upgrade Talos, add nodes, maintain Kubernetes, and troubleshoot failures.
 
