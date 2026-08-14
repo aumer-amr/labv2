@@ -317,6 +317,16 @@ spec:
               kubernetes.io/metadata.name: kube-system
           podSelector:
             matchLabels:
+              app.kubernetes.io/name: descheduler
+      ports:
+        - port: 10258
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
               k8s-app: kube-dns
       ports:
         - port: 9153
