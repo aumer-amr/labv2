@@ -42,6 +42,17 @@ spec:
       ports:
         - port: 8086
           protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flux-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: konflate
+              app.kubernetes.io/name: konflate
+      ports:
+        - port: 8080
+          protocol: TCP
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
@@ -64,6 +75,7 @@ spec:
             dns:
               - matchName: api.openai.com
               - matchName: ha-mcp.ai.svc.cluster.local
+              - matchName: konflate.flux-system.svc.cluster.local
               - matchName: litellm-rw.ai.svc.cluster.local
     - toFQDNs:
         - matchName: api.openai.com
