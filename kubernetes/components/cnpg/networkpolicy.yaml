@@ -120,6 +120,18 @@ spec:
               protocol: ANY
           rules:
             dns:
+              - matchName: ${APP}-r
+              - matchName: ${APP}-r.${NAMESPACE}
+              - matchName: ${APP}-r.${NAMESPACE}.svc
+              - matchName: ${APP}-r.${NAMESPACE}.svc.cluster.local
+              - matchName: ${APP}-ro
+              - matchName: ${APP}-ro.${NAMESPACE}
+              - matchName: ${APP}-ro.${NAMESPACE}.svc
+              - matchName: ${APP}-ro.${NAMESPACE}.svc.cluster.local
+              - matchName: ${APP}-rw
+              - matchName: ${APP}-rw.${NAMESPACE}
+              - matchName: ${APP}-rw.${NAMESPACE}.svc
+              - matchName: ${APP}-rw.${NAMESPACE}.svc.cluster.local
               - matchName: barman-cloud
               - matchName: barman-cloud.database
               - matchName: barman-cloud.database.svc
