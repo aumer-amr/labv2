@@ -11,4 +11,5 @@ resources:
   - ./litellm-operator/ks.yaml
   - ./litellm/ks.yaml
   - ./ha-mcp/ks.yaml
+  - ./context7/ks.yaml
   - ./network-policies/ks.yaml
