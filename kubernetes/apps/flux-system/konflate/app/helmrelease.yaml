@@ -1,0 +1,29 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: konflate
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: konflate
+  interval: 1h
+  values:
+    podLabels:
+      network.home.arpa/from-envoy-external: allow
+      network.home.arpa/from-envoy-internal: allow
+    deploymentAnnotations:
+      reloader.stakater.com/auto: "true"
+    config:
+      repo: github://aumer-amr/labv2
+      statusChecks: true
+      prComments: true
+      publicUrl: https://konflate.${SECRET_DOMAIN}
+      mcp: true
+      verifyImages: true
+    secret:
+      existingSecret: konflate-secret
+    monitoring:
+      serviceMonitor:
+        enabled: true

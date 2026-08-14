@@ -1,0 +1,72 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: konflate
+  annotations:
+    gatus.home-operations.com/endpoint: |-
+      path: /healthz
+      conditions: ["[STATUS] == 200"]
+spec:
+  hostnames: ["konflate.${SECRET_DOMAIN}"]
+  parentRefs:
+    - name: envoy-external
+      namespace: network
+      sectionName: https
+  rules:
+    - name: health
+      matches:
+        - path:
+            type: Exact
+            value: /healthz
+      backendRefs:
+        - name: konflate
+          port: 8080
+    - name: hooks
+      matches:
+        - path:
+            type: Exact
+            value: /hooks
+      backendRefs:
+        - name: konflate
+          port: 8080
+    - name: mcp
+      matches:
+        - path:
+            type: PathPrefix
+            value: /mcp
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            hostname: konflate-mcp.${SECRET_DOMAIN}
+            statusCode: 302
+    - name: ui
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: konflate
+          port: 8080
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: konflate-mcp
+spec:
+  hostnames: ["konflate-mcp.${SECRET_DOMAIN}"]
+  parentRefs:
+    - name: envoy-internal
+      namespace: network
+      sectionName: https
+  rules:
+    - name: mcp
+      matches:
+        - path:
+            type: PathPrefix
+            value: /mcp
+      backendRefs:
+        - name: konflate
+          port: 8080

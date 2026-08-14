@@ -1,0 +1,26 @@
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: konflate-oidc
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: konflate
+      sectionName: ui
+  oidc:
+    provider:
+      issuer: https://idm.${SECRET_DOMAIN}/oauth2/openid/konflate
+      authorizationEndpoint: https://idm.${SECRET_DOMAIN}/ui/oauth2
+      tokenEndpoint: https://idm.${SECRET_DOMAIN}/oauth2/token
+      backendRefs:
+        - name: kanidm
+          namespace: security
+          port: 8443
+    clientID: konflate
+    clientSecret:
+      name: konflate-secret
+    redirectURL: https://konflate.${SECRET_DOMAIN}/oauth2/callback
+    logoutPath: /logout
+    scopes: [openid]

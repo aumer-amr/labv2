@@ -6,6 +6,7 @@ metadata:
 spec:
   dependsOn:
     - name: flux-instance
+    - name: konflate
   interval: 1h
   path: ./kubernetes/apps/flux-system/network-policies/app
   prune: true

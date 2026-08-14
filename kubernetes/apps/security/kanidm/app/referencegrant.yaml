@@ -12,6 +12,9 @@ spec:
     - group: gateway.envoyproxy.io
       kind: SecurityPolicy
       namespace: observability
+    - group: gateway.envoyproxy.io
+      kind: SecurityPolicy
+      namespace: flux-system
   to:
     - group: ""
       kind: Service
