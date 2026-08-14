@@ -12,6 +12,10 @@ spec:
   replicas: 1
   generalSettings:
     health_check_endpoint: /v1/health
+    use_x_forwarded_for: true
+    mcp_trusted_proxy_ranges:
+      - 10.42.0.0/16
+    mcp_xff_num_trusted_hops: 1
   routerSettings:
     routing_strategy: simple-shuffle
     num_retries: 3
