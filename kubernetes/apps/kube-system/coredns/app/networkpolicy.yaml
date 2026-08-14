@@ -32,6 +32,13 @@ spec:
               app.kubernetes.io/name: cert-manager
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: database
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: cloudnative-pg
+              app.kubernetes.io/name: cloudnative-pg
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: external-secrets
           podSelector:
             matchLabels:
