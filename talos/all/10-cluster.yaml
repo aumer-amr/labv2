@@ -9,3 +9,10 @@ machine:
   certSANs:
     - "127.0.0.1"
     - "10.10.1.110"
+  features:
+    kubernetesTalosAPIAccess:
+      enabled: true
+      allowedRoles:
+        - os:admin
+      allowedKubernetesNamespaces:
+        - system-upgrade
