@@ -1,0 +1,17 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ClusterImageCatalog
+metadata:
+  name: postgresql
+spec:
+  images:
+    - major: 14
+      image: ghcr.io/cloudnative-pg/postgresql:14.24-202608131513-minimal-trixie@sha256:13c15d32b733489843f404f5b3dce15d3d9a58b841844ac9723ee4d525a5de8d
+    - major: 15
+      image: ghcr.io/cloudnative-pg/postgresql:15.19-202608131515-minimal-trixie@sha256:48157c0e109df2184c5bef177ed0d4f65dc7477de4f56d01fdb4de7827a53c43
+    - major: 16
+      image: ghcr.io/cloudnative-pg/postgresql:16.15-202608131515-minimal-trixie@sha256:abea6ed90460430d42c1683b076a7100580de4eb14f327d895e5892ab6d7bc62
+    - major: 17
+      image: ghcr.io/cloudnative-pg/postgresql:17.11-202608131515-minimal-trixie@sha256:9211898215214ca88635c6e54c1ac63e4b8c6840d4ccf93d3fa7f54371b22ab1
+    - major: 18
+      image: ghcr.io/cloudnative-pg/postgresql:18.6-202608131513-minimal-trixie@sha256:e488b1434919f455f2ee4e18a181ce9b33f34cdd8dfb821126855486bce6ad34

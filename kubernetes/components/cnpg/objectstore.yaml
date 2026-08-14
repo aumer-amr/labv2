@@ -1,0 +1,24 @@
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: ${APP}
+spec:
+  configuration:
+    destinationPath: s3://${PG_BACKUP_BUCKET}
+    endpointURL: https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+    s3Credentials:
+      accessKeyId:
+        name: ${APP}-backup
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: ${APP}-backup
+        key: ACCESS_SECRET_KEY
+      region:
+        name: ${APP}-backup
+        key: REGION
+    data:
+      compression: gzip
+    wal:
+      compression: gzip
+  retentionPolicy: 30d

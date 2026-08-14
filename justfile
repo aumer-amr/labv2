@@ -11,6 +11,9 @@ mod? bootstrap 'bootstrap'
 [group('kubernetes')]
 mod? kube 'kubernetes'
 
+[group('database')]
+mod? cnpg 'kubernetes/apps/database'
+
 [group('talos')]
 mod? talos 'talos'
 

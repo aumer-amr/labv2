@@ -1,0 +1,12 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: ${APP}
+spec:
+  cluster:
+    name: ${APP}
+  ensure: present
+  name: ${APP}
+  owner: ${APP}
+  databaseReclaimPolicy: retain

@@ -1,0 +1,13 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: ${APP}
+spec:
+  backupOwnerReference: self
+  cluster:
+    name: ${APP}
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
+  schedule: "0 ${PG_BACKUP_MINUTE:=0} 2 * * *"

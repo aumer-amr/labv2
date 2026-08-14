@@ -1,0 +1,14 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: database
+
+components:
+  - ../../components/sops
+
+resources:
+  - ./namespace.yaml
+  - ./cloudnative-pg/ks.yaml
+  - ./barman-cloud/ks.yaml
+  - ./network-policies/ks.yaml

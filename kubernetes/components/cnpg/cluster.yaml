@@ -1,0 +1,47 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: ${APP}
+spec:
+  instances: ${PG_INSTANCES:=1}
+  enablePDB: false
+  # Set this to 1 together with PG_INSTANCES=3 for synchronous replication.
+  minSyncReplicas: ${PG_SYNC_REPLICAS:=0}
+  maxSyncReplicas: ${PG_SYNC_REPLICAS:=0}
+  imageCatalogRef:
+    apiGroup: postgresql.cnpg.io
+    kind: ClusterImageCatalog
+    name: postgresql
+    major: ${PG_MAJOR:=18}
+  affinity:
+    podAntiAffinityType: required
+    topologyKey: kubernetes.io/hostname
+  bootstrap:
+    initdb:
+      database: ${APP}
+      owner: ${APP}
+      secret:
+        name: ${APP}-postgres
+  postgresql:
+    pg_hba:
+      - hostnossl all all all reject
+    syncReplicaElectionConstraint:
+      enabled: true
+      nodeLabelsAntiAffinity:
+        - kubernetes.io/hostname
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  storage:
+    size: 5Gi
+    storageClass: ceph-block
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: ${APP}

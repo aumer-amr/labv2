@@ -1,0 +1,30 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ${APP}-postgres
+spec:
+  groups:
+    - name: ${APP}-postgres
+      rules:
+        - alert: CNPGClusterOffline
+          annotations:
+            summary: PostgreSQL cluster ${NAMESPACE}/${APP} has no healthy metrics collector.
+          expr: cnpg_collector_up{namespace="${NAMESPACE}",cnpg_cluster="${APP}"} == 0
+          for: 5m
+          labels:
+            severity: critical
+        - alert: CNPGBackupFailed
+          annotations:
+            summary: The latest backup for PostgreSQL cluster ${NAMESPACE}/${APP} failed.
+          expr: barman_cloud_cloudnative_pg_io_last_failed_backup_timestamp{namespace="${NAMESPACE}",cnpg_cluster="${APP}"} > barman_cloud_cloudnative_pg_io_last_available_backup_timestamp{namespace="${NAMESPACE}",cnpg_cluster="${APP}"}
+          for: 5m
+          labels:
+            severity: critical
+        - alert: CNPGBackupStale
+          annotations:
+            summary: PostgreSQL cluster ${NAMESPACE}/${APP} has no successful backup newer than 26 hours.
+          expr: time() - barman_cloud_cloudnative_pg_io_last_available_backup_timestamp{namespace="${NAMESPACE}",cnpg_cluster="${APP}"} > 93600
+          for: 15m
+          labels:
+            severity: warning

@@ -1,0 +1,15 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - ./cluster.yaml
+  - ./database.yaml
+  - ./databaserole.yaml
+  - ./externalsecret-backup.yaml
+  - ./externalsecret-postgres.yaml
+  - ./networkpolicy.yaml
+  - ./objectstore.yaml
+  - ./podmonitor.yaml
+  - ./prometheusrule.yaml
+  - ./scheduledbackup.yaml
