@@ -59,6 +59,12 @@ spec:
               kubernetes.io/metadata.name: flux-system
           podSelector:
             matchLabels:
+              app.kubernetes.io/name: konflate
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flux-system
+          podSelector:
+            matchLabels:
               app: helm-controller
         - namespaceSelector:
             matchLabels:
