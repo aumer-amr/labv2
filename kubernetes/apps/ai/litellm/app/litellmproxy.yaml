@@ -23,6 +23,11 @@ spec:
     drop_params: true
     merge_reasoning_content_in_choices: true
   env:
+    - name: DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: litellm-secret
+          key: DATABASE_URL
     - name: LITELLM_LOG
       value: INFO
     - name: LITELLM_MODE
@@ -32,6 +37,11 @@ spec:
         secretKeyRef:
           name: litellm-secret
           key: LITELLM_MASTER_KEY
+    - name: LITELLM_SALT_KEY
+      valueFrom:
+        secretKeyRef:
+          name: litellm-secret
+          key: LITELLM_SALT_KEY
   resources:
     requests:
       cpu: 100m

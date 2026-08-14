@@ -64,6 +64,7 @@ spec:
             dns:
               - matchName: api.openai.com
               - matchName: ha-mcp.ai.svc.cluster.local
+              - matchName: litellm-rw.ai.svc.cluster.local
     - toFQDNs:
         - matchName: api.openai.com
       toPorts:
