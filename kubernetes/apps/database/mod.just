@@ -78,7 +78,7 @@ upgrade namespace app target:
 
     app_dir="kubernetes/apps/$namespace/$app"
     ks="$app_dir/ks.yaml"
-    catalog="kubernetes/apps/database/cloudnative-pg/app/clusterimagecatalog.yaml"
+    catalog="kubernetes/apps/database/postgresql-images/app/clusterimagecatalog.yaml"
     [[ -f "$ks" ]] || fail "Missing $ks"
     [[ -f "$app_dir/app/kustomization.yaml" ]] || fail "Missing $app_dir/app/kustomization.yaml"
 

@@ -10,5 +10,6 @@ components:
 resources:
   - ./namespace.yaml
   - ./cloudnative-pg/ks.yaml
+  - ./postgresql-images/ks.yaml
   - ./barman-cloud/ks.yaml
   - ./network-policies/ks.yaml
