@@ -8,8 +8,10 @@ spec:
   dependsOn:
     - name: envoy-gateway
       namespace: network
+    - name: grafana-operator
     - name: kanidm
       namespace: security
+    - name: kube-prometheus-stack
     - name: onepassword-connect
       namespace: external-secrets
     - name: rook-ceph-cluster

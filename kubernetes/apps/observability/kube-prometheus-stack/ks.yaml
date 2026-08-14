@@ -8,6 +8,7 @@ spec:
   dependsOn:
     - name: envoy-gateway
       namespace: network
+    - name: grafana-operator
     - name: kanidm
       namespace: security
     - name: onepassword-connect

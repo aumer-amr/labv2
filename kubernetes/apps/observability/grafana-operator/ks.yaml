@@ -26,8 +26,11 @@ metadata:
 spec:
   dependsOn:
     - name: grafana-operator
+    - name: envoy-gateway
+      namespace: network
     - name: kanidm
       namespace: security
+    - name: kube-prometheus-stack
     - name: rook-ceph-cluster
       namespace: rook-ceph
   postBuild:
