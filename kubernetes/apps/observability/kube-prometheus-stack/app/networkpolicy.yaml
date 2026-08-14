@@ -224,6 +224,26 @@ spec:
     - to:
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: database
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: cloudnative-pg
+              app.kubernetes.io/name: cloudnative-pg
+      ports:
+        - port: 8080
+          protocol: TCP
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchExpressions:
+              - key: cnpg.io/cluster
+                operator: Exists
+      ports:
+        - port: 9187
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: external-secrets
           podSelector:
             matchLabels:
