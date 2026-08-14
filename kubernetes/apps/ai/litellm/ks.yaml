@@ -8,6 +8,10 @@ spec:
   dependsOn:
     - name: litellm-operator
       namespace: ai
+    - name: envoy-gateway
+      namespace: network
+    - name: kube-prometheus-stack
+      namespace: observability
     - name: onepassword-connect
       namespace: external-secrets
   interval: 1h
