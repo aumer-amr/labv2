@@ -558,6 +558,17 @@ spec:
     - to:
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: trivy-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: trivy-operator
+              app.kubernetes.io/name: trivy-operator
+      ports:
+        - port: 8080
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: system-upgrade
           podSelector:
             matchLabels:
