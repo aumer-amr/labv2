@@ -1,0 +1,66 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: trivy-operator
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: trivy-operator
+  install:
+    crds: Create
+  interval: 1h
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: ClusterRole
+              name: trivy-operator
+            patch: |-
+              - op: test
+                path: /rules/9/resources/0
+                value: jobs
+              - op: remove
+                path: /rules/9
+          - target:
+              kind: Role
+              name: trivy-operator
+            patch: |-
+              - op: add
+                path: /rules/-
+                value:
+                  apiGroups:
+                    - batch
+                  resources:
+                    - jobs
+                  verbs:
+                    - create
+                    - delete
+                    - get
+                    - list
+                    - watch
+  upgrade:
+    crds: CreateReplace
+  values:
+    compliance:
+      specs: []
+    fullnameOverride: trivy-operator
+    operator:
+      accessGlobalSecretsAndServiceAccount: false
+      clusterComplianceEnabled: false
+      infraAssessmentScannerEnabled: false
+      scanJobTTL: 10m
+      scanJobsConcurrentLimit: 3
+      sbomGenerationEnabled: false
+    resources:
+      requests:
+        cpu: 100m
+      limits:
+        memory: 512Mi
+    serviceMonitor:
+      enabled: true
+    trivy:
+      severity: HIGH,CRITICAL
+    trivyOperator:
+      scanJobPodTemplateLabels: network.home.arpa/trivy-scan=allow

@@ -1,0 +1,20 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: network-policies
+spec:
+  dependsOn:
+    - name: trivy-operator
+    - name: coredns
+      namespace: kube-system
+  interval: 1h
+  path: ./kubernetes/apps/trivy-system/network-policies/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: trivy-system
+  wait: true

@@ -1,0 +1,97 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/networking.k8s.io/networkpolicy_v1.json
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: trivy-operator-metrics
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: trivy-operator
+      app.kubernetes.io/name: trivy-operator
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 8080
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: trivy-operator-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: trivy-operator
+      app.kubernetes.io/name: trivy-operator
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchPattern: "*"
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: trivy-scan-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      network.home.arpa/trivy-scan: allow
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchPattern: "*"
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
