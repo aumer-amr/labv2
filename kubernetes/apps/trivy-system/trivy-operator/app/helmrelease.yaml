@@ -5,9 +5,13 @@ kind: HelmRelease
 metadata:
   name: trivy-operator
 spec:
-  chartRef:
-    kind: OCIRepository
-    name: trivy-operator
+  chart:
+    spec:
+      chart: trivy-operator
+      sourceRef:
+        kind: HelmRepository
+        name: trivy-operator
+      version: 0.35.0
   install:
     crds: Create
   interval: 1h
