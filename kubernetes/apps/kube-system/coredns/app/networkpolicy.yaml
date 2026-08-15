@@ -195,6 +195,19 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/name: victoria-logs-collector
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: trivy-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: trivy-operator
+              app.kubernetes.io/name: trivy-operator
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: trivy-system
+          podSelector:
+            matchLabels:
+              network.home.arpa/trivy-scan: allow
       ports:
         - port: 53
           protocol: UDP
