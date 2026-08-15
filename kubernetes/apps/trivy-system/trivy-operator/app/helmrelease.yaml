@@ -68,6 +68,9 @@ spec:
     serviceMonitor:
       enabled: true
     trivy:
+      configFile:
+        cache:
+          backend: memory
       severity: HIGH,CRITICAL
     trivyOperator:
       scanJobPodTemplateLabels: network.home.arpa/trivy-scan=allow
