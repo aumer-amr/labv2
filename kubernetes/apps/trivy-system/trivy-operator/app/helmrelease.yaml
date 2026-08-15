@@ -21,8 +21,12 @@ spec:
               - op: test
                 path: /rules/9/resources/0
                 value: jobs
-              - op: remove
-                path: /rules/9
+              - op: replace
+                path: /rules/9/verbs
+                value:
+                  - get
+                  - list
+                  - watch
           - target:
               kind: Role
               name: trivy-operator
