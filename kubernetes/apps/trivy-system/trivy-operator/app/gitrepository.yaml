@@ -1,0 +1,11 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/source.toolkit.fluxcd.io/gitrepository_v1.json
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: trivy-operator
+spec:
+  interval: 15m
+  ref:
+    commit: 5e34376b9f5aa6aa330fb360b6c26f828103fb5c
+  url: https://github.com/aquasecurity/trivy-operator.git

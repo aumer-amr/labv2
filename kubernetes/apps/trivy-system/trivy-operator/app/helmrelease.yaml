@@ -7,11 +7,10 @@ metadata:
 spec:
   chart:
     spec:
-      chart: trivy-operator
+      chart: ./deploy/helm
       sourceRef:
-        kind: HelmRepository
+        kind: GitRepository
         name: trivy-operator
-      version: 0.35.0
   install:
     crds: Create
   interval: 1h
