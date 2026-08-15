@@ -6,4 +6,5 @@ namespace: trivy-system
 
 resources:
   - ./namespace.yaml
+  - ./network-policies/ks.yaml
   - ./trivy-operator/ks.yaml
