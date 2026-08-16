@@ -81,6 +81,12 @@ spec:
               app: kustomize-controller
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: fitness
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: sparkyfitness
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: home
           podSelector:
             matchLabels:
