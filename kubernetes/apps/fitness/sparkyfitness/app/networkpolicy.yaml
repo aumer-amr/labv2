@@ -68,9 +68,11 @@ spec:
               protocol: ANY
           rules:
             dns:
+              - matchName: api.github.com
               - matchName: idm.${SECRET_DOMAIN}
               - matchName: sparkyfitness-rw.fitness.svc.cluster.local
     - toFQDNs:
+        - matchName: api.github.com
         - matchName: idm.${SECRET_DOMAIN}
       toPorts:
         - ports:
