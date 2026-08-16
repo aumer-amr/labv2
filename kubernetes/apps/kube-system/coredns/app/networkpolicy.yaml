@@ -87,6 +87,12 @@ spec:
               app.kubernetes.io/name: sparkyfitness
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: fitness
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: kopiur
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: home
           podSelector:
             matchLabels:
