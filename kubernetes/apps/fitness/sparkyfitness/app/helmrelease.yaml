@@ -222,6 +222,7 @@ spec:
           frontend:
             app:
               - path: /var/cache/nginx
+              - path: /run
               - path: /var/run/nginx
               - path: /etc/nginx/conf.d
       frontend-tmp:
