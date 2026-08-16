@@ -1,0 +1,13 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: DatabaseRole
+metadata:
+  name: sparkyfitness-app
+spec:
+  cluster:
+    name: sparkyfitness
+  ensure: present
+  login: true
+  name: sparkyfitness_app
+  passwordSecret:
+    name: sparkyfitness-app-postgres
