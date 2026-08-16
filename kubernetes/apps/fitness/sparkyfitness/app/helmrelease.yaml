@@ -25,6 +25,7 @@ spec:
             env:
               TZ: Europe/Amsterdam
               NODE_ENV: production
+              NODE_EXTRA_CA_CERTS: /etc/postgresql/ca/ca.crt
               PGSSLMODE: require
               ALLOW_PRIVATE_NETWORK_CORS: "false"
               BETTER_AUTH_URL: https://fitness.${SECRET_DOMAIN}
@@ -182,6 +183,18 @@ spec:
           http:
             port: 8080
     persistence:
+      postgres-ca:
+        type: secret
+        name: sparkyfitness-ca
+        defaultMode: 0444
+        items:
+          - key: ca.crt
+            path: ca.crt
+        advancedMounts:
+          server:
+            app:
+              - path: /etc/postgresql/ca
+                readOnly: true
       data:
         existingClaim: sparkyfitness
         advancedMounts:
