@@ -138,6 +138,15 @@ spec:
                       protocol="UDP",
                       destination_ip=~"^(224[.]0[.]0[.]251|239[.]255[.]255[.]250|255[.]255[.]255[.]255)$"
                     }[5m])
+                    unless on (source_namespace, source_workload, protocol, destination_ip)
+                    increase(hubble_drop_total{
+                      reason=~"(?i)policy[ _]denied",
+                      source_namespace="fitness",
+                      source_workload="sparkyfitness-server",
+                      protocol="TCP",
+                      # ponytail: Hubble exposes only destination IP here; use FQDN if metrics gain that label.
+                      destination_ip=~"^185[.]199[.](108|109|110|111)[.]133$"
+                    }[5m])
                   ) >= 3
                 for: 2m
                 labels:
