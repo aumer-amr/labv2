@@ -141,7 +141,9 @@ spec:
               - matchName: barman-cloud.database.svc
               - matchName: barman-cloud.database.svc.cluster.local
               - matchPattern: "*.r2.cloudflarestorage.com"
-              - matchPattern: "*.r2.cloudflarestorage.com.*"
+              - matchPattern: "*.r2.cloudflarestorage.com.${NAMESPACE}.svc.cluster.local"
+              - matchPattern: "*.r2.cloudflarestorage.com.svc.cluster.local"
+              - matchPattern: "*.r2.cloudflarestorage.com.cluster.local"
     - toFQDNs:
         - matchPattern: "*.r2.cloudflarestorage.com"
       toPorts:
