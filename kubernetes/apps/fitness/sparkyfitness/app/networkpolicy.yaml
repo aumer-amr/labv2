@@ -71,9 +71,11 @@ spec:
               - matchName: api.github.com
               - matchName: idm.${SECRET_DOMAIN}
               - matchName: sparkyfitness-rw.fitness.svc.cluster.local
+              - matchName: wger.de
     - toFQDNs:
         - matchName: api.github.com
         - matchName: idm.${SECRET_DOMAIN}
+        - matchName: wger.de
       toPorts:
         - ports:
             - port: "443"
