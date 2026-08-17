@@ -77,6 +77,7 @@ spec:
         - matchName: api.github.com
         - matchName: idm.${SECRET_DOMAIN}
         - matchName: wger.de
+        - matchName: wger.de.fitness.svc.cluster.local
       toPorts:
         - ports:
             - port: "443"
