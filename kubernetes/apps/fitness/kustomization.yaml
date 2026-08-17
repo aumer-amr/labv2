@@ -9,3 +9,4 @@ components:
 resources:
   - ./namespace.yaml
   - ./sparkyfitness/ks.yaml
+  - ./network-policies/ks.yaml
