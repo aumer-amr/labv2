@@ -69,17 +69,25 @@ spec:
           rules:
             dns:
               - matchName: api.github.com
+              - matchName: api.webapp.prod.blv.foodcase-services.com
+              - matchPattern: api.webapp.prod.blv.foodcase-services.com.*
               - matchName: idm.${SECRET_DOMAIN}
               - matchName: sparkyfitness-rw.fitness.svc.cluster.local
               - matchName: wger.de
               - matchPattern: wger.de.*
+              - matchName: images.openfoodfacts.org
+              - matchPattern: images.openfoodfacts.org.*
               - matchName: world.openfoodfacts.org
               - matchPattern: world.openfoodfacts.org.*
     - toFQDNs:
         - matchName: api.github.com
+        - matchName: api.webapp.prod.blv.foodcase-services.com
+        - matchName: api.webapp.prod.blv.foodcase-services.com.fitness.svc.cluster.local
         - matchName: idm.${SECRET_DOMAIN}
         - matchName: wger.de
         - matchName: wger.de.fitness.svc.cluster.local
+        - matchName: images.openfoodfacts.org
+        - matchName: images.openfoodfacts.org.fitness.svc.cluster.local
         - matchName: world.openfoodfacts.org
         - matchName: world.openfoodfacts.org.fitness.svc.cluster.local
       toPorts:
