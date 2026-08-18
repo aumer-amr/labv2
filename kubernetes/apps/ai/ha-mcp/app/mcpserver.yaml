@@ -22,7 +22,7 @@ spec:
         drop: ["ALL"]
       readOnlyRootFilesystem: true
     # renovate: datasource=docker depName=ghcr.io/homeassistant-ai/ha-mcp
-    image: ghcr.io/homeassistant-ai/ha-mcp:8.1.1
+    image: ghcr.io/homeassistant-ai/ha-mcp:8.2.0
     port: 8086
     command:
       - ha-mcp-web
