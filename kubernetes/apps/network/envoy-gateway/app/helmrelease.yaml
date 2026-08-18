@@ -8,6 +8,8 @@ spec:
     kind: OCIRepository
     name: envoy-gateway
   interval: 1h
+  upgrade:
+    crds: CreateReplace
   values:
     global:
       imageRegistry: mirror.gcr.io
