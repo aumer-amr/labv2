@@ -43,6 +43,19 @@
       minimumGroupSize: 2,
     },
     {
+      description: "CloudNativePG PostgreSQL image versioning",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/cloudnative-pg/postgresql"],
+      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)-(?<patch>\\d+)-(?<compatibility>minimal-trixie)$",
+    },
+    {
+      description: "Disable CloudNativePG PostgreSQL major updates",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/cloudnative-pg/postgresql"],
+      matchUpdateTypes: ["major"],
+      enabled: false,
+    },
+    {
       matchUpdateTypes: ["major"],
       addLabels: ["type/major"],
     },
