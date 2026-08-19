@@ -115,6 +115,19 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/managed-by: kopiur
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: system-upgrade
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: tuppr
+              app.kubernetes.io/name: tuppr
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: system-upgrade
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: tuppr
         - podSelector:
             matchLabels:
               k8s-app: hubble-relay
