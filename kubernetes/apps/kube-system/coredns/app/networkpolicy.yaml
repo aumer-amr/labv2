@@ -26,6 +26,12 @@ spec:
               app.kubernetes.io/name: ha-mcp
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: administration
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: kopiur
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: cert-manager
           podSelector:
             matchLabels:
