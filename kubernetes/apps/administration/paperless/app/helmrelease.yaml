@@ -1,0 +1,142 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: paperless
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: paperless
+  interval: 1h
+  values:
+    global:
+      createDefaultServiceAccount: false
+    controllers:
+      paperless:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        strategy: Recreate
+        containers:
+          app:
+            image:
+              repository: ghcr.io/paperless-ngx/paperless-ngx
+              tag: 3.0.5@sha256:65a4cabf0169ea7fbd90ab7bb28ba3f8b5909613635acda1a03ad606f34b456b
+            env:
+              PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
+              PAPERLESS_DBENGINE: postgresql
+              PAPERLESS_DBHOST:
+                valueFrom:
+                  secretKeyRef:
+                    name: paperless-postgres
+                    key: host
+              PAPERLESS_DBNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: paperless-postgres
+                    key: dbname
+              PAPERLESS_DBUSER:
+                valueFrom:
+                  secretKeyRef:
+                    name: paperless-postgres
+                    key: username
+              PAPERLESS_DBPASS:
+                valueFrom:
+                  secretKeyRef:
+                    name: paperless-postgres
+                    key: password
+              PAPERLESS_DBPORT:
+                valueFrom:
+                  secretKeyRef:
+                    name: paperless-postgres
+                    key: port
+              PAPERLESS_DB_OPTIONS: sslmode=require
+              PAPERLESS_SOCIAL_AUTO_SIGNUP: "true"
+              PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: "true"
+              PAPERLESS_TIME_ZONE: Europe/Amsterdam
+              PAPERLESS_URL: https://paperless.${SECRET_DOMAIN}
+            envFrom:
+              - secretRef:
+                  name: paperless-secret
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: &port 8000
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: *port
+                  failureThreshold: 30
+                  periodSeconds: 10
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 4Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      labels:
+        network.home.arpa/from-envoy-internal: allow
+        network.home.arpa/to-envoy-external: allow
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+    service:
+      app:
+        controller: paperless
+        ports:
+          http:
+            port: *port
+    persistence:
+      archive:
+        existingClaim: paperless
+        advancedMounts:
+          paperless:
+            app:
+              - path: /usr/src/paperless/data
+                subPath: data
+              - path: /usr/src/paperless/media
+                subPath: media
+              - path: /usr/src/paperless/export
+                subPath: export
+      consume:
+        type: emptyDir
+        advancedMounts:
+          paperless:
+            app:
+              - path: /usr/src/paperless/consume
+      tmp:
+        type: emptyDir
+        advancedMounts:
+          paperless:
+            app:
+              - path: /tmp

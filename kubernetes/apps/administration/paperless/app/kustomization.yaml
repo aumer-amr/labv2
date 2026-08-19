@@ -1,0 +1,59 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+components:
+  - ../../../../components/cnpg
+  - ../../../../components/valkey
+resources:
+  - ./externalsecret.yaml
+  - ./helmrelease.yaml
+  - ./httproute.yaml
+  - ./networkpolicy.yaml
+  - ./ocirepository.yaml
+patches:
+  # Audit stage: render policies out until required flows are observed.
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+    patch: |-
+      $patch: delete
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: unused
+  - target:
+      group: cilium.io
+      version: v2
+      kind: CiliumNetworkPolicy
+    patch: |-
+      $patch: delete
+      apiVersion: cilium.io/v2
+      kind: CiliumNetworkPolicy
+      metadata:
+        name: unused
+  - target:
+      group: helm.toolkit.fluxcd.io
+      kind: HelmRelease
+      name: .*-valkey
+    patch: |-
+      - op: replace
+        path: /spec/values/dataStorage/enabled
+        value: true
+      - op: add
+        path: /spec/values/dataStorage/requestedSize
+        value: 1Gi
+      - op: add
+        path: /spec/values/dataStorage/className
+        value: ceph-block
+      - op: add
+        path: /spec/values/dataStorage/keepPvc
+        value: true
+      - op: replace
+        path: /spec/values/valkeyConfig
+        value: |-
+          maxmemory 192mb
+          maxmemory-policy noeviction
+          appendonly yes
+          appendfsync everysec
