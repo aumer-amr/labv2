@@ -1,0 +1,21 @@
+---
+# This complements the Valkey ingress rule when the app namespace is default-deny.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ${APP}-valkey-client
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: ${APP}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: ${APP}-valkey
+              app.kubernetes.io/name: valkey
+      ports:
+        - port: 6379
+          protocol: TCP

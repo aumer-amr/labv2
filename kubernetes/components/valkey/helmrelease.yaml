@@ -1,0 +1,51 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ${APP}-valkey
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: valkey
+    namespace: database
+  interval: 1h
+  values:
+    auth:
+      enabled: true
+      usersExistingSecret: ${APP}-valkey
+      aclUsers:
+        default:
+          passwordKey: VALKEY_PASSWORD
+          permissions: "~* &* +@all"
+    dataStorage:
+      enabled: false
+    deploymentStrategy: Recreate
+    fullnameOverride: ${APP}-valkey
+    metrics:
+      enabled: false
+    networkPolicy:
+      ingress:
+        - from:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ${APP}
+          ports:
+            - port: 6379
+              protocol: TCP
+    podDisruptionBudget:
+      enabled: false
+    readinessProbe:
+      enabled: true
+    replica:
+      enabled: false
+    resources:
+      requests:
+        cpu: ${VALKEY_CPU_REQUEST:=10m}
+        memory: ${VALKEY_MEMORY_REQUEST:=64Mi}
+      limits:
+        cpu: ${VALKEY_CPU_LIMIT:=500m}
+        memory: ${VALKEY_MEMORY_LIMIT:=256Mi}
+    valkeyConfig: |-
+      maxmemory ${VALKEY_MAXMEMORY:=192mb}
+      maxmemory-policy ${VALKEY_MAXMEMORY_POLICY:=allkeys-lru}
