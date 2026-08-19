@@ -97,6 +97,12 @@ spec:
         - ports:
             - port: "6443"
               protocol: TCP
+    - toCIDR:
+        - 10.10.1.110/32
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
     - toEntities:
         - host
         - remote-node
