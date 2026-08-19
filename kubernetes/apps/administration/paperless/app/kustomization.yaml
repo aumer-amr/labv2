@@ -51,6 +51,9 @@ patches:
         path: /spec/values/dataStorage/keepPvc
         value: true
       - op: replace
+        path: /spec/values/networkPolicy
+        value: {}
+      - op: replace
         path: /spec/values/valkeyConfig
         value: |-
           maxmemory 192mb
