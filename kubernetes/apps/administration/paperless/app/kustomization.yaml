@@ -36,6 +36,14 @@ patches:
   - target:
       group: helm.toolkit.fluxcd.io
       kind: HelmRelease
+      name: paperless
+    patch: |-
+      - op: replace
+        path: /spec/values/defaultPodOptions/labels
+        value: {}
+  - target:
+      group: helm.toolkit.fluxcd.io
+      kind: HelmRelease
       name: .*-valkey
     patch: |-
       - op: replace
