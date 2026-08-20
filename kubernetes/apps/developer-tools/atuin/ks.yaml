@@ -7,9 +7,12 @@ metadata:
 spec:
   components:
     - ../../../../components/kopiur/backup
+    - ../../../../components/kopiur/secret
   dependsOn:
     - name: envoy-gateway
       namespace: network
+    - name: onepassword-connect
+      namespace: external-secrets
     - name: kopiur
       namespace: kube-system
     - name: rook-ceph-cluster
