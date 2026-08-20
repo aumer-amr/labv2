@@ -1,0 +1,114 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: actual
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: actual
+  interval: 1h
+  values:
+    global:
+      createDefaultServiceAccount: false
+    controllers:
+      actual:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        strategy: Recreate
+        containers:
+          app:
+            image:
+              repository: ghcr.io/actualbudget/actual
+              tag: 26.8.1@sha256:6478d9ddfc0924479c09e6699c205e354c6f2216dfe7de3c0fb7b590d6edcdc5
+            env:
+              ACTUAL_OPENID_DISCOVERY_URL: https://idm.${SECRET_DOMAIN}/oauth2/openid/actual/.well-known/openid-configuration
+              ACTUAL_OPENID_ENFORCE: "true"
+              ACTUAL_OPENID_SERVER_HOSTNAME: https://actual.${SECRET_DOMAIN}
+              ACTUAL_PORT: &port 5006
+              ACTUAL_TOKEN_EXPIRATION: openid-provider
+              ACTUAL_USER_CREATION_MODE: login
+              TZ: Europe/Amsterdam
+              ACTUAL_OPENID_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: actual-secret
+                    key: KANIDM_CLIENT_ID
+              ACTUAL_OPENID_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: actual-secret
+                    key: KANIDM_CLIENT_SECRET
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: *port
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: *port
+                  failureThreshold: 30
+                  periodSeconds: 10
+            resources:
+              requests:
+                cpu: 10m
+                memory: 128Mi
+              limits:
+                memory: 512Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      labels:
+        network.home.arpa/from-envoy-internal: allow
+        network.home.arpa/to-envoy-external: allow
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+    service:
+      app:
+        controller: actual
+        ports:
+          http:
+            port: *port
+    persistence:
+      data:
+        existingClaim: actual
+        advancedMounts:
+          actual:
+            app:
+              - path: /data
+      tmp:
+        type: emptyDir
+        advancedMounts:
+          actual:
+            app:
+              - path: /tmp

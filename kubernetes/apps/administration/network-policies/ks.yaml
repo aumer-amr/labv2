@@ -6,6 +6,7 @@ metadata:
   name: network-policies
 spec:
   dependsOn:
+    - name: actual
     - name: paperless
     - name: kopiur
       namespace: kube-system
