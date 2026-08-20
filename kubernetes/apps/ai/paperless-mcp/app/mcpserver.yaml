@@ -1,0 +1,39 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/litellm.home-operations.com/litellmmcpserver_v1alpha1.json
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMMCPServer
+metadata:
+  name: paperless-mcp
+spec:
+  alias: paperless_mcp
+  authType: bearer_token
+  authTokenRef:
+    name: paperless-mcp-secret
+    key: PAPERLESS_API_KEY
+  workload:
+    automountServiceAccountToken: false
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      readOnlyRootFilesystem: true
+    # renovate: datasource=docker depName=ghcr.io/baruchiro/paperless-mcp
+    image: ghcr.io/baruchiro/paperless-mcp:latest@sha256:abba37e831e789633900d3f6911768484b24f989793a05df83c8f95bb24ac8c5
+    port: 3000
+    env:
+      - name: PAPERLESS_URL
+        value: http://paperless.administration.svc.cluster.local:8000
+      - name: PAPERLESS_PUBLIC_URL
+        value: https://paperless.${SECRET_DOMAIN}
+    volumes:
+      - name: tmp
+        emptyDir: {}
+    volumeMounts:
+      - name: tmp
+        mountPath: /tmp
