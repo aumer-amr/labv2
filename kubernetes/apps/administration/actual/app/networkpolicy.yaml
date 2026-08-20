@@ -53,6 +53,7 @@ spec:
           rules:
             dns:
               - matchName: idm.${SECRET_DOMAIN}
+              - matchPattern: "idm.${SECRET_DOMAIN}.*"
     - toFQDNs:
         - matchName: idm.${SECRET_DOMAIN}
       toPorts:
