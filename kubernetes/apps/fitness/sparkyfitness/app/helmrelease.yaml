@@ -61,7 +61,7 @@ spec:
                     name: sparkyfitness-app-postgres
                     key: password
               SPARKY_FITNESS_FRONTEND_URL: https://fitness.${SECRET_DOMAIN}
-              SPARKY_FITNESS_DISABLE_SIGNUP: "true"
+              SPARKY_FITNESS_DISABLE_SIGNUP: "false"
               SPARKY_FITNESS_DISABLE_EMAIL_LOGIN: "true"
               SPARKY_FITNESS_LOG_LEVEL: info
               SPARKY_FITNESS_OIDC_AUTH_ENABLED: "true"
