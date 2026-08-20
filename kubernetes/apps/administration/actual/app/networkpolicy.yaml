@@ -53,7 +53,7 @@ spec:
           rules:
             dns:
               - matchName: idm.${SECRET_DOMAIN}
-              - matchPattern: "idm.${SECRET_DOMAIN}.*"
+              - matchName: idm.${SECRET_DOMAIN}.administration.svc.cluster.local
     - toFQDNs:
         - matchName: idm.${SECRET_DOMAIN}
       toPorts:
