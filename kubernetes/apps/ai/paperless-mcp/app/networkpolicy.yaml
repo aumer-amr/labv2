@@ -46,18 +46,7 @@ spec:
       toPorts:
         - ports:
             - port: "53"
-              protocol: UDP
-          rules:
-            dns:
-              - matchName: paperless.administration.svc.cluster.local
-    - toEndpoints:
-        - matchLabels:
-            k8s:io.kubernetes.pod.namespace: kube-system
-            k8s:k8s-app: kube-dns
-      toPorts:
-        - ports:
-            - port: "53"
-              protocol: TCP
+              protocol: ANY
           rules:
             dns:
               - matchName: paperless.administration.svc.cluster.local
