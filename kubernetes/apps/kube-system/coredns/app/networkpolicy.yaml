@@ -50,6 +50,12 @@ spec:
               app.kubernetes.io/name: paperless
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: developer-tools
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: kopiur
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: cert-manager
           podSelector:
             matchLabels:
