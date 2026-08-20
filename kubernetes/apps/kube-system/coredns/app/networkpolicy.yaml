@@ -41,6 +41,12 @@ spec:
               kubernetes.io/metadata.name: administration
           podSelector:
             matchLabels:
+              app.kubernetes.io/name: actual
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: administration
+          podSelector:
+            matchLabels:
               app.kubernetes.io/name: paperless
         - namespaceSelector:
             matchLabels:
