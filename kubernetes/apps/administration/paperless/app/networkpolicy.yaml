@@ -21,6 +21,16 @@ spec:
       ports:
         - port: 8000
           protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: paperless-mcp
+      ports:
+        - port: 8000
+          protocol: TCP
   egress:
     - to:
         - namespaceSelector:
