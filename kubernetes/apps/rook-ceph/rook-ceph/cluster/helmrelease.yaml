@@ -34,6 +34,16 @@ spec:
         enabled: true
         urlPrefix: /
         ssl: false
+      healthCheck:
+        muteHealthWarning:
+          AUTH_INSECURE_ROTATING_SERVICE_KEY_TYPE:
+            policy: mute
+          AUTH_INSECURE_CLIENT_KEY_TYPE:
+            policy: mute
+          AUTH_INSECURE_KEYS_ALLOWED:
+            policy: mute
+          AUTH_INSECURE_KEYS_CREATABLE:
+            policy: mute
       mgr:
         modules:
           - name: insights
@@ -47,6 +57,13 @@ spec:
         osd:
           limits:
             memory: 8Gi
+      security:
+        cephx:
+          daemon:
+            keyRotationPolicy: KeyGeneration
+            keyGeneration: 2
+          csi:
+            keyType: aes # aes256k requires kernel 7.0+
       storage:
         devicePathFilter: /dev/disk/by-id/ata-CT1000MX500SSD1_.*
         useAllDevices: false
