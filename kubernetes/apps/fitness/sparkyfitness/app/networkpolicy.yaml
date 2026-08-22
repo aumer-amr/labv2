@@ -81,6 +81,7 @@ spec:
               - matchPattern: world.openfoodfacts.org.*
     - toFQDNs:
         - matchName: api.github.com
+        - matchName: api.github.com.fitness.svc.cluster.local
         - matchName: api.webapp.prod.blv.foodcase-services.com
         - matchName: api.webapp.prod.blv.foodcase-services.com.fitness.svc.cluster.local
         - matchName: idm.${SECRET_DOMAIN}
