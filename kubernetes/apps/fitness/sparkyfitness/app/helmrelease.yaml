@@ -21,7 +21,7 @@ spec:
           app:
             image:
               repository: docker.io/codewithcj/sparkyfitness_server
-              tag: v1.6.2@sha256:3290602cc0d6f5ccf50ae07897fd8959317ce5e2e62db93d36c8d4a266dd0997
+              tag: v1.6.4@sha256:79e5334290c70a477e98065244812d8692d4a63862b15d8d8e78aa3d8e55904d
             env:
               TZ: Europe/Amsterdam
               NODE_ENV: production
