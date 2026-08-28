@@ -130,7 +130,7 @@ spec:
           app:
             image:
               repository: docker.io/codewithcj/sparkyfitness
-              tag: v1.6.2@sha256:66c6f8ee86d7b9a2196c479b91f5187a55c462805432d97c55a28e50e5044353
+              tag: v1.6.4@sha256:893fcfbe9421354fe25fa1ae917087ff6a8d010330d2113e6179369fbc23abb6
             env:
               NGINX_LISTEN_PORT: "8080"
               SPARKY_FITNESS_FRONTEND_URL: https://fitness.${SECRET_DOMAIN}
