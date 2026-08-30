@@ -61,7 +61,13 @@ spec:
               - matchPattern: "**.hf.co.cluster.local"
     - toFQDNs:
         - matchName: huggingface.co
+        - matchName: huggingface.co.ai.svc.cluster.local
+        - matchName: huggingface.co.svc.cluster.local
+        - matchName: huggingface.co.cluster.local
         - matchPattern: "**.hf.co"
+        - matchPattern: "**.hf.co.ai.svc.cluster.local"
+        - matchPattern: "**.hf.co.svc.cluster.local"
+        - matchPattern: "**.hf.co.cluster.local"
       toPorts:
         - ports:
             - port: "443"
@@ -133,7 +139,13 @@ spec:
               - matchPattern: "**.hf.co.cluster.local"
     - toFQDNs:
         - matchName: huggingface.co
+        - matchName: huggingface.co.ai.svc.cluster.local
+        - matchName: huggingface.co.svc.cluster.local
+        - matchName: huggingface.co.cluster.local
         - matchPattern: "**.hf.co"
+        - matchPattern: "**.hf.co.ai.svc.cluster.local"
+        - matchPattern: "**.hf.co.svc.cluster.local"
+        - matchPattern: "**.hf.co.cluster.local"
       toPorts:
         - ports:
             - port: "443"
