@@ -34,7 +34,9 @@ spec:
           rules:
             dns:
               - matchName: huggingface.co
+              - matchPattern: "huggingface.co.*"
               - matchPattern: "*.hf.co"
+              - matchPattern: "*.hf.co.*"
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -46,7 +48,9 @@ spec:
           rules:
             dns:
               - matchName: huggingface.co
+              - matchPattern: "huggingface.co.*"
               - matchPattern: "*.hf.co"
+              - matchPattern: "*.hf.co.*"
     - toFQDNs:
         - matchName: huggingface.co
         - matchPattern: "*.hf.co"
@@ -94,7 +98,9 @@ spec:
           rules:
             dns:
               - matchName: huggingface.co
+              - matchPattern: "huggingface.co.*"
               - matchPattern: "*.hf.co"
+              - matchPattern: "*.hf.co.*"
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -106,7 +112,9 @@ spec:
           rules:
             dns:
               - matchName: huggingface.co
+              - matchPattern: "huggingface.co.*"
               - matchPattern: "*.hf.co"
+              - matchPattern: "*.hf.co.*"
     - toFQDNs:
         - matchName: huggingface.co
         - matchPattern: "*.hf.co"
