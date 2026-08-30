@@ -35,6 +35,18 @@ spec:
     prometheus_adapter: true
     drop_params: true
     merge_reasoning_content_in_choices: true
+  extraConfig:
+    policies:
+      prompt-injection-protection:
+        description: Protects against prompt injection, SQL injection, code injection, and jailbreak attempts
+        guardrails:
+          add:
+            - prompt-injection-blocker
+            - sql-injection-blocker
+            - code-injection-blocker
+    policy_attachments:
+      - policy: prompt-injection-protection
+        scope: "*"
   env:
     - name: DATABASE_URL
       valueFrom:

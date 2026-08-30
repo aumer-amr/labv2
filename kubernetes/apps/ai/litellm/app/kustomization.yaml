@@ -7,6 +7,7 @@ components:
   - ../../../../components/valkey
 resources:
   - ./externalsecret.yaml
+  - ./guardrails.yaml
   - ./httproute.yaml
   - ./litellmproxy.yaml
   - ./models/
