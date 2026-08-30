@@ -42,7 +42,6 @@ patches:
         path: /spec/values/defaultPodOptions/labels
         value:
           network.home.arpa/from-envoy-internal: allow
-          network.home.arpa/to-envoy-external: allow
   - target:
       group: helm.toolkit.fluxcd.io
       kind: HelmRelease
