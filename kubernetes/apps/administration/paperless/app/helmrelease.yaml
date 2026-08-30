@@ -101,6 +101,7 @@ spec:
       automountServiceAccountToken: false
       labels:
         network.home.arpa/from-envoy-internal: allow
+        network.home.arpa/to-envoy-external: allow
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000

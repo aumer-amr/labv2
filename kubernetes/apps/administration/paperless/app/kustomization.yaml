@@ -15,15 +15,6 @@ patches:
   - target:
       group: helm.toolkit.fluxcd.io
       kind: HelmRelease
-      name: paperless
-    patch: |-
-      - op: replace
-        path: /spec/values/defaultPodOptions/labels
-        value:
-          network.home.arpa/from-envoy-internal: allow
-  - target:
-      group: helm.toolkit.fluxcd.io
-      kind: HelmRelease
       name: .*-valkey
     patch: |-
       - op: replace
