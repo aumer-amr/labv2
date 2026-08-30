@@ -23,6 +23,12 @@ spec:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
+              app.kubernetes.io/name: litellm-operator
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
               app.kubernetes.io/instance: llmkube
               app.kubernetes.io/name: llmkube
               control-plane: controller-manager
