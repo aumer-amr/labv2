@@ -34,9 +34,13 @@ spec:
           rules:
             dns:
               - matchName: huggingface.co
-              - matchPattern: "huggingface.co.*"
-              - matchPattern: "*.hf.co"
-              - matchPattern: "*.hf.co.*"
+              - matchName: huggingface.co.ai.svc.cluster.local
+              - matchName: huggingface.co.svc.cluster.local
+              - matchName: huggingface.co.cluster.local
+              - matchPattern: "**.hf.co"
+              - matchPattern: "**.hf.co.ai.svc.cluster.local"
+              - matchPattern: "**.hf.co.svc.cluster.local"
+              - matchPattern: "**.hf.co.cluster.local"
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -48,12 +52,16 @@ spec:
           rules:
             dns:
               - matchName: huggingface.co
-              - matchPattern: "huggingface.co.*"
-              - matchPattern: "*.hf.co"
-              - matchPattern: "*.hf.co.*"
+              - matchName: huggingface.co.ai.svc.cluster.local
+              - matchName: huggingface.co.svc.cluster.local
+              - matchName: huggingface.co.cluster.local
+              - matchPattern: "**.hf.co"
+              - matchPattern: "**.hf.co.ai.svc.cluster.local"
+              - matchPattern: "**.hf.co.svc.cluster.local"
+              - matchPattern: "**.hf.co.cluster.local"
     - toFQDNs:
         - matchName: huggingface.co
-        - matchPattern: "*.hf.co"
+        - matchPattern: "**.hf.co"
       toPorts:
         - ports:
             - port: "443"
@@ -98,9 +106,13 @@ spec:
           rules:
             dns:
               - matchName: huggingface.co
-              - matchPattern: "huggingface.co.*"
-              - matchPattern: "*.hf.co"
-              - matchPattern: "*.hf.co.*"
+              - matchName: huggingface.co.ai.svc.cluster.local
+              - matchName: huggingface.co.svc.cluster.local
+              - matchName: huggingface.co.cluster.local
+              - matchPattern: "**.hf.co"
+              - matchPattern: "**.hf.co.ai.svc.cluster.local"
+              - matchPattern: "**.hf.co.svc.cluster.local"
+              - matchPattern: "**.hf.co.cluster.local"
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -112,12 +124,16 @@ spec:
           rules:
             dns:
               - matchName: huggingface.co
-              - matchPattern: "huggingface.co.*"
-              - matchPattern: "*.hf.co"
-              - matchPattern: "*.hf.co.*"
+              - matchName: huggingface.co.ai.svc.cluster.local
+              - matchName: huggingface.co.svc.cluster.local
+              - matchName: huggingface.co.cluster.local
+              - matchPattern: "**.hf.co"
+              - matchPattern: "**.hf.co.ai.svc.cluster.local"
+              - matchPattern: "**.hf.co.svc.cluster.local"
+              - matchPattern: "**.hf.co.cluster.local"
     - toFQDNs:
         - matchName: huggingface.co
-        - matchPattern: "*.hf.co"
+        - matchPattern: "**.hf.co"
       toPorts:
         - ports:
             - port: "443"
