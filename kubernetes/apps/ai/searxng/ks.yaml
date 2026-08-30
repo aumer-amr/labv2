@@ -3,29 +3,22 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: network-policies
+  name: searxng
 spec:
   dependsOn:
-    - name: ha-mcp
-    - name: litellm
-    - name: litellm-operator
-    - name: llmkube
-    - name: llmkube-models
-    - name: memini
-    - name: open-webui
-    - name: searxng
-    - name: coredns
-      namespace: kube-system
+    - name: envoy-gateway
+      namespace: network
+    - name: onepassword-connect
+      namespace: external-secrets
   interval: 1h
-  path: ./kubernetes/apps/ai/network-policies/app
+  path: ./kubernetes/apps/ai/searxng/app
   postBuild:
     substituteFrom:
-      - kind: Secret
-        name: cluster-secrets
+      - name: cluster-secrets
+        kind: Secret
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
     namespace: flux-system
   targetNamespace: ai
-  wait: true

@@ -1,0 +1,43 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: open-webui
+spec:
+  components:
+    - ../../../../components/kopiur/backup
+    - ../../../../components/kopiur/secret
+  dependsOn:
+    - name: envoy-gateway
+      namespace: network
+    - name: kopiur
+      namespace: kube-system
+    - name: litellm
+      namespace: ai
+    - name: onepassword-connect
+      namespace: external-secrets
+    - name: rook-ceph-cluster
+      namespace: rook-ceph
+    - name: searxng
+      namespace: ai
+    - name: valkey
+      namespace: database
+  interval: 1h
+  path: ./kubernetes/apps/ai/open-webui/app
+  postBuild:
+    substitute:
+      APP: open-webui
+      KOPIUR_CAPACITY: 5Gi
+      KOPIUR_PGID: "0"
+      KOPIUR_PUID: "0"
+      NAMESPACE: ai
+    substituteFrom:
+      - name: cluster-secrets
+        kind: Secret
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: ai

@@ -1,0 +1,108 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/networking.k8s.io/networkpolicy_v1.json
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: open-webui
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: open-webui
+      app.kubernetes.io/name: open-webui
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-internal
+      ports:
+        - port: 8080
+          protocol: TCP
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-external
+      ports:
+        - port: 10443
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: litellm
+      ports:
+        - port: 4000
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: searxng
+              app.kubernetes.io/name: searxng
+      ports:
+        - port: 8080
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: open-webui-oidc
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: open-webui
+      app.kubernetes.io/name: open-webui
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: idm.${SECRET_DOMAIN}
+              - matchName: litellm.ai.svc.cluster.local
+              - matchName: open-webui-valkey.ai.svc.cluster.local
+              - matchName: searxng.ai.svc.cluster.local
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: idm.${SECRET_DOMAIN}
+              - matchName: litellm.ai.svc.cluster.local
+              - matchName: open-webui-valkey.ai.svc.cluster.local
+              - matchName: searxng.ai.svc.cluster.local
+    - toFQDNs:
+        - matchName: idm.${SECRET_DOMAIN}
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

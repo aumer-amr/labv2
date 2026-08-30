@@ -1,0 +1,125 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: open-webui
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: open-webui
+  interval: 1h
+  values:
+    global:
+      createDefaultServiceAccount: false
+    controllers:
+      open-webui:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        strategy: Recreate
+        containers:
+          app:
+            image:
+              repository: ghcr.io/open-webui/open-webui
+              tag: v0.11.1@sha256:6bb1fbe8ab0a3e0456067f493044ffb66a30a65a34be47f6a5862176a370dd16
+            env:
+              ANONYMIZED_TELEMETRY: "false"
+              BYPASS_WEB_SEARCH_WEB_LOADER: "true"
+              DO_NOT_TRACK: "true"
+              ENABLE_DIRECT_CONNECTIONS: "false"
+              ENABLE_LOGIN_FORM: "false"
+              ENABLE_OAUTH_PERSISTENT_CONFIG: "false"
+              ENABLE_OAUTH_SIGNUP: "true"
+              ENABLE_OLLAMA_API: "false"
+              ENABLE_OPENAI_API: "true"
+              ENABLE_PERSISTENT_CONFIG: "false"
+              ENABLE_SIGNUP: "false"
+              ENABLE_WEB_SEARCH: "true"
+              ENABLE_WEBSOCKET_SUPPORT: "true"
+              OAUTH_PROVIDER_NAME: Kanidm
+              OAUTH_SCOPES: openid email profile
+              OPENAI_API_BASE_URL: http://litellm.ai.svc.cluster.local:4000/v1
+              OPENAI_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: open-webui-litellm
+                    key: key
+              OPENID_PROVIDER_URL: https://idm.${SECRET_DOMAIN}/oauth2/openid/open-webui/.well-known/openid-configuration
+              OPENID_REDIRECT_URI: https://chat.${SECRET_DOMAIN}/oauth/oidc/callback
+              RAG_EMBEDDING_ENGINE: openai
+              RAG_EMBEDDING_MODEL: qwen3-embedding
+              RAG_OPENAI_API_BASE_URL: http://litellm.ai.svc.cluster.local:4000/v1
+              RAG_OPENAI_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: open-webui-litellm
+                    key: key
+              REDIS_KEY_PREFIX: open-webui
+              SEARXNG_QUERY_URL: "http://searxng.ai.svc.cluster.local:8080/search?q=<query>"
+              TASK_MODEL_EXTERNAL: gpt-5.6-luna
+              TZ: Europe/Amsterdam
+              WEB_SEARCH_ENGINE: searxng
+              WEBUI_URL: https://chat.${SECRET_DOMAIN}
+              WEBSOCKET_MANAGER: redis
+            envFrom:
+              - secretRef:
+                  name: open-webui-secret
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: &port 8080
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /ready
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /ready
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      labels:
+        network.home.arpa/from-envoy-internal: allow
+        network.home.arpa/to-envoy-external: allow
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+    service:
+      app:
+        controller: open-webui
+        ports:
+          http:
+            port: *port
+    persistence:
+      data:
+        existingClaim: open-webui
+        globalMounts:
+          - path: /app/backend/data

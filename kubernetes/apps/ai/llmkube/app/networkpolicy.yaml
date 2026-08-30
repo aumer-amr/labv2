@@ -76,6 +76,30 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
+  name: llmkube-controller-metrics
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: llmkube
+      app.kubernetes.io/name: llmkube
+      control-plane: controller-manager
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 8443
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
   name: qwen3-embedding-0.6b
 spec:
   podSelector:
@@ -88,6 +112,12 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: litellm
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
       ports:
         - port: 8080
           protocol: TCP

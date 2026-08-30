@@ -6,6 +6,8 @@ metadata:
   name: llmkube
 spec:
   dependsOn:
+    - name: kube-prometheus-stack
+      namespace: observability
     - name: rook-ceph-cluster
       namespace: rook-ceph
   interval: 1h

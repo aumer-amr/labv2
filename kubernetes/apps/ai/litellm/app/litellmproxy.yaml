@@ -5,6 +5,10 @@ kind: LiteLLMProxy
 metadata:
   name: litellm
 spec:
+  apiAccess:
+    masterKeyRef:
+      name: litellm-secret
+      key: LITELLM_MASTER_KEY
   podLabels:
     network.home.arpa/from-envoy-internal: allow
   # renovate: datasource=docker depName=ghcr.io/berriai/litellm
@@ -31,6 +35,8 @@ spec:
       port: os.environ/REDIS_PORT
       password: os.environ/REDIS_PASSWORD
     success_callback:
+      - prometheus
+    failure_callback:
       - prometheus
     prometheus_adapter: true
     drop_params: true

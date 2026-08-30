@@ -34,14 +34,14 @@ spec:
           drop: ["ALL"]
         readOnlyRootFilesystem: true
     metrics:
-      enabled: false
+      enabled: true
     prometheus:
       serviceMonitor:
-        enabled: false
+        enabled: true
       inferencePodMonitor:
-        enabled: false
+        enabled: true
       routerPodMonitor:
-        enabled: false
+        enabled: true
       prometheusRule:
         enabled: false
     modelCache:

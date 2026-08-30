@@ -31,6 +31,22 @@ spec:
       ports:
         - port: 4000
           protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: litellm-operator
+              app.kubernetes.io/name: litellm-operator
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: memini
+              app.kubernetes.io/name: memini
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: open-webui
+              app.kubernetes.io/name: open-webui
+      ports:
+        - port: 4000
+          protocol: TCP
   egress:
     - to:
         - namespaceSelector:
