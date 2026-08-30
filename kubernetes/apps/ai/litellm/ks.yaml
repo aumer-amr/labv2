@@ -10,6 +10,8 @@ spec:
       namespace: database
     - name: cloudnative-pg
       namespace: database
+    - name: valkey
+      namespace: database
     - name: litellm-operator
       namespace: ai
     - name: llmkube-models

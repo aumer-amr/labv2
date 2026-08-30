@@ -97,6 +97,7 @@ spec:
               - matchName: ha-mcp.ai.svc.cluster.local
               - matchName: konflate.flux-system.svc.cluster.local
               - matchName: litellm-rw.ai.svc.cluster.local
+              - matchName: litellm-valkey.ai.svc.cluster.local
               - matchName: paperless-mcp.ai.svc.cluster.local
               - matchName: qwen3-embedding-0-6b.ai.svc.cluster.local
     - toEndpoints:
@@ -113,6 +114,7 @@ spec:
               - matchName: ha-mcp.ai.svc.cluster.local
               - matchName: konflate.flux-system.svc.cluster.local
               - matchName: litellm-rw.ai.svc.cluster.local
+              - matchName: litellm-valkey.ai.svc.cluster.local
               - matchName: paperless-mcp.ai.svc.cluster.local
               - matchName: qwen3-embedding-0-6b.ai.svc.cluster.local
     - toFQDNs:

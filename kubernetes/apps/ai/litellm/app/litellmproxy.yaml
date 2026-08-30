@@ -20,7 +20,16 @@ spec:
     routing_strategy: simple-shuffle
     num_retries: 3
     timeout: 600
+    redis_host: os.environ/REDIS_HOST
+    redis_port: os.environ/REDIS_PORT
+    redis_password: os.environ/REDIS_PASSWORD
   litellmSettings:
+    cache: true
+    cache_params:
+      type: redis
+      host: os.environ/REDIS_HOST
+      port: os.environ/REDIS_PORT
+      password: os.environ/REDIS_PASSWORD
     success_callback:
       - prometheus
     prometheus_adapter: true
@@ -46,6 +55,15 @@ spec:
         secretKeyRef:
           name: litellm-secret
           key: LITELLM_SALT_KEY
+    - name: REDIS_HOST
+      value: litellm-valkey.ai.svc.cluster.local
+    - name: REDIS_PORT
+      value: "6379"
+    - name: REDIS_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: litellm-secret
+          key: REDIS_PASSWORD
   resources:
     requests:
       cpu: 100m
