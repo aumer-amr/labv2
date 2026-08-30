@@ -23,6 +23,20 @@ spec:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
+              app.kubernetes.io/instance: llmkube
+              app.kubernetes.io/name: llmkube
+              control-plane: controller-manager
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
+              inference.llmkube.dev/service: qwen3-embedding-0.6b
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
               app.kubernetes.io/name: ha-mcp
         - namespaceSelector:
             matchLabels:
