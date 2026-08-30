@@ -12,6 +12,8 @@ spec:
       namespace: database
     - name: litellm-operator
       namespace: ai
+    - name: llmkube-models
+      namespace: ai
     - name: envoy-gateway
       namespace: network
     - name: kube-prometheus-stack

@@ -55,6 +55,16 @@ spec:
     - to:
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
+              inference.llmkube.dev/service: qwen3-embedding-0.6b
+      ports:
+        - port: 8080
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: flux-system
           podSelector:
             matchLabels:
@@ -80,7 +90,7 @@ spec:
       toPorts:
         - ports:
             - port: "53"
-              protocol: ANY
+              protocol: UDP
           rules:
             dns:
               - matchName: api.openai.com
@@ -88,6 +98,23 @@ spec:
               - matchName: konflate.flux-system.svc.cluster.local
               - matchName: litellm-rw.ai.svc.cluster.local
               - matchName: paperless-mcp.ai.svc.cluster.local
+              - matchName: qwen3-embedding-0.6b.ai.svc.cluster.local
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: api.openai.com
+              - matchName: ha-mcp.ai.svc.cluster.local
+              - matchName: konflate.flux-system.svc.cluster.local
+              - matchName: litellm-rw.ai.svc.cluster.local
+              - matchName: paperless-mcp.ai.svc.cluster.local
+              - matchName: qwen3-embedding-0.6b.ai.svc.cluster.local
     - toFQDNs:
         - matchName: api.openai.com
       toPorts:

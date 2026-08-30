@@ -9,6 +9,8 @@ spec:
     - name: ha-mcp
     - name: litellm
     - name: litellm-operator
+    - name: llmkube
+    - name: llmkube-models
     - name: coredns
       namespace: kube-system
   interval: 1h

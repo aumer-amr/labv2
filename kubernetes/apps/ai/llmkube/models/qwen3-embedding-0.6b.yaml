@@ -1,0 +1,86 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: Model
+metadata:
+  name: qwen3-embedding-0.6b
+spec:
+  source: https://huggingface.co/Qwen/Qwen3-Embedding-0.6B-GGUF/resolve/main/Qwen3-Embedding-0.6B-Q8_0.gguf
+  sha256: 06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439
+  format: gguf
+  quantization: Q8_0
+  hardware:
+    accelerator: intel
+    gpu:
+      enabled: true
+      vendor: intel
+      layers: 99
+      resourceClaims:
+        - name: gpu
+          resourceClaimTemplateName: llmkube-models-gpu
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: InferenceService
+metadata:
+  name: qwen3-embedding-0.6b
+spec:
+  modelRef: qwen3-embedding-0.6b
+  runtime: llamacpp
+  mode: embedding
+  # renovate: datasource=docker depName=ghcr.io/ggml-org/llama.cpp
+  image: ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:74b3e5244810dafac2a6f2e173548676eec2333b16cec2203cfedf6ed0ebdabe
+  replicas: 1
+  podSecurityContext:
+    fsGroup: 102
+    supplementalGroups:
+      - 44
+      - 992
+  priority: normal
+  contextSize: 8192
+  parallelSlots: 2
+  batchSize: 2048
+  uBatchSize: 2048
+  env:
+    - name: ZES_ENABLE_SYSMAN
+      value: "1"
+    - name: ONEAPI_DEVICE_SELECTOR
+      value: level_zero:gpu
+    - name: UR_L0_ENABLE_RELAXED_ALLOCATION_LIMITS
+      value: "1"
+  extraArgs:
+    - --alias
+    - qwen3-embedding
+    - --cache-ram
+    - "0"
+    - --cont-batching
+    - --threads
+    - "6"
+    - --threads-batch
+    - "12"
+    - --mmap
+  endpoint:
+    port: 8080
+    type: ClusterIP
+  resources:
+    cpu: 100m
+    memory: 2Gi
+  probeOverrides:
+    startup:
+      httpGet:
+        path: /health
+        port: 8080
+      periodSeconds: 10
+      failureThreshold: 360
+    liveness:
+      httpGet:
+        path: /health
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      failureThreshold: 6
+    readiness:
+      httpGet:
+        path: /health
+        port: 8080
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 6

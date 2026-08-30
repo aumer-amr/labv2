@@ -10,6 +10,7 @@ resources:
   - ./namespace.yaml
   - ./litellm-operator/ks.yaml
   - ./litellm/ks.yaml
+  - ./llmkube/ks.yaml
   - ./ha-mcp/ks.yaml
   - ./paperless-mcp/ks.yaml
   - ./context7/ks.yaml
