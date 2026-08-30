@@ -225,6 +225,7 @@ spec:
               - matchPattern: "*.quay.io"
               - matchName: mirror.gcr.io
               - matchPattern: "*.mirror.gcr.io"
+              - matchName: registry.erwanleboucher.dev
               - matchName: notification-controller.flux-system.svc.cluster.local
               - matchName: ocharted.${SECRET_DOMAIN}
               - matchPattern: "*.ocharted.${SECRET_DOMAIN}"
@@ -248,6 +249,7 @@ spec:
               - matchPattern: "*.quay.io"
               - matchName: mirror.gcr.io
               - matchPattern: "*.mirror.gcr.io"
+              - matchName: registry.erwanleboucher.dev
               - matchName: notification-controller.flux-system.svc.cluster.local
               - matchName: ocharted.${SECRET_DOMAIN}
               - matchPattern: "*.ocharted.${SECRET_DOMAIN}"
@@ -262,6 +264,7 @@ spec:
         - matchPattern: "*.quay.io"
         - matchName: mirror.gcr.io
         - matchPattern: "*.mirror.gcr.io"
+        - matchName: registry.erwanleboucher.dev
         - matchName: ocharted.${SECRET_DOMAIN}
       toPorts:
         - ports:
