@@ -8,7 +8,7 @@ spec:
   modelName: qwen3-embedding
   params:
     model: openai/qwen3-embedding
-    apiBase: http://qwen3-embedding-0.6b.ai.svc.cluster.local:8080/v1
+    apiBase: http://qwen3-embedding-0-6b.ai.svc.cluster.local:8080/v1
     apiKey: none
   info:
     mode: embedding
