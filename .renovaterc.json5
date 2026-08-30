@@ -75,6 +75,16 @@
       minimumGroupSize: 2,
     },
     {
+      description: "SparkyFitness Group",
+      groupName: "sparkyfitness",
+      matchDatasources: ["docker"],
+      matchPackageNames: [
+        "docker.io/codewithcj/sparkyfitness",
+        "docker.io/codewithcj/sparkyfitness_server",
+      ],
+      minimumGroupSize: 2,
+    },
+    {
       description: "CloudNativePG PostgreSQL image versioning",
       matchDatasources: ["docker"],
       matchPackageNames: ["ghcr.io/cloudnative-pg/postgresql"],
