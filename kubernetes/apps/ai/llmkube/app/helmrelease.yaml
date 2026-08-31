@@ -9,19 +9,6 @@ spec:
     kind: OCIRepository
     name: llmkube
   interval: 30m
-  postRenderers:
-    - kustomize:
-        patches:
-          - target:
-              kind: ServiceMonitor
-              name: llmkube-controller-manager-metrics-monitor
-            patch: |-
-              - op: test
-                path: /spec/endpoints/0/scheme
-                value: https
-              - op: add
-                path: /spec/endpoints/0/bearerTokenFile
-                value: /var/run/secrets/kubernetes.io/serviceaccount/token
   values:
     namespace: ai
     crds:
@@ -48,6 +35,7 @@ spec:
         readOnlyRootFilesystem: true
     metrics:
       enabled: true
+      secure: false
     prometheus:
       serviceMonitor:
         enabled: true
