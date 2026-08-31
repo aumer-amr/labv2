@@ -35,7 +35,7 @@ spec:
       - 44
       - 992
   priority: normal
-  contextSize: 131072
+  contextSize: 32768
   parallelSlots: 1
   batchSize: 4096
   uBatchSize: 1024
@@ -53,20 +53,14 @@ spec:
     - "0"
     - --cont-batching
     - --jinja
+    - --predict
+    - "512"
     - --flash-attn
     - on
     - --cache-type-k
     - q8_0
     - --cache-type-v
     - q8_0
-    - --rope-scaling
-    - yarn
-    - --rope-scale
-    - "4"
-    - --yarn-orig-ctx
-    - "32768"
-    - --override-kv
-    - qwen3.context_length=int:131072
     - --threads
     - "6"
     - --threads-batch
