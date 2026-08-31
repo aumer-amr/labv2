@@ -35,7 +35,7 @@ spec:
       - 44
       - 992
   priority: normal
-  contextSize: 8192
+  contextSize: 131072
   parallelSlots: 1
   batchSize: 2048
   uBatchSize: 512
@@ -53,6 +53,12 @@ spec:
     - "0"
     - --cont-batching
     - --jinja
+    - --rope-scaling
+    - yarn
+    - --rope-scale
+    - "4"
+    - --yarn-orig-ctx
+    - "32768"
     - --threads
     - "6"
     - --threads-batch
@@ -64,7 +70,7 @@ spec:
     type: ClusterIP
   resources:
     cpu: 250m
-    memory: 6Gi
+    memory: 24Gi
   probeOverrides:
     startup:
       httpGet:

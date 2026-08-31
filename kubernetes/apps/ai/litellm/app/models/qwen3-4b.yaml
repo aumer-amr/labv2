@@ -11,4 +11,6 @@ spec:
     apiBase: http://qwen3-4b.ai.svc.cluster.local:8080/v1
     apiKey: none
   info:
+    maxInputTokens: 131072
+    maxTokens: 131072
     mode: chat
