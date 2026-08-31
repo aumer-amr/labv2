@@ -43,7 +43,9 @@ just talos apply-node <node> try
 
 ### Upgrade Talos
 
-Update `talosVersion` in `talos/topf.yaml`, review diff, then upgrade one node at a time:
+Update `talosVersion` in `talos/topf.yaml` and
+`kubernetes/apps/system-upgrade/tuppr/upgrades/talosupgrade.yaml`, review the
+diff, then upgrade one node at a time:
 
 ```sh
 just talos upgrade-node <node>
@@ -57,9 +59,36 @@ just talos upgrade
 
 Confirm node health between upgrades.
 
+For Talos patch releases, no compatibility-gate change is needed. Before a
+Talos minor release:
+
+1. Check the official Talos support matrix for that minor release.
+2. Add its supported Kubernetes minor range to
+   `scripts/check-talos-kubernetes-compatibility.sh`.
+3. Raise the exclusive `ghcr.io/siderolabs/kubelet` `allowedVersions` ceiling
+   in `.renovaterc.json5`. For a maximum supported Kubernetes version of
+   `1.37`, use `<1.38.0`.
+4. Run the compatibility check:
+
+    ```sh
+    bash scripts/check-talos-kubernetes-compatibility.sh
+    ```
+
+Unknown Talos minors fail the check until this review is completed. Do not
+derive support from release numbering alone.
+
 ### Upgrade Kubernetes
 
-Update `kubernetesVersion` in `talos/topf.yaml`, then run:
+Confirm the target Kubernetes minor is listed in the current Talos support
+matrix. Update `kubernetesVersion` in `talos/topf.yaml` and the version in
+`kubernetes/apps/system-upgrade/tuppr/upgrades/kubernetesupgrade.yaml`, then
+run:
+
+```sh
+bash scripts/check-talos-kubernetes-compatibility.sh
+```
+
+After the check passes, run:
 
 ```sh
 just talos upgrade-k8s

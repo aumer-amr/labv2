@@ -55,6 +55,12 @@
       minimumGroupSize: 3,
     },
     {
+      description: "Hold Kubernetes at Talos 1.13 support ceiling",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/siderolabs/kubelet"],
+      allowedVersions: "<1.37.0",
+    },
+    {
       description: "Flux Operator Group",
       groupName: "flux-operator",
       matchDatasources: ["docker"],
