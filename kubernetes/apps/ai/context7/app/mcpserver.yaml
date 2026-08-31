@@ -6,6 +6,8 @@ metadata:
   name: context7
 spec:
   alias: context7
+  params:
+    allow_all_keys: true
   proxyRef: litellm
   url: https://mcp.context7.com/mcp
   transport: http

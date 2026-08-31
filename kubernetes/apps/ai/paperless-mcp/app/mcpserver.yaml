@@ -6,6 +6,8 @@ metadata:
   name: paperless-mcp
 spec:
   alias: paperless_mcp
+  params:
+    allow_all_keys: true
   authType: bearer_token
   authTokenRef:
     name: paperless-mcp-secret

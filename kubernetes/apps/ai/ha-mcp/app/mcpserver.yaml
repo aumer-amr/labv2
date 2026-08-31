@@ -6,6 +6,8 @@ metadata:
   name: ha-mcp
 spec:
   alias: ha_mcp
+  params:
+    allow_all_keys: true
   workload:
     automountServiceAccountToken: false
     podLabels:
