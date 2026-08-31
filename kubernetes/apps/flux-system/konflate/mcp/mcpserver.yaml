@@ -6,6 +6,8 @@ metadata:
   name: konflate
 spec:
   alias: konflate
+  params:
+    allow_all_keys: true
   proxyRef: litellm
   url: http://konflate.flux-system.svc.cluster.local:8080/mcp
   transport: http
