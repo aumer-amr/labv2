@@ -1,0 +1,96 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: Model
+metadata:
+  name: hermes-3-3b
+spec:
+  source: https://huggingface.co/NousResearch/Hermes-3-Llama-3.2-3B-GGUF/resolve/3cd927095d8cbab12c743f932aa63b6f7bbfa141/Hermes-3-Llama-3.2-3B.Q4_K_M.gguf
+  sha256: 91776fe0f6cd7483d9d5e06162fdd1f8f0262c15ced269791b4d96a655e8a5a2
+  format: gguf
+  quantization: Q4_K_M
+  hardware:
+    accelerator: intel
+    gpu:
+      enabled: true
+      vendor: intel
+      layers: 99
+      resourceClaims:
+        - name: gpu
+          resourceClaimTemplateName: llmkube-models-gpu
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: InferenceService
+metadata:
+  name: hermes-3-3b
+spec:
+  modelRef: hermes-3-3b
+  runtime: llamacpp
+  mode: chat
+  # renovate: datasource=docker depName=ghcr.io/ggml-org/llama.cpp
+  image: ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:be8d64a2a05b11ddaf5799c544b0d96f8d9a09fb065e8d117cafa7f03e533896
+  replicas: 1
+  podSecurityContext:
+    fsGroup: 102
+    supplementalGroups:
+      - 44
+      - 992
+  priority: normal
+  contextSize: 16384
+  parallelSlots: 1
+  batchSize: 2048
+  uBatchSize: 512
+  env:
+    - name: ZES_ENABLE_SYSMAN
+      value: "1"
+    - name: ONEAPI_DEVICE_SELECTOR
+      value: level_zero:gpu
+    - name: UR_L0_ENABLE_RELAXED_ALLOCATION_LIMITS
+      value: "1"
+  extraArgs:
+    - --alias
+    - hermes-3-3b-local
+    - --cache-ram
+    - "0"
+    - --cont-batching
+    - --jinja
+    - --predict
+    - "256"
+    - --flash-attn
+    - on
+    - --cache-type-k
+    - q8_0
+    - --cache-type-v
+    - q8_0
+    - --threads
+    - "6"
+    - --threads-batch
+    - "12"
+    - --mmap
+    - --metrics
+  endpoint:
+    port: 8080
+    type: ClusterIP
+  resources:
+    cpu: 250m
+    memory: 8Gi
+  probeOverrides:
+    startup:
+      httpGet:
+        path: /health
+        port: 8080
+      periodSeconds: 10
+      failureThreshold: 360
+    liveness:
+      httpGet:
+        path: /health
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      failureThreshold: 6
+    readiness:
+      httpGet:
+        path: /health
+        port: 8080
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 6
