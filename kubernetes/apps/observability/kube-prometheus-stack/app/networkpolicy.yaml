@@ -374,6 +374,16 @@ spec:
               kubernetes.io/metadata.name: kube-system
           podSelector:
             matchLabels:
+              app.kubernetes.io/name: drm-exporter
+      ports:
+        - port: 8081
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
               app.kubernetes.io/name: metrics-server
       ports:
         - port: 10250
