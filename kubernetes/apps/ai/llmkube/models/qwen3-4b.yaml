@@ -53,8 +53,6 @@ spec:
     - "0"
     - --cont-batching
     - --jinja
-    - --reasoning
-    - "off"
     - --flash-attn
     - on
     - --cache-type-k
