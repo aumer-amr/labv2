@@ -53,6 +53,8 @@ spec:
     - "0"
     - --cont-batching
     - --jinja
+    - --chat-template-file
+    - /templates/hermes-3-tool-use.jinja
     - --predict
     - "256"
     - --flash-attn
@@ -67,6 +69,14 @@ spec:
     - "12"
     - --mmap
     - --metrics
+  extraVolumes:
+    - name: chat-template
+      configMap:
+        name: hermes-3-3b-chat-template
+  extraVolumeMounts:
+    - name: chat-template
+      mountPath: /templates
+      readOnly: true
   endpoint:
     port: 8080
     type: ClusterIP

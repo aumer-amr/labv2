@@ -6,3 +6,11 @@ resources:
   - ./hermes-3-3b.yaml
   - ./qwen3-embedding-0.6b.yaml
   - ./qwen3-4b.yaml
+configMapGenerator:
+  - name: hermes-3-3b-chat-template
+    files:
+      - hermes-3-tool-use.jinja=./hermes-3-tool-use.jinja
+generatorOptions:
+  disableNameSuffixHash: true
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
