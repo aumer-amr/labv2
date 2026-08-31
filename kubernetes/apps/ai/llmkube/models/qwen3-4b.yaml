@@ -59,6 +59,8 @@ spec:
     - "4"
     - --yarn-orig-ctx
     - "32768"
+    - --override-kv
+    - qwen3.context_length=int:131072
     - --threads
     - "6"
     - --threads-batch
