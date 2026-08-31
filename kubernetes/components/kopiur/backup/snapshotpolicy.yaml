@@ -24,9 +24,12 @@ spec:
         name: ${APP}
   verification:
     deep:
+      capacity: ${KOPIUR_CAPACITY:=5Gi}
       schedule:
         cron: H 5 1 * *
     quick:
       schedule:
         cron: H 3 * * *
+    successExpr: stats.files > 0 && stats.errors == 0
+    verifyFilesPercent: 10
   volumeSnapshotClassName: ${KOPIUR_SNAPSHOTCLASS:=csi-ceph-blockpool}
