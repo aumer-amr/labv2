@@ -22,6 +22,16 @@ spec:
             image:
               repository: ghcr.io/open-webui/open-webui
               tag: v0.11.1@sha256:6bb1fbe8ab0a3e0456067f493044ffb66a30a65a34be47f6a5862176a370dd16
+            command:
+              - /bin/bash
+              - -c
+            args:
+              - |
+                set -eu
+                export TOOL_SERVER_CONNECTIONS="$(
+                  python -c 'import json, os; print(json.dumps([{"type": "mcp", "url": "http://litellm.ai.svc.cluster.local:4000/mcp", "auth_type": "bearer", "key": os.environ["OPENAI_API_KEY"], "config": {"enable": True}, "info": {"id": "litellm", "name": "LiteLLM", "description": "LiteLLM MCP Gateway"}}]))'
+                )"
+                exec bash start.sh
             env:
               ANONYMIZED_TELEMETRY: "false"
               BYPASS_WEB_SEARCH_WEB_LOADER: "true"
@@ -36,6 +46,12 @@ spec:
               ENABLE_SIGNUP: "false"
               ENABLE_WEB_SEARCH: "true"
               ENABLE_WEBSOCKET_SUPPORT: "true"
+              MEMINI_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: memini-secret
+                    key: MEMINI_API_KEY
+              MEMINI_BASE_URL: http://memini.ai.svc.cluster.local:8081
               OAUTH_CODE_CHALLENGE_METHOD: S256
               OAUTH_PROVIDER_NAME: Kanidm
               OAUTH_SCOPES: openid email profile

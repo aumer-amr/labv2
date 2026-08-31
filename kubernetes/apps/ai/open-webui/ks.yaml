@@ -15,6 +15,8 @@ spec:
       namespace: kube-system
     - name: litellm
       namespace: ai
+    - name: memini
+      namespace: ai
     - name: onepassword-connect
       namespace: external-secrets
     - name: rook-ceph-cluster

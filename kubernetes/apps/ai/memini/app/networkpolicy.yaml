@@ -32,6 +32,14 @@ spec:
       ports:
         - port: 9090
           protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: open-webui
+              app.kubernetes.io/name: open-webui
+      ports:
+        - port: 8081
+          protocol: TCP
   egress:
     - to:
         - namespaceSelector:

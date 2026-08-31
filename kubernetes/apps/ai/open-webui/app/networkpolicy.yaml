@@ -56,6 +56,14 @@ spec:
     - to:
         - podSelector:
             matchLabels:
+              app.kubernetes.io/instance: memini
+              app.kubernetes.io/name: memini
+      ports:
+        - port: 8081
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
               app.kubernetes.io/instance: searxng
               app.kubernetes.io/name: searxng
       ports:
