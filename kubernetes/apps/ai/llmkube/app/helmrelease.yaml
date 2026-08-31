@@ -36,6 +36,24 @@ spec:
     metrics:
       enabled: true
       secure: false
+    grafana:
+      dashboards:
+        enabled: true
+        only:
+          - llamacpp-dashboard
+          - llmkube-inference
+          - llmkube-quota
+          - model-router-dashboard
+        operator:
+          enabled: true
+          mode: auto
+          instanceSelector:
+            matchLabels:
+              dashboards: grafana
+          allowCrossNamespaceImport: true
+          datasources:
+            - inputName: DS_PROMETHEUS
+              datasourceName: prometheus
     prometheus:
       serviceMonitor:
         enabled: true
