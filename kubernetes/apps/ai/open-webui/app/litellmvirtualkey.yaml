@@ -11,6 +11,7 @@ spec:
     - gpt-5.6-terra
     - gpt-5.6-sol
     - qwen3-embedding
+    - qwen3-4b-local
   proxyRef: litellm
   secretKey: key
   secretName: open-webui-litellm

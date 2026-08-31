@@ -1,0 +1,88 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: Model
+metadata:
+  name: qwen3-4b
+spec:
+  source: https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf
+  sha256: 7485fe6f11af29433bc51cab58009521f205840f5b4ae3a32fa7f92e8534fdf5
+  format: gguf
+  quantization: Q4_K_M
+  hardware:
+    accelerator: intel
+    gpu:
+      enabled: true
+      vendor: intel
+      layers: 99
+      resourceClaims:
+        - name: gpu
+          resourceClaimTemplateName: llmkube-models-gpu
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: InferenceService
+metadata:
+  name: qwen3-4b
+spec:
+  modelRef: qwen3-4b
+  runtime: llamacpp
+  mode: chat
+  # renovate: datasource=docker depName=ghcr.io/ggml-org/llama.cpp
+  image: ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:74b3e5244810dafac2a6f2e173548676eec2333b16cec2203cfedf6ed0ebdabe
+  replicas: 1
+  podSecurityContext:
+    fsGroup: 102
+    supplementalGroups:
+      - 44
+      - 992
+  priority: normal
+  contextSize: 8192
+  parallelSlots: 1
+  batchSize: 2048
+  uBatchSize: 512
+  env:
+    - name: ZES_ENABLE_SYSMAN
+      value: "1"
+    - name: ONEAPI_DEVICE_SELECTOR
+      value: level_zero:gpu
+    - name: UR_L0_ENABLE_RELAXED_ALLOCATION_LIMITS
+      value: "1"
+  extraArgs:
+    - --alias
+    - qwen3-4b-local
+    - --cache-ram
+    - "0"
+    - --cont-batching
+    - --jinja
+    - --threads
+    - "6"
+    - --threads-batch
+    - "12"
+    - --mmap
+    - --metrics
+  endpoint:
+    port: 8080
+    type: ClusterIP
+  resources:
+    cpu: 250m
+    memory: 6Gi
+  probeOverrides:
+    startup:
+      httpGet:
+        path: /health
+        port: 8080
+      periodSeconds: 10
+      failureThreshold: 360
+    liveness:
+      httpGet:
+        path: /health
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      failureThreshold: 6
+    readiness:
+      httpGet:
+        path: /health
+        port: 8080
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 6

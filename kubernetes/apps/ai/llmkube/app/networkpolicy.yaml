@@ -100,11 +100,15 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: qwen3-embedding-0.6b
+  name: llmkube-models
 spec:
   podSelector:
-    matchLabels:
-      inference.llmkube.dev/service: qwen3-embedding-0.6b
+    matchExpressions:
+      - key: inference.llmkube.dev/service
+        operator: In
+        values:
+          - qwen3-embedding-0.6b
+          - qwen3-4b
   policyTypes:
     - Ingress
   ingress:
@@ -125,11 +129,15 @@ spec:
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: qwen3-embedding-0.6b-download
+  name: llmkube-model-downloads
 spec:
   endpointSelector:
-    matchLabels:
-      inference.llmkube.dev/service: qwen3-embedding-0.6b
+    matchExpressions:
+      - key: inference.llmkube.dev/service
+        operator: In
+        values:
+          - qwen3-embedding-0.6b
+          - qwen3-4b
   egress:
     - toEndpoints:
         - matchLabels:
