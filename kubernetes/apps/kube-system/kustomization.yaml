@@ -14,6 +14,7 @@ resources:
   - ./hubble-auth/ks.yaml
   - ./coredns/ks.yaml
   - ./descheduler/ks.yaml
+  - ./drm-exporter/ks.yaml
   - ./ocharted/ks.yaml
   - ./metrics-server/ks.yaml
   - ./reloader/ks.yaml
