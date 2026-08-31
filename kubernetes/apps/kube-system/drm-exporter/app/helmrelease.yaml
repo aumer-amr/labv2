@@ -29,4 +29,5 @@ spec:
       limits:
         memory: 128Mi
     securityContext:
+      allowPrivilegeEscalation: true
       privileged: true
