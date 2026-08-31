@@ -6,6 +6,8 @@ metadata:
   name: cloudnative-pg
 spec:
   dependsOn:
+    - name: grafana-operator
+      namespace: observability
     - name: kube-prometheus-stack
       namespace: observability
   interval: 1h

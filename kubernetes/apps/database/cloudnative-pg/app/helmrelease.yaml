@@ -10,6 +10,9 @@ spec:
     name: cloudnative-pg
   interval: 1h
   values:
+    monitoring:
+      grafanaDashboard:
+        create: true
     replicaCount: 1
     resources:
       requests:
