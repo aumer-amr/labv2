@@ -37,8 +37,8 @@ spec:
   priority: normal
   contextSize: 131072
   parallelSlots: 1
-  batchSize: 2048
-  uBatchSize: 512
+  batchSize: 4096
+  uBatchSize: 1024
   env:
     - name: ZES_ENABLE_SYSMAN
       value: "1"
