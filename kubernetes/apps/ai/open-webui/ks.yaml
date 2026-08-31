@@ -13,6 +13,8 @@ spec:
       namespace: network
     - name: kopiur
       namespace: kube-system
+    - name: ha-mcp
+      namespace: ai
     - name: litellm
       namespace: ai
     - name: memini

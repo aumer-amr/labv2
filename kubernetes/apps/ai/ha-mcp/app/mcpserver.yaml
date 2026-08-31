@@ -42,3 +42,21 @@ spec:
     volumeMounts:
       - name: tmp
         mountPath: /tmp
+---
+# Restricted alias for clients that should not receive every Home Assistant tool schema.
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMMCPServer
+metadata:
+  name: ha-control
+spec:
+  alias: ha_control
+  params:
+    allow_all_keys: true
+    allowed_tools:
+      - ha_search
+      - ha_get_state
+      - ha_bulk_control
+      - ha_call_service
+  proxyRef: litellm
+  transport: http
+  url: http://ha-mcp.ai.svc.cluster.local:8086/mcp
