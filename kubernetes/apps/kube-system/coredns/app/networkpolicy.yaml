@@ -36,8 +36,12 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: ai
           podSelector:
-            matchLabels:
-              inference.llmkube.dev/service: qwen3-embedding-0.6b
+            matchExpressions:
+              - key: inference.llmkube.dev/service
+                operator: In
+                values:
+                  - qwen3-embedding-0.6b
+                  - qwen3-4b
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: ai
