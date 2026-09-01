@@ -11,8 +11,8 @@
 
 ## Add a reranker to Memini
 
-- Deploy a reranker model and configure Memini to use it for retrieval.
-- Verify reranking improves result ordering without breaking or materially slowing retrieval.
+- [x] Deploy a reranker model and configure Memini to use it for retrieval.
+- [x] Verify reranking improves result ordering without breaking or materially slowing retrieval.
 
 ## Fix Open WebUI Kopiur backups
 
