@@ -40,6 +40,7 @@ spec:
                     name: memini-litellm-secret
                     key: LITELLM_API_KEY
               MEMINI_LLM_BASE_URL: http://litellm.ai.svc.cluster.local:4000/v1
+              MEMINI_LLM_EXTRA_BODY: '{"additional_drop_params":["temperature"]}'
               MEMINI_LLM_MODEL: gpt-5.6-luna
             resources:
               requests:
