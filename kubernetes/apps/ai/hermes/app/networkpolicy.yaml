@@ -83,8 +83,11 @@ spec:
           rules:
             dns:
               - matchName: discord.com
+              - matchPattern: discord.com.*
               - matchName: gateway.discord.gg
+              - matchPattern: gateway.discord.gg.*
               - matchName: hermes-agent.nousresearch.com
+              - matchPattern: hermes-agent.nousresearch.com.*
               - matchName: idm.${SECRET_DOMAIN}
               - matchName: litellm.ai.svc.cluster.local
               - matchName: memini.ai.svc.cluster.local
@@ -99,15 +102,21 @@ spec:
           rules:
             dns:
               - matchName: discord.com
+              - matchPattern: discord.com.*
               - matchName: gateway.discord.gg
+              - matchPattern: gateway.discord.gg.*
               - matchName: hermes-agent.nousresearch.com
+              - matchPattern: hermes-agent.nousresearch.com.*
               - matchName: idm.${SECRET_DOMAIN}
               - matchName: litellm.ai.svc.cluster.local
               - matchName: memini.ai.svc.cluster.local
     - toFQDNs:
         - matchName: discord.com
+        - matchName: discord.com.ai.svc.cluster.local
         - matchName: gateway.discord.gg
+        - matchName: gateway.discord.gg.ai.svc.cluster.local
         - matchName: hermes-agent.nousresearch.com
+        - matchName: hermes-agent.nousresearch.com.ai.svc.cluster.local
         - matchName: idm.${SECRET_DOMAIN}
       toPorts:
         - ports:
