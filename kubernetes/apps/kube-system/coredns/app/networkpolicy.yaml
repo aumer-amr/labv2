@@ -71,6 +71,12 @@ spec:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
+              app.kubernetes.io/name: hermes
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
               app.kubernetes.io/name: searxng
         - namespaceSelector:
             matchLabels:

@@ -15,6 +15,7 @@ resources:
   - ./coredns/ks.yaml
   - ./descheduler/ks.yaml
   - ./drm-exporter/ks.yaml
+  - ./gvisor/ks.yaml
   - ./ocharted/ks.yaml
   - ./metrics-server/ks.yaml
   - ./reloader/ks.yaml
