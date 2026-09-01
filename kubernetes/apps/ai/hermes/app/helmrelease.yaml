@@ -47,6 +47,11 @@ spec:
               HERMES_GATEWAY_BOOTSTRAP_STATE: running
               HERMES_HOME: /opt/data
               HOME: /opt/data
+              DISCORD_ALLOWED_CHANNELS:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-secret
+                    key: DISCORD_ALLOWED_CHANNELS
               DISCORD_ALLOWED_USERS:
                 valueFrom:
                   secretKeyRef:
@@ -57,6 +62,11 @@ spec:
                   secretKeyRef:
                     name: hermes-secret
                     key: DISCORD_BOT_TOKEN
+              DISCORD_HOME_CHANNEL:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-secret
+                    key: DISCORD_HOME_CHANNEL
               LITELLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
