@@ -44,6 +44,10 @@ spec:
             matchLabels:
               app.kubernetes.io/instance: open-webui
               app.kubernetes.io/name: open-webui
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: hermes
+              app.kubernetes.io/name: hermes
       ports:
         - port: 4000
           protocol: TCP

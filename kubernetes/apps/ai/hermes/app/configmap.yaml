@@ -1,0 +1,48 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-config
+data:
+  config.yaml: |-
+    model:
+      default: gpt-5.6-terra
+      provider: lab-litellm
+    providers:
+      lab-litellm:
+        api: http://litellm.ai.svc.cluster.local:4000/v1
+        key_env: LITELLM_API_KEY
+        transport: chat_completions
+    memory:
+      provider: memini
+    terminal:
+      backend: local
+      cwd: /opt/data/workspace
+      timeout: 180
+      persistent_shell: true
+    compression:
+      enabled: true
+      protect_last_n: 20
+      threshold: 0.5
+    agent:
+      max_turns: 90
+      gateway_timeout: 1800
+      restart_drain_timeout: 60
+      api_max_retries: 2
+      reasoning_effort: medium
+    security:
+      redact_secrets: true
+      website_blocklist:
+        enabled: true
+        domains:
+          - 169.254.169.254
+          - metadata.google.internal
+    privacy:
+      redact_pii: true
+    dashboard:
+      public_url: https://hermes.${SECRET_DOMAIN}
+      oauth:
+        provider: self-hosted
+        self_hosted:
+          issuer: https://idm.${SECRET_DOMAIN}/oauth2/openid/hermes
+          client_id: hermes

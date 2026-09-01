@@ -1,13 +1,14 @@
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/networking.k8s.io/networkpolicy_v1.json
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: memini
+  name: hermes
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/instance: memini
-      app.kubernetes.io/name: memini
+      app.kubernetes.io/instance: hermes
+      app.kubernetes.io/name: hermes
   policyTypes:
     - Ingress
     - Egress
@@ -20,33 +21,7 @@ spec:
             matchLabels:
               gateway.envoyproxy.io/owning-gateway-name: envoy-internal
       ports:
-        - port: 8081
-          protocol: TCP
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: observability
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: prometheus
-      ports:
-        - port: 9090
-          protocol: TCP
-    - from:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/instance: open-webui
-              app.kubernetes.io/name: open-webui
-      ports:
-        - port: 8081
-          protocol: TCP
-    - from:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/instance: hermes
-              app.kubernetes.io/name: hermes
-      ports:
-        - port: 8080
+        - port: 9119
           protocol: TCP
   egress:
     - to:
@@ -64,20 +39,25 @@ spec:
     - to:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: ai
+              kubernetes.io/metadata.name: network
           podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-external
+      ports:
+        - port: 10443
+          protocol: TCP
+    - to:
+        - podSelector:
             matchLabels:
               app.kubernetes.io/name: litellm
       ports:
         - port: 4000
           protocol: TCP
     - to:
-        - namespaceSelector:
+        - podSelector:
             matchLabels:
-              kubernetes.io/metadata.name: ai
-          podSelector:
-            matchLabels:
-              inference.llmkube.dev/service: qwen3-reranker-0.6b
+              app.kubernetes.io/instance: memini
+              app.kubernetes.io/name: memini
       ports:
         - port: 8080
           protocol: TCP
@@ -85,18 +65,13 @@ spec:
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: kopiur-mover
+  name: hermes-oidc
 spec:
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/managed-by: kopiur
+      app.kubernetes.io/instance: hermes
+      app.kubernetes.io/name: hermes
   egress:
-    - toEntities:
-        - kube-apiserver
-      toPorts:
-        - ports:
-            - port: "6443"
-              protocol: TCP
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -104,12 +79,27 @@ spec:
       toPorts:
         - ports:
             - port: "53"
-              protocol: ANY
+              protocol: UDP
           rules:
             dns:
-              - matchPattern: "*.r2.cloudflarestorage.com"
+              - matchName: idm.${SECRET_DOMAIN}
+              - matchName: litellm.ai.svc.cluster.local
+              - matchName: memini.ai.svc.cluster.local
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: idm.${SECRET_DOMAIN}
+              - matchName: litellm.ai.svc.cluster.local
+              - matchName: memini.ai.svc.cluster.local
     - toFQDNs:
-        - matchPattern: "*.r2.cloudflarestorage.com"
+        - matchName: idm.${SECRET_DOMAIN}
       toPorts:
         - ports:
             - port: "443"

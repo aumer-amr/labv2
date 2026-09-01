@@ -1,0 +1,19 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./configmap.yaml
+  - ./helmrelease.yaml
+  - ./httproute.yaml
+  - ./litellmvirtualkey.yaml
+  - ./networkpolicy.yaml
+  - ./ocirepository.yaml
+configMapGenerator:
+  # Vendored from eleboucher/memini-hermes@5597ca3323d58fa6d7f430630d7f66502efdc38b.
+  - name: hermes-memini
+    files:
+      - __init__.py=plugin/__init__.py
+      - plugin.yaml=plugin/plugin.yaml
+generatorOptions:
+  disableNameSuffixHash: true
