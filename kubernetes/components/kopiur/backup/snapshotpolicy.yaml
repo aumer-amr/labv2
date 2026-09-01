@@ -30,6 +30,6 @@ spec:
     quick:
       schedule:
         cron: H 3 * * *
-    successExpr: stats.files > 0 && stats.errors == 0
+    successExpr: snapshot.id != '' && stats.errors == 0 && (tier == 'quick' || stats.files > 0)
     verifyFilesPercent: 10
   volumeSnapshotClassName: ${KOPIUR_SNAPSHOTCLASS:=csi-ceph-blockpool}
