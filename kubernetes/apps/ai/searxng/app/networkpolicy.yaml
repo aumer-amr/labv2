@@ -25,6 +25,10 @@ spec:
     - from:
         - podSelector:
             matchLabels:
+              app.kubernetes.io/instance: hermes
+              app.kubernetes.io/name: hermes
+        - podSelector:
+            matchLabels:
               app.kubernetes.io/instance: open-webui
               app.kubernetes.io/name: open-webui
       ports:

@@ -5,6 +5,7 @@ metadata:
   name: hermes-config
 data:
   config.yaml: |-
+    _config_version: 39
     model:
       default: gpt-5.6-terra
       provider: lab-litellm
@@ -21,9 +22,13 @@ data:
         - memini
     mcp_servers:
       litellm:
-        url: http://litellm.ai.svc.cluster.local:4000/mcp/
+        url: http://litellm.ai.svc.cluster.local:4000/toolset/litellm/mcp
         headers:
           Authorization: Bearer $${LITELLM_API_KEY}
+    web:
+      search_backend: searxng
+    curator:
+      enabled: false
     terminal:
       backend: local
       cwd: /opt/data/workspace
@@ -39,6 +44,13 @@ data:
       restart_drain_timeout: 60
       api_max_retries: 2
       reasoning_effort: medium
+      disabled_toolsets:
+        - browser
+        - computer_use
+        - image_gen
+        - skills
+        - tts
+        - vision
     security:
       redact_secrets: true
       website_blocklist:

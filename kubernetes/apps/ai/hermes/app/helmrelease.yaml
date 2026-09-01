@@ -79,6 +79,7 @@ spec:
                     key: MEMINI_API_KEY
               MEMINI_BASE_URL: http://memini.ai.svc.cluster.local:8080
               MEMINI_NAMESPACE: hermes
+              SEARXNG_URL: http://searxng.ai.svc.cluster.local:8080
               TZ: Europe/Amsterdam
             probes:
               liveness:

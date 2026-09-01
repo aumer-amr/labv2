@@ -20,6 +20,8 @@ spec:
       namespace: ai
     - name: memini
       namespace: ai
+    - name: searxng
+      namespace: ai
     - name: rook-ceph-cluster
       namespace: rook-ceph
   interval: 1h
