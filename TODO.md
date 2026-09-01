@@ -26,7 +26,7 @@ Open WebUI runs as UID `0`, but its data is owned by `0:65532` and is group-read
 
 ## Close monitoring gap
 
-- Add an alert for any Kopiur `Snapshot` remaining `Pending` longer than 30 minutes.
-- Verify the alert fires for authorization-blocked snapshots and resolves after a newer snapshot succeeds.
+- [x] Add an alert for any Kopiur `Snapshot` remaining `Pending` longer than 30 minutes.
+- [x] Verify the alert fires for authorization-blocked snapshots and resolves after a newer snapshot succeeds.
 
 Do not annotate the `ai` namespace with `kopiur.home-operations.com/privileged-movers=true` unless a root mover is proven necessary. That grant has namespace-wide security implications.
