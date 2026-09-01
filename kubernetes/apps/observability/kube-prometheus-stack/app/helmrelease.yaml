@@ -161,6 +161,17 @@ spec:
                 expr: count(time() - container_last_seen{image=~"(docker.io).*",container!=""} < 30) > 100
                 labels:
                   severity: critical
+      kopiur-rules:
+        groups:
+          - name: kopiur
+            rules:
+              - alert: KopiurSnapshotPending
+                annotations:
+                  summary: Kopiur snapshot {{ $labels.namespace }}/{{ $labels.name }} has been pending for more than 30 minutes.
+                expr: kopiur_resource_phase{kind="Snapshot", phase="Pending"} == 1
+                for: 30m
+                labels:
+                  severity: critical
       oom-rules:
         groups:
           - name: oom
