@@ -141,6 +141,12 @@ spec:
             matchLabels:
               app.kubernetes.io/instance: memini
               app.kubernetes.io/name: memini
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
       ports:
         - port: 8080
           protocol: TCP
