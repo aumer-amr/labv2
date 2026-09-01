@@ -63,6 +63,16 @@ spec:
       ports:
         - port: 4000
           protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
+              inference.llmkube.dev/service: qwen3-reranker-0.6b
+      ports:
+        - port: 8080
+          protocol: TCP
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy

@@ -42,6 +42,8 @@ spec:
               MEMINI_LLM_BASE_URL: http://litellm.ai.svc.cluster.local:4000/v1
               MEMINI_LLM_EXTRA_BODY: '{"additional_drop_params":["temperature"]}'
               MEMINI_LLM_MODEL: gpt-5.6-luna
+              MEMINI_RERANK: http://qwen3-reranker-0-6b.ai.svc.cluster.local:8080/v1
+              MEMINI_RERANK_MODEL: qwen3-reranker-0.6b
             resources:
               requests:
                 cpu: 25m

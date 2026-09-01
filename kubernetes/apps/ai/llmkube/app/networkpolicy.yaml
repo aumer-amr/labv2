@@ -125,6 +125,26 @@ spec:
         - port: 8080
           protocol: TCP
 ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: qwen3-reranker
+spec:
+  podSelector:
+    matchLabels:
+      inference.llmkube.dev/service: qwen3-reranker-0.6b
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: memini
+              app.kubernetes.io/name: memini
+      ports:
+        - port: 8080
+          protocol: TCP
+---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -136,6 +156,7 @@ spec:
         operator: In
         values:
           - qwen3-embedding-0.6b
+          - qwen3-reranker-0.6b
   egress:
     - toEndpoints:
         - matchLabels:
