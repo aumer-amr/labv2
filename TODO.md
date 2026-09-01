@@ -16,11 +16,11 @@
 
 ## Fix Open WebUI Kopiur backups
 
-- Change `KOPIUR_PUID` and `KOPIUR_PGID` in `kubernetes/apps/ai/open-webui/ks.yaml` from `0` to `65532`.
-- Render and validate the affected Kustomization.
-- Reconcile through Flux after the repository change is committed and pushed.
-- Verify a new Open WebUI snapshot reaches `Succeeded` and completes quick/deep verification.
-- Test restore behavior and resulting ownership before relying on the backup for recovery.
+- [x] Change `KOPIUR_PUID` and `KOPIUR_PGID` in `kubernetes/apps/ai/open-webui/ks.yaml` from `0` to `65532`.
+- [x] Render and validate the affected Kustomization.
+- [x] Reconcile through Flux after the repository change is committed and pushed.
+- [x] Verify a new Open WebUI snapshot reaches `Succeeded` and completes quick/deep verification.
+- [x] Test restore behavior and resulting ownership before relying on the backup for recovery.
 
 Open WebUI runs as UID `0`, but its data is owned by `0:65532` and is group-readable/writable where needed. Running the Kopiur mover as `65532:65532` should permit backup access without granting privileged movers across the entire `ai` namespace.
 
