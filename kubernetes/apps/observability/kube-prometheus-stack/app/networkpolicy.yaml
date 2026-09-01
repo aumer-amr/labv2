@@ -223,9 +223,7 @@ spec:
               - key: inference.llmkube.dev/service
                 operator: In
                 values:
-                  - hermes-3-3b
                   - qwen3-embedding-0.6b
-                  - qwen3-4b
       ports:
         - port: 8080
           protocol: TCP
