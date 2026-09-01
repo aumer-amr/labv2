@@ -13,7 +13,7 @@ nodes:
   - host: "deathscythe"
     ip: "10.10.1.100"
     role: control-plane
-    schematicId: "ab86bd395e263b78e5f54c800e4d319dae786d9ae25ecb129462a9e0e9491615"
+    schematicId: "eff8a38ccf4d7d945a04303b470161ea777afbcf9cb1bc965dcd9b5dbf06240d"
     data:
       installDisk: "/dev/nvme0n1"
       installDiskSerial: ""
@@ -24,7 +24,7 @@ nodes:
   - host: "epyon"
     ip: "10.10.1.101"
     role: control-plane
-    schematicId: "ab86bd395e263b78e5f54c800e4d319dae786d9ae25ecb129462a9e0e9491615"
+    schematicId: "eff8a38ccf4d7d945a04303b470161ea777afbcf9cb1bc965dcd9b5dbf06240d"
     data:
       installDisk: "/dev/nvme0n1"
       installDiskSerial: ""
@@ -35,7 +35,7 @@ nodes:
   - host: "heavyarms"
     ip: "10.10.1.102"
     role: control-plane
-    schematicId: "ab86bd395e263b78e5f54c800e4d319dae786d9ae25ecb129462a9e0e9491615"
+    schematicId: "eff8a38ccf4d7d945a04303b470161ea777afbcf9cb1bc965dcd9b5dbf06240d"
     data:
       installDisk: "/dev/nvme0n1"
       installDiskSerial: ""
