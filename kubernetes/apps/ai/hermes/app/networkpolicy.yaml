@@ -82,6 +82,9 @@ spec:
               protocol: UDP
           rules:
             dns:
+              - matchName: discord.com
+              - matchName: gateway.discord.gg
+              - matchName: hermes-agent.nousresearch.com
               - matchName: idm.${SECRET_DOMAIN}
               - matchName: litellm.ai.svc.cluster.local
               - matchName: memini.ai.svc.cluster.local
@@ -95,10 +98,16 @@ spec:
               protocol: TCP
           rules:
             dns:
+              - matchName: discord.com
+              - matchName: gateway.discord.gg
+              - matchName: hermes-agent.nousresearch.com
               - matchName: idm.${SECRET_DOMAIN}
               - matchName: litellm.ai.svc.cluster.local
               - matchName: memini.ai.svc.cluster.local
     - toFQDNs:
+        - matchName: discord.com
+        - matchName: gateway.discord.gg
+        - matchName: hermes-agent.nousresearch.com
         - matchName: idm.${SECRET_DOMAIN}
       toPorts:
         - ports:

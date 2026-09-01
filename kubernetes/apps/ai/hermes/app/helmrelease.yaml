@@ -47,6 +47,16 @@ spec:
               HERMES_GATEWAY_BOOTSTRAP_STATE: running
               HERMES_HOME: /opt/data
               HOME: /opt/data
+              DISCORD_ALLOWED_USERS:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-secret
+                    key: DISCORD_ALLOWED_USERS
+              DISCORD_BOT_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-secret
+                    key: DISCORD_BOT_TOKEN
               LITELLM_API_KEY:
                 valueFrom:
                   secretKeyRef:

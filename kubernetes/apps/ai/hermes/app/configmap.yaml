@@ -15,6 +15,15 @@ data:
         transport: chat_completions
     memory:
       provider: memini
+    plugins:
+      enabled:
+        - discord-platform
+        - memini
+    mcp_servers:
+      litellm:
+        url: http://litellm.ai.svc.cluster.local:4000/mcp/
+        headers:
+          Authorization: Bearer $${LITELLM_API_KEY}
     terminal:
       backend: local
       cwd: /opt/data/workspace
