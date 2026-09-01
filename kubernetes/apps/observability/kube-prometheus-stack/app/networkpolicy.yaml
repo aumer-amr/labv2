@@ -224,6 +224,7 @@ spec:
                 operator: In
                 values:
                   - qwen3-embedding-0.6b
+                  - qwen3-reranker-0.6b
       ports:
         - port: 8080
           protocol: TCP
