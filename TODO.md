@@ -6,8 +6,8 @@
 
 ## Fix Memini requests to Luna
 
-- Stop Memini from sending `temperature: 0` to `gpt-5.6-luna`; omit the parameter so the model uses its supported default value of `1`.
-- Verify Memini can complete a chat request through LiteLLM without a `400 Bad Request` response.
+- [x] Stop Memini from sending `temperature: 0` to `gpt-5.6-luna`; omit the parameter so the model uses its supported default value of `1`.
+- [x] Verify Memini can complete a chat request through LiteLLM without a `400 Bad Request` response.
 
 ## Add a reranker to Memini
 
