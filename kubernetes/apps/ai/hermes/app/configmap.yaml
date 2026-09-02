@@ -27,6 +27,11 @@ data:
           Authorization: Bearer $${LITELLM_API_KEY}
     web:
       search_backend: searxng
+    stt:
+      provider: openai
+      openai:
+        base_url: http://speaches.ai.svc.cluster.local:8000/v1
+        model: Systran/faster-whisper-small
     curator:
       enabled: false
     terminal:

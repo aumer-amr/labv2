@@ -11,6 +11,7 @@ resources:
   - ./litellm-operator/ks.yaml
   - ./litellm/ks.yaml
   - ./llmkube/ks.yaml
+  - ./speaches/ks.yaml
   - ./hermes/ks.yaml
   - ./memini/ks.yaml
   - ./open-webui/ks.yaml
