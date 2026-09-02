@@ -59,6 +59,35 @@ spec:
         secretKeyRef:
           name: litellm-secret
           key: DATABASE_URL
+    - name: GENERIC_AUTHORIZATION_ENDPOINT
+      value: https://idm.${SECRET_DOMAIN}/ui/oauth2
+    - name: GENERIC_CLIENT_ID
+      value: litellm
+    - name: GENERIC_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: litellm-secret
+          key: GENERIC_CLIENT_SECRET
+    - name: GENERIC_CLIENT_USE_PKCE
+      value: "true"
+    - name: GENERIC_SCOPE
+      value: openid profile email groups
+    - name: GENERIC_TOKEN_ENDPOINT
+      value: https://idm.${SECRET_DOMAIN}/oauth2/token
+    - name: GENERIC_USERINFO_ENDPOINT
+      value: https://idm.${SECRET_DOMAIN}/oauth2/openid/litellm/userinfo
+    - name: GENERIC_USER_DISPLAY_NAME_ATTRIBUTE
+      value: name
+    - name: GENERIC_USER_EMAIL_ATTRIBUTE
+      value: email
+    - name: GENERIC_USER_FIRST_NAME_ATTRIBUTE
+      value: given_name
+    - name: GENERIC_USER_ID_ATTRIBUTE
+      value: sub
+    - name: GENERIC_USER_LAST_NAME_ATTRIBUTE
+      value: family_name
+    - name: GENERIC_USER_ROLE_ATTRIBUTE
+      value: litellm_role
     - name: LITELLM_LOG
       value: INFO
     - name: LITELLM_MODE
@@ -73,6 +102,8 @@ spec:
         secretKeyRef:
           name: litellm-secret
           key: LITELLM_SALT_KEY
+    - name: PROXY_BASE_URL
+      value: https://litellm.${SECRET_DOMAIN}
     - name: REDIS_HOST
       value: litellm-valkey.ai.svc.cluster.local.
     - name: REDIS_PORT
