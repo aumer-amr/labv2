@@ -61,6 +61,7 @@ data:
     privacy:
       redact_pii: true
     dashboard:
+      theme: mono
       public_url: https://hermes.${SECRET_DOMAIN}
       oauth:
         provider: self-hosted
