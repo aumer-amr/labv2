@@ -24,6 +24,7 @@ spec:
               - from huggingface_hub import snapshot_download; snapshot_download("Systran/faster-whisper-small")
             env: &env
               HF_HUB_CACHE: /home/ubuntu/.cache/huggingface/hub
+              HF_XET_CACHE: /tmp/huggingface/xet
               WHISPER__COMPUTE_TYPE: int8
               WHISPER__CPU_THREADS: "4"
               WHISPER__INFERENCE_DEVICE: cpu
