@@ -55,6 +55,16 @@ spec:
     - to:
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-external
+      ports:
+        - port: 10443
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
