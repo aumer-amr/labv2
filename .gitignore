@@ -18,6 +18,7 @@ __pycache__/
 *.py[cod]
 # Misc.
 .claude/
+/.codex/config.toml
 .private/
 .venv/
 /AGENTS.override.md
