@@ -69,14 +69,6 @@ spec:
       ports:
         - port: 8080
           protocol: TCP
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/instance: speaches
-              app.kubernetes.io/name: speaches
-      ports:
-        - port: 8000
-          protocol: TCP
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
@@ -102,10 +94,6 @@ spec:
               - matchPattern: discord.com.*
               - matchName: gateway.discord.gg
               - matchPattern: gateway.discord.gg.*
-              - matchPattern: "**.discord.media"
-              - matchPattern: "**.discord.media.ai.svc.cluster.local"
-              - matchPattern: "**.discord.media.svc.cluster.local"
-              - matchPattern: "**.discord.media.cluster.local"
               - matchName: hermes-agent.nousresearch.com
               - matchPattern: hermes-agent.nousresearch.com.*
               - matchName: nousresearch.github.io
@@ -128,10 +116,6 @@ spec:
               - matchPattern: discord.com.*
               - matchName: gateway.discord.gg
               - matchPattern: gateway.discord.gg.*
-              - matchPattern: "**.discord.media"
-              - matchPattern: "**.discord.media.ai.svc.cluster.local"
-              - matchPattern: "**.discord.media.svc.cluster.local"
-              - matchPattern: "**.discord.media.cluster.local"
               - matchName: hermes-agent.nousresearch.com
               - matchPattern: hermes-agent.nousresearch.com.*
               - matchName: nousresearch.github.io
@@ -154,11 +138,6 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
-    - toFQDNs:
-        - matchPattern: "**.discord.media"
-        - matchPattern: "**.discord.media.ai.svc.cluster.local"
-        - matchPattern: "**.discord.media.svc.cluster.local"
-        - matchPattern: "**.discord.media.cluster.local"
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
