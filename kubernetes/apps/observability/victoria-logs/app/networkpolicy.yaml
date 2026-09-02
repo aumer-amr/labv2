@@ -14,6 +14,17 @@ spec:
     - Egress
   ingress:
     - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: hermes
+              app.kubernetes.io/name: hermes
+      ports:
+        - port: 9428
+          protocol: TCP
+    - from:
         - podSelector:
             matchLabels:
               app: grafana

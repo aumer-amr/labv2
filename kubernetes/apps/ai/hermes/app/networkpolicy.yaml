@@ -138,3 +138,27 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: hermes-victoria-logs
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: hermes
+      app.kubernetes.io/name: hermes
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: observability
+            app.kubernetes.io/instance: victoria-logs
+            app.kubernetes.io/name: victoria-logs-single
+      toPorts:
+        - ports:
+            - port: "9428"
+              protocol: TCP
+          rules:
+            http:
+              - method: POST
+                path: /select/logsql/query
