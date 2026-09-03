@@ -20,6 +20,14 @@ data:
       enabled:
         - discord-platform
         - memini
+    skills:
+      disabled:
+        - airtable
+        - arxiv
+        - baoyu-infographic
+        - competitor-news-monitor
+        - xurl
+        - youtube-content
     mcp_servers:
       litellm:
         url: http://litellm.ai.svc.cluster.local:4000/toolset/litellm/mcp
@@ -57,6 +65,7 @@ data:
       reasoning_effort: medium
       disabled_toolsets:
         - browser
+        - code_execution
         - computer_use
         - image_gen
         - skills
