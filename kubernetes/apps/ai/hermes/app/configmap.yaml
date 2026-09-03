@@ -29,6 +29,17 @@ data:
       search_backend: searxng
     curator:
       enabled: false
+    stt:
+      enabled: false
+    wake_word:
+      enabled: false
+    model_catalog:
+      enabled: false
+      excluded_providers:
+        - opencode-free
+    models_dev:
+      # ponytail: Hermes lacks models_dev.enabled; use loopback until upstream adds it.
+      url: http://127.0.0.1:9
     terminal:
       backend: local
       cwd: /opt/data/workspace

@@ -44,6 +44,7 @@ spec:
               ENABLE_OPENAI_API: "true"
               ENABLE_PERSISTENT_CONFIG: "false"
               ENABLE_SIGNUP: "false"
+              ENABLE_VERSION_UPDATE_CHECK: "false"
               ENABLE_WEB_SEARCH: "true"
               ENABLE_WEBSOCKET_SUPPORT: "true"
               MEMINI_API_KEY:
