@@ -63,7 +63,7 @@ spec:
     type: ClusterIP
   resources:
     cpu: 100m
-    memory: 2Gi
+    memory: 6Gi
   probeOverrides:
     startup:
       httpGet:
