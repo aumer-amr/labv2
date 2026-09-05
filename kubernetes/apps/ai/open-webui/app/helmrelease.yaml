@@ -29,7 +29,7 @@ spec:
               - |
                 set -eu
                 export TOOL_SERVER_CONNECTIONS="$(
-                  python -c 'import json, os; print(json.dumps([{"type": "mcp", "url": "http://litellm.ai.svc.cluster.local:4000/ha_control/mcp", "path": "", "auth_type": "bearer", "key": os.environ["OPENAI_API_KEY"], "config": {"enable": True}, "info": {"id": "ha-control", "name": "Home Assistant", "description": "Restricted Home Assistant controls"}}]))'
+                  python -c 'import json, os; print(json.dumps([{"type": "mcp", "url": "http://litellm.ai.svc.cluster.local:4000/ha_mcp/mcp", "path": "", "auth_type": "bearer", "key": os.environ["OPENAI_API_KEY"], "config": {"enable": True}, "info": {"id": "ha-control", "name": "Home Assistant", "description": "Restricted Home Assistant controls"}}]))'
                 )"
                 exec bash start.sh
             env:
