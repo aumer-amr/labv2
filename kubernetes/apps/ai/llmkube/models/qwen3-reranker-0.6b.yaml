@@ -27,7 +27,7 @@ spec:
   runtime: llamacpp
   mode: rerank
   # renovate: datasource=docker depName=ghcr.io/ggml-org/llama.cpp
-  image: ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:be8d64a2a05b11ddaf5799c544b0d96f8d9a09fb065e8d117cafa7f03e533896
+  image: ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:d14e49d20a4baf070cedcafbf32388ab1ff809f52fb7ec950371fba01a13c0bd
   replicas: 1
   podSecurityContext:
     fsGroup: 102
