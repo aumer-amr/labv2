@@ -140,14 +140,6 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
-    # GitHub release assets remain world-identified when DNS is allowed by
-    # the baseline NetworkPolicy, so the FQDN selector cannot match them.
-    - toCIDR:
-        - 185.199.108.0/22
-      toPorts:
-        - ports:
-            - port: "443"
-              protocol: TCP
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy

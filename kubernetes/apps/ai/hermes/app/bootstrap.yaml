@@ -117,7 +117,7 @@ data:
 
     if ! echo "6129359f4e1f3848a5572ccb0b26cf28b8ca08cef38c95a765b2f64a2c961a2f  /opt/data/tool-cache/kubectl" | sha256sum --check --status; then
       curl --connect-timeout 15 --fail --location --max-time 120 --retry 3 --silent --show-error \
-        https://dl.k8s.io./release/v1.37.0/bin/linux/amd64/kubectl \
+        https://dl.k8s.io/release/v1.37.0/bin/linux/amd64/kubectl \
         --output /tmp/kubectl
       echo "6129359f4e1f3848a5572ccb0b26cf28b8ca08cef38c95a765b2f64a2c961a2f  /tmp/kubectl" | sha256sum --check
       rm -f -- /opt/data/tool-cache/kubectl
@@ -130,9 +130,9 @@ data:
     kubectl version --client | grep -q 'v1\.37\.0'
 
     if [ ! -d /opt/data/renovate-workspace/.git ]; then
-      git clone --quiet https://github.com./aumer-amr/labv2.git /opt/data/renovate-workspace
+      git clone --quiet https://github.com/aumer-amr/labv2.git /opt/data/renovate-workspace
     fi
-    test "$(git -C /opt/data/renovate-workspace remote get-url origin)" = "https://github.com./aumer-amr/labv2.git"
+    test "$(git -C /opt/data/renovate-workspace remote get-url origin)" = "https://github.com/aumer-amr/labv2.git"
     git -C /opt/data/renovate-workspace fetch --quiet --force --prune origin main
     git -C /opt/data/renovate-workspace checkout --quiet --detach --force origin/main
     git -C /opt/data/renovate-workspace clean -ffd

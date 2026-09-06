@@ -222,6 +222,10 @@ spec:
               readOnlyRootFilesystem: true
     defaultPodOptions:
       automountServiceAccountToken: false
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       runtimeClassName: gvisor
       labels:
         network.home.arpa/from-envoy-internal: allow
