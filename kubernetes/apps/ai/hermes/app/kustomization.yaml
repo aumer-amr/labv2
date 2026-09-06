@@ -3,18 +3,26 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  - ./bootstrap.yaml
   - ./configmap.yaml
   - ./externalsecret.yaml
   - ./helmrelease.yaml
   - ./httproute.yaml
   - ./litellmvirtualkey.yaml
+  - ./merge-broker-pvc.yaml
   - ./networkpolicy.yaml
   - ./ocirepository.yaml
+  - ./rbac.yaml
 configMapGenerator:
   # Vendored from eleboucher/memini-hermes@5597ca3323d58fa6d7f430630d7f66502efdc38b.
   - name: hermes-memini
     files:
       - __init__.py=plugin/__init__.py
       - plugin.yaml=plugin/plugin.yaml
+secretGenerator:
+  - name: hermes-private-skills
+    files:
+      - assess-renovate-prs.sops.yaml=../../../../../.codex-private/skills/assess-renovate-prs/skill.sops.yaml
+      - assess-upstream-template.sops.yaml=../../../../../.codex-private/skills/assess-upstream-template/skill.sops.yaml
 generatorOptions:
   disableNameSuffixHash: true

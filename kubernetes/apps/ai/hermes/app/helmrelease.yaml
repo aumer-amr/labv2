@@ -34,6 +34,59 @@ spec:
               runAsGroup: 0
               runAsNonRoot: false
               runAsUser: 0
+          bootstrap:
+            image:
+              repository: docker.io/nousresearch/hermes-agent
+              tag: v2026.8.31@sha256:64923faeae267792bf9bf87fe3b4c4869e35004e360c7df01730ad801b74d524
+            command:
+              - /bin/sh
+              - /run/bootstrap/bootstrap.sh
+            env:
+              DISCORD_HOME_CHANNEL:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-secret
+                    key: DISCORD_HOME_CHANNEL
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+          prepare-merge-broker:
+            image:
+              repository: docker.io/nousresearch/hermes-agent
+              tag: v2026.8.31@sha256:64923faeae267792bf9bf87fe3b4c4869e35004e360c7df01730ad801b74d524
+            command:
+              - /opt/hermes/.venv/bin/python
+              - -I
+              - /run/bootstrap/prepare-merge-broker.py
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+          verify-read-token:
+            image:
+              repository: docker.io/nousresearch/hermes-agent
+              tag: v2026.8.31@sha256:64923faeae267792bf9bf87fe3b4c4869e35004e360c7df01730ad801b74d524
+            command:
+              - /opt/hermes/.venv/bin/python
+              - -I
+              - /run/bootstrap/verify-read-token.py
+            env:
+              GH_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-secret
+                    key: GH_TOKEN
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
         containers:
           app:
             image:
@@ -47,6 +100,7 @@ spec:
               HERMES_GATEWAY_BOOTSTRAP_STATE: running
               HERMES_HOME: /opt/data
               HOME: /opt/data
+              PATH: /opt/tools:/opt/hermes/bin:/opt/hermes/.venv/bin:/usr/local/bin:/usr/bin:/bin
               DISCORD_ALLOWED_CHANNELS:
                 valueFrom:
                   secretKeyRef:
@@ -72,6 +126,11 @@ spec:
                   secretKeyRef:
                     name: hermes-litellm
                     key: key
+              GH_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-secret
+                    key: GH_TOKEN
               MEMINI_API_KEY:
                 valueFrom:
                   secretKeyRef:
@@ -125,6 +184,42 @@ spec:
               - containerPort: *port
                 name: http
                 protocol: TCP
+          merge-broker:
+            image:
+              repository: docker.io/nousresearch/hermes-agent
+              tag: v2026.8.31@sha256:64923faeae267792bf9bf87fe3b4c4869e35004e360c7df01730ad801b74d524
+            command:
+              - /opt/hermes/.venv/bin/python
+              - -I
+            args:
+              - /run/broker/assessment.py
+              - serve
+              - --host
+              - 127.0.0.1
+              - --port
+              - "9171"
+            env:
+              GH_CONFIG_DIR: /tmp-private/gh
+              GH_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-secret
+                    key: GH_MERGE_TOKEN
+              HOME: /tmp-private
+              PATH: /run/broker:/usr/local/bin:/usr/bin:/bin
+              TMPDIR: /tmp-private
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                memory: 128Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
     defaultPodOptions:
       automountServiceAccountToken: false
       runtimeClassName: gvisor
@@ -146,6 +241,10 @@ spec:
         name: hermes-config
         advancedMounts:
           hermes:
+            bootstrap:
+              - path: /opt/data/config.yaml
+                subPath: config.yaml
+                readOnly: true
             app:
               - path: /opt/data/config.yaml
                 subPath: config.yaml
@@ -154,8 +253,78 @@ spec:
         existingClaim: hermes
         advancedMounts:
           hermes:
+            bootstrap:
+              - path: /opt/data
             app:
               - path: /opt/data
+      tools:
+        type: emptyDir
+        advancedMounts:
+          hermes:
+            bootstrap:
+              - path: /opt/tools
+            app:
+              - path: /opt/tools
+            prepare-merge-broker:
+              - path: /opt/tools
+                readOnly: true
+      bootstrap:
+        type: configMap
+        name: hermes-bootstrap
+        advancedMounts:
+          hermes:
+            bootstrap:
+              - path: /run/bootstrap
+                readOnly: true
+            prepare-merge-broker:
+              - path: /run/bootstrap
+                readOnly: true
+            verify-read-token:
+              - path: /run/bootstrap
+                readOnly: true
+      private-skills:
+        type: secret
+        name: hermes-private-skills
+        advancedMounts:
+          hermes:
+            bootstrap:
+              - path: /run/private-skills
+                readOnly: true
+            prepare-merge-broker:
+              - path: /run/private-skills
+                readOnly: true
+      merge-broker:
+        type: emptyDir
+        advancedMounts:
+          hermes:
+            prepare-merge-broker:
+              - path: /run/broker
+            merge-broker:
+              - path: /run/broker
+                readOnly: true
+      renovate-workspace:
+        type: emptyDir
+        advancedMounts:
+          hermes:
+            bootstrap:
+              - path: /opt/data/renovate-workspace
+            app:
+              - path: /opt/data/renovate-workspace
+      private-skill-runtime:
+        type: emptyDir
+        advancedMounts:
+          hermes:
+            bootstrap:
+              - path: /opt/data/skills/private
+            app:
+              - path: /opt/data/skills/private
+                readOnly: true
+      private-prompt-runtime:
+        type: emptyDir
+        advancedMounts:
+          hermes:
+            bootstrap:
+              - path: /opt/data/private-prompts
       memini-plugin:
         type: configMap
         name: hermes-memini
@@ -176,8 +345,53 @@ spec:
         type: emptyDir
         advancedMounts:
           hermes:
+            bootstrap:
+              - path: /tmp
             app:
               - path: /tmp
+            merge-broker:
+              - path: /tmp
+                readOnly: true
+      merge-broker-tmp:
+        type: emptyDir
+        advancedMounts:
+          hermes:
+            merge-broker:
+              - path: /tmp-private
+      merge-broker-state:
+        existingClaim: hermes-merge-broker-state
+        advancedMounts:
+          hermes:
+            merge-broker:
+              - path: /var/lib/hermes-broker
+      service-account:
+        type: custom
+        volumeSpec:
+          projected:
+            defaultMode: 420
+            sources:
+              - serviceAccountToken:
+                  expirationSeconds: 3600
+                  path: token
+              - configMap:
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+                  name: kube-root-ca.crt
+              - downwardAPI:
+                  items:
+                    - fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
+                      path: namespace
+        advancedMounts:
+          hermes:
+            app:
+              - path: /var/run/secrets/kubernetes.io/serviceaccount
+                readOnly: true
+            merge-broker:
+              - path: /var/run/secrets/kubernetes.io/serviceaccount
+                readOnly: true
     service:
       app:
         controller: hermes

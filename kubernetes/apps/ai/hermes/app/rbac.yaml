@@ -1,0 +1,89 @@
+---
+# Cluster-wide read-only access. Kubernetes' built-in view role excludes Secrets and mutations.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: hermes-view
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: hermes
+    namespace: ai
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: hermes-rollout-observer
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - source.toolkit.fluxcd.io
+    resources:
+      - buckets
+      - gitrepositories
+      - helmrepositories
+      - ocirepositories
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - kustomize.toolkit.fluxcd.io
+    resources:
+      - kustomizations
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - helm.toolkit.fluxcd.io
+    resources:
+      - helmreleases
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - gateway.networking.k8s.io
+    resources:
+      - backendtlspolicies
+      - gatewayclasses
+      - gateways
+      - httproutes
+      - referencegrants
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - cilium.io
+    resources:
+      - ciliumnetworkpolicies
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: hermes-rollout-observer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: hermes-rollout-observer
+subjects:
+  - kind: ServiceAccount
+    name: hermes
+    namespace: ai

@@ -1,0 +1,154 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-bootstrap
+data:
+  install-private-skills.py: |-
+    #!/usr/bin/env python3
+    import os
+    from pathlib import Path
+
+    import yaml
+
+    source = Path("/run/private-skills")
+    destination = Path("/opt/data/skills/private")
+    prompts = Path("/opt/data/private-prompts")
+    for bundle in sorted(source.glob("*.sops.yaml")):
+        name = bundle.name.removesuffix(".sops.yaml")
+        values = yaml.safe_load(bundle.read_text(encoding="utf-8"))
+        if not isinstance(values, dict) or not all(
+            isinstance(values.get(key), str) for key in ("skill_md", "helper_py")
+        ):
+            raise SystemExit(f"Invalid private skill bundle: {name}")
+        target = destination / name
+        scripts = target / "scripts"
+        scripts.mkdir(parents=True, exist_ok=True)
+        skill = target / "SKILL.md"
+        helper = scripts / "assessment.py"
+        skill.write_text(values["skill_md"], encoding="utf-8")
+        helper.write_text(values["helper_py"], encoding="utf-8")
+        os.chmod(skill, 0o600)
+        os.chmod(helper, 0o700)
+        if isinstance(values.get("instructions"), str):
+            prompt = prompts / f"{name}.txt"
+            prompt.parent.mkdir(parents=True, exist_ok=True)
+            prompt.write_text(values["instructions"], encoding="utf-8")
+            os.chmod(prompt, 0o600)
+  prepare-merge-broker.py: |-
+    #!/usr/bin/env python3
+    import os
+    from pathlib import Path
+
+    import yaml
+
+    gh = Path("/run/broker/gh")
+    gh.write_bytes(Path("/opt/tools/gh").read_bytes())
+    os.chmod(gh, 0o500)
+
+    bundle = Path("/run/private-skills/assess-renovate-prs.sops.yaml")
+    values = yaml.safe_load(bundle.read_text(encoding="utf-8"))
+    helper = values.get("helper_py") if isinstance(values, dict) else None
+    if not isinstance(helper, str):
+        raise SystemExit("Invalid merge broker bundle")
+    destination = Path("/run/broker/assessment.py")
+    destination.write_text(helper, encoding="utf-8")
+    os.chmod(destination, 0o500)
+  verify-read-token.py: |-
+    #!/usr/bin/env python3
+    import json
+    import os
+    from urllib.request import Request, urlopen
+
+    request = Request(
+        "https://api.github.com/repos/aumer-amr/labv2",
+        headers={
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {os.environ['GH_TOKEN']}",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    )
+    with urlopen(request, timeout=30) as response:
+        repository = json.load(response)
+    if repository.get("full_name") != "aumer-amr/labv2":
+        raise SystemExit("Hermes GitHub token cannot read the target repository")
+    for endpoint in ("contents", "pulls?per_page=1", "actions/runs?per_page=1"):
+        check = Request(
+            f"https://api.github.com/repos/aumer-amr/labv2/{endpoint}",
+            headers=request.headers,
+        )
+        with urlopen(check, timeout=30):
+            pass
+  bootstrap.sh: |-
+    #!/bin/sh
+    set -eu
+
+    export HOME=/tmp/bootstrap-home
+    export HERMES_HOME=/opt/data
+    export PATH=/opt/tools:/opt/hermes/bin:/opt/hermes/.venv/bin:/usr/local/bin:/usr/bin:/bin
+    export GIT_CONFIG_GLOBAL=/dev/null
+    export GIT_CONFIG_NOSYSTEM=1
+    mkdir -p "$HOME" /opt/data/tool-cache /opt/tools
+
+    if ! echo "ed4960225d2833e04a61590d9fa2b5773d147f3aa375459e5466a40c102f3832  /opt/data/tool-cache/gh.tar.gz" | sha256sum --check --status; then
+      curl --fail --location --silent --show-error \
+        https://github.com/cli/cli/releases/download/v2.99.0/gh_2.99.0_linux_amd64.tar.gz \
+        --output /tmp/gh.tar.gz
+      echo "ed4960225d2833e04a61590d9fa2b5773d147f3aa375459e5466a40c102f3832  /tmp/gh.tar.gz" | sha256sum --check
+      rm -f -- /opt/data/tool-cache/gh.tar.gz
+      install -m 0600 /tmp/gh.tar.gz /opt/data/tool-cache/gh.tar.gz
+    fi
+    rm -rf -- /tmp/gh
+    mkdir /tmp/gh
+    tar --extract --gzip --file /opt/data/tool-cache/gh.tar.gz \
+      --directory /tmp/gh --strip-components=2 gh_2.99.0_linux_amd64/bin/gh
+    install -m 0755 /tmp/gh/gh /opt/tools/gh
+
+    if ! echo "6129359f4e1f3848a5572ccb0b26cf28b8ca08cef38c95a765b2f64a2c961a2f  /opt/data/tool-cache/kubectl" | sha256sum --check --status; then
+      curl --fail --location --silent --show-error \
+        https://dl.k8s.io/release/v1.37.0/bin/linux/amd64/kubectl \
+        --output /tmp/kubectl
+      echo "6129359f4e1f3848a5572ccb0b26cf28b8ca08cef38c95a765b2f64a2c961a2f  /tmp/kubectl" | sha256sum --check
+      rm -f -- /opt/data/tool-cache/kubectl
+      install -m 0600 /tmp/kubectl /opt/data/tool-cache/kubectl
+    fi
+    install -m 0755 /opt/data/tool-cache/kubectl /opt/tools/kubectl
+
+    cd "$HOME"
+    gh --version | grep -q '^gh version 2\.99\.0 '
+    kubectl version --client | grep -q 'v1\.37\.0'
+
+    if [ ! -d /opt/data/renovate-workspace/.git ]; then
+      if [ -e /opt/data/renovate-workspace ]; then
+        echo "Refusing to replace non-Git Hermes workspace" >&2
+        exit 1
+      fi
+      git clone --quiet https://github.com/aumer-amr/labv2.git /opt/data/renovate-workspace
+    fi
+    test "$(git -C /opt/data/renovate-workspace remote get-url origin)" = "https://github.com/aumer-amr/labv2.git"
+    git -C /opt/data/renovate-workspace fetch --quiet --force --prune origin main
+    git -C /opt/data/renovate-workspace checkout --quiet --detach --force origin/main
+    git -C /opt/data/renovate-workspace clean -ffd
+
+    /opt/hermes/.venv/bin/python -I /run/bootstrap/install-private-skills.py
+
+    prompt=$(cat /opt/data/private-prompts/assess-renovate-prs.txt)
+    job_id=$(
+      /opt/hermes/.venv/bin/python -I -c \
+        'import json; from pathlib import Path; jobs = json.loads(Path("/opt/data/cron/jobs.json").read_text()).get("jobs", []) if Path("/opt/data/cron/jobs.json").is_file() else []; matches = [job["id"] for job in jobs if job.get("name") == "Weekly Renovate assessment"]; raise SystemExit("Duplicate weekly Renovate jobs") if len(matches) > 1 else None; print(matches[0] if matches else "")'
+    )
+    if [ -n "$job_id" ]; then
+      hermes cron edit "$job_id" \
+        --schedule "0 10 * * 0" \
+        --prompt "$prompt" \
+        --deliver "discord:$${DISCORD_HOME_CHANNEL}" \
+        --skill assess-renovate-prs \
+        --workdir /opt/data/renovate-workspace
+      hermes cron resume "$job_id"
+    else
+      hermes cron create "0 10 * * 0" "$prompt" \
+        --name "Weekly Renovate assessment" \
+        --deliver "discord:$${DISCORD_HOME_CHANNEL}" \
+        --skill assess-renovate-prs \
+        --workdir /opt/data/renovate-workspace
+    fi
