@@ -113,6 +113,7 @@ spec:
               - matchName: github.com
               - matchName: objects.githubusercontent.com
               - matchName: release-assets.githubusercontent.com
+              - matchPattern: release-assets.githubusercontent.com.*
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -129,6 +130,7 @@ spec:
               - matchName: github.com
               - matchName: objects.githubusercontent.com
               - matchName: release-assets.githubusercontent.com
+              - matchPattern: release-assets.githubusercontent.com.*
     - toFQDNs:
         - matchName: api.github.com
         - matchName: cdn.dl.k8s.io
