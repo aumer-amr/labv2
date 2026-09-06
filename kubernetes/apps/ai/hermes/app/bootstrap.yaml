@@ -119,10 +119,6 @@ data:
     kubectl version --client | grep -q 'v1\.37\.0'
 
     if [ ! -d /opt/data/renovate-workspace/.git ]; then
-      if [ -e /opt/data/renovate-workspace ]; then
-        echo "Refusing to replace non-Git Hermes workspace" >&2
-        exit 1
-      fi
       git clone --quiet https://github.com/aumer-amr/labv2.git /opt/data/renovate-workspace
     fi
     test "$(git -C /opt/data/renovate-workspace remote get-url origin)" = "https://github.com/aumer-amr/labv2.git"
