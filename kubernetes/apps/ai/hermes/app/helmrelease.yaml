@@ -15,14 +15,14 @@ spec:
         annotations:
           reloader.stakater.com/auto: "true"
         initContainers:
-          fix-run:
+          00-fix-permissions:
             image:
               repository: docker.io/nousresearch/hermes-agent
               tag: v2026.8.31@sha256:64923faeae267792bf9bf87fe3b4c4869e35004e360c7df01730ad801b74d524
             command:
               - /bin/sh
               - -c
-              - chmod 0755 /run && chown 10000:10000 /run
+              - chmod 0755 /run /opt/data/renovate-workspace && chown 10000:10000 /run /opt/data/renovate-workspace
             securityContext:
               allowPrivilegeEscalation: false
               capabilities:
@@ -306,6 +306,8 @@ spec:
         type: emptyDir
         advancedMounts:
           hermes:
+            00-fix-permissions:
+              - path: /opt/data/renovate-workspace
             bootstrap:
               - path: /opt/data/renovate-workspace
             app:
@@ -337,7 +339,7 @@ spec:
         type: emptyDir
         advancedMounts:
           hermes:
-            fix-run:
+            00-fix-permissions:
               - path: /run
             app:
               - path: /run
