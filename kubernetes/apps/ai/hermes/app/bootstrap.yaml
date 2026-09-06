@@ -153,6 +153,7 @@ data:
         --schedule "0 10 * * 0" \
         --prompt "$prompt" \
         --deliver "discord:$${DISCORD_HOME_CHANNEL}" \
+        --clear-skills \
         --workdir /opt/data/renovate-workspace
       hermes cron resume "$job_id"
     else
