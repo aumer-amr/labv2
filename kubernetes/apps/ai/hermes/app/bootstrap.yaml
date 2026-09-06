@@ -99,6 +99,7 @@ data:
     export HOME=/tmp/bootstrap-home
     export HERMES_HOME=/opt/data
     export PATH=/opt/tools:/opt/hermes/bin:/opt/hermes/.venv/bin:/usr/local/bin:/usr/bin:/bin
+    export GH_CONFIG_DIR=/run-shared/gh
     export GIT_CONFIG_GLOBAL=/dev/null
     export GIT_CONFIG_NOSYSTEM=1
     mkdir -p "$HOME" /opt/data/tool-cache /opt/tools
@@ -130,6 +131,9 @@ data:
 
     cd "$HOME"
     gh --version | grep -q '^gh version 2\.99\.0 '
+    install -d -m 0700 "$GH_CONFIG_DIR"
+    printf '%s\n' "$GH_TOKEN" | env -u GH_TOKEN gh auth login --hostname github.com --git-protocol https --with-token
+    chmod 0600 "$GH_CONFIG_DIR/hosts.yml"
     kubectl version --client | grep -q 'v1\.37\.0'
 
     if [ ! -d /opt/data/renovate-workspace/.git ]; then

@@ -47,6 +47,11 @@ spec:
                   secretKeyRef:
                     name: hermes-secret
                     key: DISCORD_HOME_CHANNEL
+              GH_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-secret
+                    key: GH_TOKEN
             securityContext:
               allowPrivilegeEscalation: false
               capabilities:
@@ -100,6 +105,7 @@ spec:
               HERMES_GATEWAY_BOOTSTRAP_STATE: running
               HERMES_HOME: /opt/data
               HOME: /opt/data
+              GH_CONFIG_DIR: /run/gh
               PATH: /opt/tools:/opt/hermes/bin:/opt/hermes/.venv/bin:/usr/local/bin:/usr/bin:/bin
               DISCORD_ALLOWED_CHANNELS:
                 valueFrom:
@@ -126,11 +132,6 @@ spec:
                   secretKeyRef:
                     name: hermes-litellm
                     key: key
-              GH_TOKEN:
-                valueFrom:
-                  secretKeyRef:
-                    name: hermes-secret
-                    key: GH_TOKEN
               MEMINI_API_KEY:
                 valueFrom:
                   secretKeyRef:
@@ -345,6 +346,8 @@ spec:
           hermes:
             00-fix-permissions:
               - path: /run
+            bootstrap:
+              - path: /run-shared
             app:
               - path: /run
       tmp:
