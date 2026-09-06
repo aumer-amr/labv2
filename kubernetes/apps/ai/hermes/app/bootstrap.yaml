@@ -79,6 +79,17 @@ data:
         )
         with urlopen(check, timeout=30):
             pass
+  find-cron-job.py: |-
+    #!/usr/bin/env python3
+    import json
+    from pathlib import Path
+
+    path = Path("/opt/data/cron/jobs.json")
+    jobs = json.loads(path.read_text()).get("jobs", []) if path.is_file() else []
+    matches = [job["id"] for job in jobs if job.get("name") == "Weekly Renovate assessment"]
+    if len(matches) > 1:
+        raise SystemExit("Duplicate weekly Renovate jobs")
+    print(matches[0] if matches else "")
   bootstrap.sh: |-
     #!/bin/sh
     set -eu
@@ -129,10 +140,7 @@ data:
     /opt/hermes/.venv/bin/python -I /run/bootstrap/install-private-skills.py
 
     prompt=$(cat /opt/data/private-prompts/assess-renovate-prs.txt)
-    job_id=$(
-      /opt/hermes/.venv/bin/python -I -c \
-        'import json; from pathlib import Path; jobs = json.loads(Path("/opt/data/cron/jobs.json").read_text()).get("jobs", []) if Path("/opt/data/cron/jobs.json").is_file() else []; matches = [job["id"] for job in jobs if job.get("name") == "Weekly Renovate assessment"]; raise SystemExit("Duplicate weekly Renovate jobs") if len(matches) > 1 else None; print(matches[0] if matches else "")'
-    )
+    job_id=$(/opt/hermes/.venv/bin/python -I /run/bootstrap/find-cron-job.py)
     if [ -n "$job_id" ]; then
       hermes cron edit "$job_id" \
         --schedule "0 10 * * 0" \
