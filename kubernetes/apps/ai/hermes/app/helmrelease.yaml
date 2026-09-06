@@ -22,7 +22,7 @@ spec:
             command:
               - /bin/sh
               - -c
-              - chmod 0755 /run /opt/data/renovate-workspace && chown 10000:10000 /run /opt/data/renovate-workspace
+              - chmod 0755 /run /workspace && chown 10000:10000 /run /workspace
             securityContext:
               allowPrivilegeEscalation: false
               capabilities:
@@ -307,7 +307,7 @@ spec:
         advancedMounts:
           hermes:
             00-fix-permissions:
-              - path: /opt/data/renovate-workspace
+              - path: /workspace
             bootstrap:
               - path: /opt/data/renovate-workspace
             app:
