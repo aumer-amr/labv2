@@ -153,13 +153,11 @@ data:
         --schedule "0 10 * * 0" \
         --prompt "$prompt" \
         --deliver "discord:$${DISCORD_HOME_CHANNEL}" \
-        --skill assess-renovate-prs \
         --workdir /opt/data/renovate-workspace
       hermes cron resume "$job_id"
     else
       hermes cron create "0 10 * * 0" "$prompt" \
         --name "Weekly Renovate assessment" \
         --deliver "discord:$${DISCORD_HOME_CHANNEL}" \
-        --skill assess-renovate-prs \
         --workdir /opt/data/renovate-workspace
     fi
