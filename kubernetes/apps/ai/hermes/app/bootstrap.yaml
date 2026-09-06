@@ -4,6 +4,8 @@ kind: ConfigMap
 metadata:
   name: hermes-bootstrap
 data:
+  bash_profile: |-
+    export PATH=/opt/tools:/opt/hermes/bin:/opt/hermes/.venv/bin:/usr/local/bin:/usr/bin:/bin
   install-private-skills.py: |-
     #!/usr/bin/env python3
     import os
@@ -100,6 +102,7 @@ data:
     export GIT_CONFIG_GLOBAL=/dev/null
     export GIT_CONFIG_NOSYSTEM=1
     mkdir -p "$HOME" /opt/data/tool-cache /opt/tools
+    install -m 0600 /run/bootstrap/bash_profile /opt/data/.bash_profile
 
     if ! echo "ed4960225d2833e04a61590d9fa2b5773d147f3aa375459e5466a40c102f3832  /opt/data/tool-cache/gh.tar.gz" | sha256sum --check --status; then
       curl --connect-timeout 15 --fail --location --max-time 120 --retry 3 --silent --show-error \
