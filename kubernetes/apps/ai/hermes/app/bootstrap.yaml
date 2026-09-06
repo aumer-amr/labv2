@@ -106,7 +106,7 @@ data:
 
     if ! echo "6129359f4e1f3848a5572ccb0b26cf28b8ca08cef38c95a765b2f64a2c961a2f  /opt/data/tool-cache/kubectl" | sha256sum --check --status; then
       curl --connect-timeout 15 --fail --location --max-time 120 --retry 3 --silent --show-error \
-        https://dl.k8s.io/release/v1.37.0/bin/linux/amd64/kubectl \
+        https://dl.k8s.io./release/v1.37.0/bin/linux/amd64/kubectl \
         --output /tmp/kubectl
       echo "6129359f4e1f3848a5572ccb0b26cf28b8ca08cef38c95a765b2f64a2c961a2f  /tmp/kubectl" | sha256sum --check
       rm -f -- /opt/data/tool-cache/kubectl
