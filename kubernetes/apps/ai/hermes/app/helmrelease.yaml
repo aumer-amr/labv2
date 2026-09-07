@@ -39,14 +39,13 @@ spec:
               repository: docker.io/nousresearch/hermes-agent
               tag: v2026.8.31@sha256:64923faeae267792bf9bf87fe3b4c4869e35004e360c7df01730ad801b74d524
             command:
-              - /bin/sh
-              - /run/bootstrap/bootstrap.sh
+              - /opt/hermes/.venv/bin/python
+              - -I
+              - /run/bootstrap/bootstrap.py
+              - initialize
             env:
-              DISCORD_HOME_CHANNEL:
-                valueFrom:
-                  secretKeyRef:
-                    name: hermes-secret
-                    key: DISCORD_HOME_CHANNEL
+              DISCORD_ALERTS_CHANNEL: "1546583960329392218"
+              DISCORD_REVIEWS_CHANNEL: "1546583979401154582"
               GH_TOKEN:
                 valueFrom:
                   secretKeyRef:
@@ -65,7 +64,8 @@ spec:
             command:
               - /opt/hermes/.venv/bin/python
               - -I
-              - /run/bootstrap/prepare-merge-broker.py
+              - /run/bootstrap/bootstrap.py
+              - prepare-merge-broker
             securityContext:
               allowPrivilegeEscalation: false
               capabilities:
@@ -79,7 +79,8 @@ spec:
             command:
               - /opt/hermes/.venv/bin/python
               - -I
-              - /run/bootstrap/verify-read-token.py
+              - /run/bootstrap/bootstrap.py
+              - verify-read-token
             env:
               GH_TOKEN:
                 valueFrom:

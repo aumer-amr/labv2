@@ -3,7 +3,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ./bootstrap.yaml
   - ./configmap.yaml
   - ./externalsecret.yaml
   - ./helmrelease.yaml
@@ -14,6 +13,12 @@ resources:
   - ./ocirepository.yaml
   - ./rbac.yaml
 configMapGenerator:
+  - name: hermes-bootstrap
+    files:
+      - bootstrap.py=bootstrap/bootstrap.py
+      - cron-jobs.yaml=bootstrap/cron-jobs.yaml
+      - profile=bootstrap/profile
+      - tools.yaml=bootstrap/tools.yaml
   # Vendored from eleboucher/memini-hermes@5597ca3323d58fa6d7f430630d7f66502efdc38b.
   - name: hermes-memini
     files:

@@ -1,0 +1,17 @@
+jobs:
+  - name: Weekly Renovate assessment
+    schedule: 0 10 * * 0
+    deliver_env: DISCORD_REVIEWS_CHANNEL
+    script: private/assess-renovate-prs.sh
+    no_agent: true
+    workdir: /opt/data/renovate-workspace
+  - name: Morning exception brief
+    schedule: 30 7 * * *
+    deliver_env: DISCORD_ALERTS_CHANNEL
+    prompt: >-
+      Check today's Home Assistant calendars, unavailable devices, batteries below 20%, unusual energy use compared with recent history, and current Kubernetes or Flux alerts. Report only items needing attention, with concise evidence and urgency. Make no changes. If nothing needs attention, respond exactly: No exceptions.
+  - name: Weekly personal review
+    schedule: 0 18 * * 0
+    deliver_env: DISCORD_REVIEWS_CHANNEL
+    prompt: >-
+      Review the past seven days and next seven days using Home Assistant calendars and history, Paperless documents, GitHub activity, and remembered commitments. Summarize unfinished actions, upcoming deadlines, household maintenance, and open technical risks. Return at most five prioritized actions with concise evidence. Make no changes.
