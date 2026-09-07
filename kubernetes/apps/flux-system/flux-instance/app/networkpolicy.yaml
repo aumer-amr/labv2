@@ -215,6 +215,7 @@ spec:
               protocol: UDP
           rules:
             dns:
+              - matchName: codeberg.org
               - matchName: github.com
               - matchPattern: "*.github.com"
               - matchName: ghcr.io
@@ -239,6 +240,7 @@ spec:
               protocol: TCP
           rules:
             dns:
+              - matchName: codeberg.org
               - matchName: github.com
               - matchPattern: "*.github.com"
               - matchName: ghcr.io
@@ -254,6 +256,7 @@ spec:
               - matchName: ocharted.${SECRET_DOMAIN}
               - matchPattern: "*.ocharted.${SECRET_DOMAIN}"
     - toFQDNs:
+        - matchName: codeberg.org
         - matchName: github.com
         - matchPattern: "*.github.com"
         - matchName: ghcr.io
