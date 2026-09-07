@@ -102,6 +102,7 @@ spec:
               - infinity
             env:
               HERMES_DASHBOARD: "1"
+              HERMES_ASSESSMENT_EXCHANGE: /run/assessment-exchange
               HERMES_GATEWAY_BOOTSTRAP_STATE: running
               HERMES_HOME: /opt/data
               HOME: /opt/data
@@ -201,6 +202,7 @@ spec:
               - "9171"
             env:
               GH_CONFIG_DIR: /tmp-private/gh
+              HERMES_ASSESSMENT_EXCHANGE: /run/assessment-exchange
               GH_TOKEN:
                 valueFrom:
                   secretKeyRef:
@@ -241,6 +243,14 @@ spec:
           type: RuntimeDefault
       terminationGracePeriodSeconds: 120
     persistence:
+      assessment-exchange:
+        type: emptyDir
+        advancedMounts:
+          hermes:
+            app:
+              - path: /run/assessment-exchange
+            merge-broker:
+              - path: /run/assessment-exchange
       config:
         type: configMap
         name: hermes-config
@@ -325,6 +335,15 @@ spec:
               - path: /opt/data/skills/private
             app:
               - path: /opt/data/skills/private
+                readOnly: true
+      private-runner-runtime:
+        type: emptyDir
+        advancedMounts:
+          hermes:
+            bootstrap:
+              - path: /opt/data/scripts/private
+            app:
+              - path: /opt/data/scripts/private
                 readOnly: true
       private-prompt-runtime:
         type: emptyDir
