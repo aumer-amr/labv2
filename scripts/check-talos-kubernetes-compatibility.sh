@@ -41,6 +41,10 @@ case "${talos_major}.${talos_minor}" in
     kubernetes_min_minor=31
     kubernetes_max_minor=36
     ;;
+  1.14)
+    kubernetes_min_minor=32
+    kubernetes_max_minor=37
+    ;;
   *)
     fail "no matrix entry for Talos ${talos_major}.${talos_minor}; verify the official support matrix, then add its Kubernetes minor range and update Renovate's ceiling"
     ;;

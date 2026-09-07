@@ -1,0 +1,4 @@
+# Preserve compatibility with workloads that require host namespaces or host paths.
+apiVersion: v1alpha1
+kind: SecurityProfileConfig
+workloadIsolation: false

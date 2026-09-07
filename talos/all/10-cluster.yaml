@@ -1,18 +1,16 @@
-# Disable built-in CNI to use Cilium
-cluster:
-  network:
-    cni:
-      name: none
-    podSubnets: ["10.42.0.0/16"]
-    serviceSubnets: ["10.43.0.0/16"]
 machine:
   certSANs:
     - "127.0.0.1"
     - "10.10.1.110"
-  features:
-    kubernetesTalosAPIAccess:
-      enabled: true
-      allowedRoles:
-        - os:admin
-      allowedKubernetesNamespaces:
-        - system-upgrade
+---
+apiVersion: v1alpha1
+kind: KubeNetworkConfig
+podSubnets: ["10.42.0.0/16"]
+serviceSubnets: ["10.43.0.0/16"]
+---
+apiVersion: v1alpha1
+kind: KubeTalosAPIAccessConfig
+allowedRoles:
+  - os:admin
+allowedKubernetesNamespaces:
+  - system-upgrade
