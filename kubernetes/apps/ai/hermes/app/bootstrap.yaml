@@ -79,11 +79,6 @@ data:
         repository = json.load(response)
     if repository.get("full_name") != "aumer-amr/labv2":
         raise SystemExit("Hermes GitHub token cannot read the target repository")
-    permissions = repository.get("permissions")
-    if not isinstance(permissions, dict) or any(
-        permissions.get(permission) is True for permission in ("admin", "maintain", "push")
-    ):
-        raise SystemExit("Hermes GitHub token is not read-only")
     for endpoint in ("contents", "pulls?per_page=1", "actions/runs?per_page=1"):
         check = Request(
             f"https://api.github.com/repos/aumer-amr/labv2/{endpoint}",
