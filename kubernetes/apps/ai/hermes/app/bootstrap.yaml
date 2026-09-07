@@ -97,6 +97,29 @@ data:
     if len(matches) > 1:
         raise SystemExit("Duplicate weekly Renovate jobs")
     print(matches[0] if matches else "")
+  verify-cron-job.py: |-
+    #!/usr/bin/env python3
+    import json
+    import sys
+    from pathlib import Path
+
+    path = Path("/opt/data/cron/jobs.json")
+    jobs = json.loads(path.read_text()).get("jobs", []) if path.is_file() else []
+    matches = [job for job in jobs if job.get("name") == "Weekly Renovate assessment"]
+    if len(matches) != 1:
+        raise SystemExit("Expected exactly one weekly Renovate job")
+    job = matches[0]
+    expected = {
+        "deliver": sys.argv[1],
+        "no_agent": True,
+        "prompt": "",
+        "script": "private/assess-renovate-prs.sh",
+        "skills": [],
+        "workdir": "/opt/data/renovate-workspace",
+    }
+    mismatches = [key for key, value in expected.items() if job.get(key) != value]
+    if mismatches:
+        raise SystemExit(f"Weekly Renovate job mismatch: {', '.join(mismatches)}")
   bootstrap.sh: |-
     #!/bin/sh
     set -eu
@@ -151,8 +174,8 @@ data:
 
     /opt/hermes/.venv/bin/python -I /run/bootstrap/install-private-skills.py
 
-    assessment_script=/opt/data/scripts/private/assess-renovate-prs.sh
-    test -x "$assessment_script"
+    assessment_script=private/assess-renovate-prs.sh
+    test -x "/opt/data/scripts/$assessment_script"
     job_id=$(/opt/hermes/.venv/bin/python -I /run/bootstrap/find-cron-job.py)
     if [ -n "$job_id" ]; then
       hermes cron edit "$job_id" \
@@ -172,3 +195,4 @@ data:
         --deliver "discord:$${DISCORD_HOME_CHANNEL}" \
         --workdir /opt/data/renovate-workspace
     fi
+    /opt/hermes/.venv/bin/python -I /run/bootstrap/verify-cron-job.py "discord:$${DISCORD_HOME_CHANNEL}"
