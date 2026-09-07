@@ -35,7 +35,6 @@ Optional modes:
 
 ```sh
 just talos apply-node <node> auto
-just talos apply-node <node> reboot
 just talos apply-node <node> no-reboot
 just talos apply-node <node> staged
 just talos apply-node <node> try
@@ -46,6 +45,9 @@ just talos apply-node <node> try
 Update `talosVersion` in `talos/topf.yaml` and
 `kubernetes/apps/system-upgrade/tuppr/upgrades/talosupgrade.yaml`, review the
 diff, then upgrade one node at a time:
+
+For Talos 1.14 and later, upgrade all nodes before applying configuration that
+uses the multi-document configuration API.
 
 ```sh
 just talos upgrade-node <node>
