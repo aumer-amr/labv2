@@ -349,6 +349,9 @@ spec:
         type: emptyDir
         advancedMounts:
           hermes:
+            app:
+              - path: /opt/data/private-prompts
+                readOnly: true
             bootstrap:
               - path: /opt/data/private-prompts
       memini-plugin:
