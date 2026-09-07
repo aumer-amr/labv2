@@ -8,6 +8,9 @@ spec:
   modelName: gpt-5.6-terra
   params:
     model: openai/gpt-5.6-terra
+    additional:
+      additional_drop_params:
+        - temperature
     apiKeyRef:
       name: litellm-secret
       key: OPENAI_API_KEY
