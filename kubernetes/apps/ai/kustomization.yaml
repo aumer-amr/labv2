@@ -15,7 +15,7 @@ resources:
   - ./memini/ks.yaml
   - ./open-webui/ks.yaml
   - ./searxng/ks.yaml
-  - ./ha-mcp/ks.yaml
   - ./paperless-mcp/ks.yaml
   - ./context7/ks.yaml
+  - ./unifi-mcp/ks.yaml
   - ./network-policies/ks.yaml

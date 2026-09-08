@@ -3,7 +3,7 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: ha-mcp
+  name: unifi-mcp
 spec:
   dependsOn:
     - name: litellm-operator
@@ -11,11 +11,7 @@ spec:
     - name: onepassword-connect
       namespace: external-secrets
   interval: 1h
-  path: ./kubernetes/apps/ai/ha-mcp/app
-  postBuild:
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
+  path: ./kubernetes/apps/ai/unifi-mcp/app
   prune: true
   sourceRef:
     kind: GitRepository

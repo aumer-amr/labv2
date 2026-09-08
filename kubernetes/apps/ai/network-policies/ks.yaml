@@ -7,6 +7,7 @@ metadata:
 spec:
   dependsOn:
     - name: ha-mcp
+      namespace: home
     - name: litellm
     - name: litellm-operator
     - name: llmkube
@@ -14,6 +15,9 @@ spec:
     - name: memini
     - name: open-webui
     - name: searxng
+    - name: unifi-mcp
+    - name: victoria-logs-mcp
+      namespace: observability
     - name: coredns
       namespace: kube-system
   interval: 1h

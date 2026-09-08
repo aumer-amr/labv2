@@ -14,13 +14,18 @@ spec:
     - Egress
   ingress:
     - from:
+        - ipBlock:
+            cidr: 10.10.1.1/32
+      ports:
+        - port: 5514
+          protocol: UDP
+    - from:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
-              app.kubernetes.io/instance: hermes
-              app.kubernetes.io/name: hermes
+              app.kubernetes.io/name: victorialogs-mcp
       ports:
         - port: 9428
           protocol: TCP

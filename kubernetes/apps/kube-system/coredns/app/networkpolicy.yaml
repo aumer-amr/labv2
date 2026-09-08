@@ -59,6 +59,12 @@ spec:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
+              app.kubernetes.io/name: victorialogs-mcp
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
               app.kubernetes.io/name: open-webui
         - namespaceSelector:
             matchLabels:

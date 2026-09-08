@@ -14,7 +14,7 @@ spec:
     - name: kopiur
       namespace: kube-system
     - name: ha-mcp
-      namespace: ai
+      namespace: home
     - name: litellm
       namespace: ai
     - name: memini

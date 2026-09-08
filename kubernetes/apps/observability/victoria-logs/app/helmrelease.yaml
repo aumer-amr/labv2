@@ -18,6 +18,8 @@ spec:
           folderRef: victoria-logs
     server:
       fullnameOverride: victoria-logs
+      extraArgs:
+        syslog.listenAddr.udp: :5514
       podLabels:
         network.home.arpa/from-envoy-internal: allow
       persistentVolume:
