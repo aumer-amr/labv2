@@ -9,7 +9,7 @@ jobs:
     schedule: 30 7 * * *
     deliver_env: DISCORD_ALERTS_CHANNEL
     prompt: >-
-      Check today's Home Assistant calendars, unavailable devices, batteries below 20%, unusual energy use compared with recent history, and current Kubernetes or Flux alerts. Report only items needing attention, with concise evidence and urgency. Make no changes. If nothing needs attention, respond exactly: No exceptions.
+      Check today's Home Assistant calendars, unavailable devices, batteries below 20%, unusual energy use compared with recent history, and current Kubernetes or Flux alerts. For HTTP endpoints, evaluate responses against their configured Gatus conditions instead of assuming non-2xx means failure. The Flux webhook base URL is expected to return 404 because only /hook/ is routed; report it only if its HTTPRoute is unhealthy or notification-controller logs show a failed expected delivery. An unknown last-event time alone is not an exception. Report only items needing attention, with concise evidence and urgency. Make no changes. If nothing needs attention, respond exactly: No exceptions.
   - name: Weekly personal review
     schedule: 0 18 * * 0
     deliver_env: DISCORD_REVIEWS_CHANNEL
