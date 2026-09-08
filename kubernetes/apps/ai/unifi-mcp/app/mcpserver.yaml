@@ -7,7 +7,7 @@ metadata:
 spec:
   alias: unifi_network
   params:
-    allow_all_keys: true
+    allow_all_keys: false
     allowed_tools:
       - unifi_get_firewall_group_details
       - unifi_get_firewall_policy_details
