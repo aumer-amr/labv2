@@ -34,6 +34,14 @@ data:
         url: http://litellm.ai.svc.cluster.local:4000/toolset/litellm/mcp
         headers:
           Authorization: Bearer $${LITELLM_API_KEY}
+      unifi_network:
+        url: http://litellm.ai.svc.cluster.local:4000/unifi_network/mcp
+        headers:
+          Authorization: Bearer $${LITELLM_API_KEY}
+      victorialogs:
+        url: http://litellm.ai.svc.cluster.local:4000/victorialogs/mcp
+        headers:
+          Authorization: Bearer $${LITELLM_API_KEY}
     web:
       search_backend: searxng
     curator:
