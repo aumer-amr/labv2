@@ -9,8 +9,6 @@ spec:
   params:
     allow_all_keys: true
     allowed_tools:
-      - unifi_create_firewall_policy
-      - unifi_create_network
       - unifi_get_firewall_group_details
       - unifi_get_firewall_policy_details
       - unifi_get_firewall_policy_ordering
@@ -20,8 +18,6 @@ spec:
       - unifi_list_firewall_zones
       - unifi_list_legacy_firewall_rules
       - unifi_list_networks
-      - unifi_update_firewall_policy
-      - unifi_update_network
   proxyRef: litellm
   transport: http
   workload:
@@ -74,13 +70,13 @@ spec:
       - name: UNIFI_POLICY_DELETE
         value: "false"
       - name: UNIFI_POLICY_NETWORK_FIREWALL_POLICIES_CREATE
-        value: "true"
+        value: "false"
       - name: UNIFI_POLICY_NETWORK_FIREWALL_POLICIES_UPDATE
-        value: "true"
+        value: "false"
       - name: UNIFI_POLICY_NETWORK_NETWORKS_CREATE
-        value: "true"
+        value: "false"
       - name: UNIFI_POLICY_NETWORK_NETWORKS_UPDATE
-        value: "true"
+        value: "false"
       - name: UNIFI_TOOL_REGISTRATION_MODE
         value: eager
       - name: UNIFI_MCP_HTTP_ENABLED
