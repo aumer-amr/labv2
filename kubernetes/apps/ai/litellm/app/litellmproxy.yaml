@@ -53,7 +53,8 @@ spec:
             - code-injection-blocker
     policy_attachments:
       - policy: prompt-injection-protection
-        scope: "*"
+        keys:
+          - open-webui
   env:
     - name: DATABASE_URL
       valueFrom:
