@@ -8,6 +8,9 @@ spec:
   from:
     - group: gateway.envoyproxy.io
       kind: SecurityPolicy
+      namespace: home
+    - group: gateway.envoyproxy.io
+      kind: SecurityPolicy
       namespace: kube-system
     - group: gateway.envoyproxy.io
       kind: SecurityPolicy
