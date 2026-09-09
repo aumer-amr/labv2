@@ -114,7 +114,7 @@ spec:
         annotations:
           gatus.home-operations.com/endpoint: |-
             path: /healthz
-            conditions: ["[STATUS] == 200"]
+            conditions: ["[STATUS] == 404"]
         hostnames:
           - zigbee2mqtt.${SECRET_DOMAIN}
         parentRefs:
