@@ -62,3 +62,24 @@ upgrade:
 [group('talos')]
 upgrade-node node:
     topf upgrade --nodes-filter "^{{ node }}$"
+
+[doc('Check full-cluster shutdown prerequisites without changing state')]
+[group('talos')]
+shutdown-plan:
+    mise exec -- bash ../scripts/cluster-power.sh plan
+
+[confirm('This stops every workload and powers off all three Talos nodes — continue? [y/N]')]
+[doc('Gracefully stop applications and Ceph, then power off every node')]
+[group('talos')]
+shutdown:
+    mise exec -- bash ../scripts/cluster-power.sh shutdown
+
+[doc('Restore Ceph, applications, and Flux after all nodes are powered on')]
+[group('talos')]
+startup:
+    mise exec -- bash ../scripts/cluster-power.sh startup
+
+[doc('Show the locally recorded cluster power phase')]
+[group('talos')]
+power-status:
+    mise exec -- bash ../scripts/cluster-power.sh status

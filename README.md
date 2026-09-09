@@ -18,6 +18,7 @@ This repository contains rendered cluster configuration. Initial template setup 
 - [Application Valkey caches](docs/valkey.md) — add, connect, verify, and upgrade isolated per-application Valkey instances.
 - [Reset](docs/reset.md) — return one or all Talos nodes to maintenance mode.
 - [Maintenance](docs/maintenance.md) — apply and upgrade Talos, add nodes, maintain Kubernetes, and troubleshoot failures.
+- [Cluster power](docs/power.md) — safely shut down and restart the full Talos and Rook Ceph cluster.
 
 ## Quick Reference
 
