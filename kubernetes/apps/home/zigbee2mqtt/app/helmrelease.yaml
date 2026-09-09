@@ -1,0 +1,162 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: zigbee2mqtt
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: zigbee2mqtt
+  interval: 1h
+  values:
+    controllers:
+      zigbee2mqtt:
+        strategy: Recreate
+        containers:
+          app:
+            image:
+              repository: ghcr.io/koenkk/zigbee2mqtt
+              tag: 2.13.0@sha256:4fb4db4d49a217bed6d0204f454ce809febc565bbe051b85c556ee2bcef73d8c
+            env:
+              TZ: Europe/Amsterdam
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: &port 8080
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: *port
+                  failureThreshold: 30
+                  periodSeconds: 5
+            resources:
+              requests:
+                cpu: 10m
+                memory: 128Mi
+              limits:
+                memory: 512Mi
+            securityContext:
+              privileged: true
+              readOnlyRootFilesystem: true
+              runAsUser: 0
+          mqtt:
+            image:
+              repository: docker.io/library/eclipse-mosquitto
+              tag: 2.1.2-alpine@sha256:6f8d8a947c506f8a2290ec65cd4bd2bc7cb4d43fb5f6271f861cb013e2ef9797
+            probes:
+              liveness: &mqttProbes
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 1883
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness: *mqttProbes
+            resources:
+              requests:
+                cpu: 5m
+                memory: 16Mi
+              limits:
+                memory: 64Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 1000
+              runAsGroup: 1000
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      labels:
+        network.home.arpa/from-envoy-internal: allow
+      nodeSelector:
+        kubernetes.io/hostname: deathscythe
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+    service:
+      app:
+        controller: zigbee2mqtt
+        ports:
+          http:
+            port: *port
+    route:
+      app:
+        annotations:
+          gatus.home-operations.com/endpoint: |-
+            conditions: ["[STATUS] == 200"]
+        hostnames:
+          - zigbee2mqtt.${SECRET_DOMAIN}
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+    configMaps:
+      mosquitto:
+        data:
+          mosquitto.conf: |-
+            allow_anonymous true
+            listener 1883
+            log_dest stdout
+            persistence true
+            persistence_location /mosquitto/data/
+    persistence:
+      data:
+        existingClaim: zigbee2mqtt
+        advancedMounts:
+          zigbee2mqtt:
+            app:
+              - path: /app/data
+                subPath: zigbee2mqtt
+            mqtt:
+              - path: /mosquitto/data
+                subPath: mosquitto
+      mosquitto-config:
+        type: configMap
+        identifier: mosquitto
+        advancedMounts:
+          zigbee2mqtt:
+            mqtt:
+              - path: /mosquitto/config/mosquitto.conf
+                subPath: mosquitto.conf
+                readOnly: true
+      tmp:
+        type: emptyDir
+        advancedMounts:
+          zigbee2mqtt:
+            app:
+              - path: /tmp
+            mqtt:
+              - path: /tmp
+      zigbee:
+        type: hostPath
+        hostPath: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_7acba91b7f45ed11a7f8d18f0a86e0b4-if00-port0
+        hostPathType: CharDevice
+        advancedMounts:
+          zigbee2mqtt:
+            app:
+              - path: /dev/ttyUSB0

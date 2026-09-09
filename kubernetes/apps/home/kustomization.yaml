@@ -10,3 +10,4 @@ resources:
   - ./namespace.yaml
   - ./home-assistant/ks.yaml
   - ./network-policies/ks.yaml
+  - ./zigbee2mqtt/ks.yaml
