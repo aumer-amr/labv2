@@ -24,6 +24,14 @@ spec:
           protocol: TCP
   egress:
     - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: zigbee2mqtt
+              app.kubernetes.io/name: zigbee2mqtt
+      ports:
+        - port: 1883
+          protocol: TCP
+    - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: network

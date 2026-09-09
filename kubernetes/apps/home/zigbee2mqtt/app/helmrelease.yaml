@@ -21,6 +21,7 @@ spec:
             env:
               TZ: Europe/Amsterdam
               ZIGBEE2MQTT_CONFIG_FRONTEND_ENABLED: true
+              ZIGBEE2MQTT_CONFIG_HOMEASSISTANT_ENABLED: true
             probes:
               liveness:
                 enabled: true
@@ -106,6 +107,8 @@ spec:
         ports:
           http:
             port: *port
+          mqtt:
+            port: 1883
     route:
       app:
         annotations:

@@ -21,3 +21,11 @@ spec:
       ports:
         - port: 8080
           protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: home-assistant
+              app.kubernetes.io/name: home-assistant
+      ports:
+        - port: 1883
+          protocol: TCP
