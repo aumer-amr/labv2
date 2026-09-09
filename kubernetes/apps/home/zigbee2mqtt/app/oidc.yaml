@@ -1,0 +1,46 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external-secrets.io/externalsecret_v1.json
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: zigbee2mqtt-oidc
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword-connect
+  target:
+    name: zigbee2mqtt-oidc-client
+    template:
+      data:
+        client-secret: "{{ .clientSecret }}"
+  data:
+    - secretKey: clientSecret
+      remoteRef:
+        key: kanidm-zigbee2mqtt
+        property: KANIDM_CLIENT_SECRET
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: zigbee2mqtt-oidc
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: zigbee2mqtt
+      sectionName: ui
+  oidc:
+    provider:
+      issuer: https://idm.${SECRET_DOMAIN}/oauth2/openid/zigbee2mqtt
+      authorizationEndpoint: https://idm.${SECRET_DOMAIN}/ui/oauth2
+      tokenEndpoint: https://idm.${SECRET_DOMAIN}/oauth2/token
+      backendRefs:
+        - name: kanidm
+          namespace: security
+          port: 8443
+    clientID: zigbee2mqtt
+    clientSecret:
+      name: zigbee2mqtt-oidc-client
+    redirectURL: https://zigbee2mqtt.${SECRET_DOMAIN}/oauth2/callback
+    logoutPath: /logout
+    scopes: [openid]

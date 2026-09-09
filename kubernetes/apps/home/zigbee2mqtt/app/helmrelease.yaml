@@ -113,12 +113,30 @@ spec:
       app:
         annotations:
           gatus.home-operations.com/endpoint: |-
+            path: /healthz
             conditions: ["[STATUS] == 200"]
         hostnames:
           - zigbee2mqtt.${SECRET_DOMAIN}
         parentRefs:
           - name: envoy-internal
             namespace: network
+        rules:
+          - name: health
+            matches:
+              - path:
+                  type: Exact
+                  value: /healthz
+            backendRefs:
+              - identifier: app
+                port: http
+          - name: ui
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+            backendRefs:
+              - identifier: app
+                port: http
     configMaps:
       mosquitto:
         data:
