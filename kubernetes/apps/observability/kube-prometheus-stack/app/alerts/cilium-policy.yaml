@@ -1,0 +1,23 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cilium-policy
+spec:
+  groups:
+    - name: cilium-policy
+      rules:
+        - alert: CiliumPolicyDenied
+          annotations:
+            description: Permanent expected-deny exclusions are maintained as separate recording rules. Use Alertmanager silences only for temporary conditions.
+            summary: Cilium denied {{ $value }} flows from {{ $labels.source_namespace }}/{{ $labels.source_workload }} to {{ $labels.destination_namespace }}/{{ $labels.destination_workload }} ({{ $labels.destination_ip }}) in the last 5 minutes.
+          expr: |-
+            sum by (source_namespace, source_workload, destination_ip, destination_namespace, destination_workload, traffic_direction, protocol) (
+              increase(hubble_drop_total{reason=~"(?i)policy[ _]denied"}[5m])
+              unless on (source_namespace, source_workload, protocol, destination_ip)
+              hubble:policy_denied:exclusion
+            ) >= 3
+          for: 2m
+          labels:
+            severity: warning

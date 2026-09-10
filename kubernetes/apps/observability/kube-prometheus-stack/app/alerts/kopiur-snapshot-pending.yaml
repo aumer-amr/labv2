@@ -1,0 +1,17 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kopiur-snapshot-pending
+spec:
+  groups:
+    - name: kopiur
+      rules:
+        - alert: KopiurSnapshotPending
+          annotations:
+            summary: Kopiur snapshot {{ $labels.namespace }}/{{ $labels.name }} has been pending for more than 30 minutes.
+          expr: kopiur_resource_phase{kind="Snapshot", phase="Pending"} == 1
+          for: 30m
+          labels:
+            severity: critical

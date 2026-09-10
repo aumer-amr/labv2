@@ -1,0 +1,21 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cilium-policy-exclusion-home-assistant
+spec:
+  groups:
+    - name: cilium-policy.exclusions.home-assistant
+      rules:
+        - record: hubble:policy_denied:exclusion
+          expr: |-
+            increase(hubble_drop_total{
+              reason=~"(?i)policy[ _]denied",
+              source_namespace="home",
+              source_workload="home-assistant",
+              protocol="UDP",
+              destination_ip=~"^(224[.]0[.]0[.]251|239[.]255[.]255[.]250|255[.]255[.]255[.]255)$"
+            }[5m])
+          labels:
+            exclusion: home-assistant-local-discovery

@@ -1,0 +1,21 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cilium-policy-exclusion-sparkyfitness
+spec:
+  groups:
+    - name: cilium-policy.exclusions.sparkyfitness
+      rules:
+        - record: hubble:policy_denied:exclusion
+          expr: |-
+            increase(hubble_drop_total{
+              reason=~"(?i)policy[ _]denied",
+              source_namespace="fitness",
+              source_workload="sparkyfitness-server",
+              protocol="TCP",
+              destination_ip=~"^185[.]199[.](108|109|110|111)[.]133$"
+            }[5m])
+          labels:
+            exclusion: sparkyfitness-github-raw-announcements
