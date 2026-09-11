@@ -26,7 +26,7 @@ spec:
         drop: ["ALL"]
       readOnlyRootFilesystem: true
     # renovate: datasource=docker depName=ghcr.io/baruchiro/paperless-mcp
-    image: ghcr.io/baruchiro/paperless-mcp:latest@sha256:abba37e831e789633900d3f6911768484b24f989793a05df83c8f95bb24ac8c5
+    image: ghcr.io/baruchiro/paperless-mcp:latest@sha256:7a793eeeb2ef9ea43175bf6b43b2179cc7c5b7e5484b6aecea8984a61d1ffe2d
     port: 3000
     env:
       - name: PAPERLESS_URL
