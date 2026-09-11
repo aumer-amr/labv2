@@ -92,12 +92,31 @@ endpoints:
       hide-url: true
       hide-hostname: true
 
-  - name: P1
+  - name: P1 management
     group: internal
     url: http://10.40.123.98/
     interval: 1m
     conditions:
       - "[STATUS] == 401"
+    alerts:
+      - type: pushover
+    ui:
+      hide-url: true
+      hide-hostname: true
+
+  - name: P1 telemetry
+    group: internal
+    url: https://home-assistant.aumer.dev/api/template
+    method: POST
+    headers:
+      Authorization: Bearer ${HOME_ASSISTANT_TOKEN}
+      Content-Type: application/json
+    body: >-
+      {"template": "{{ 'fresh' if states.sensor.electricity_meter_power_consumption.state not in ['unknown', 'unavailable'] and (now() - states.sensor.electricity_meter_power_consumption.last_reported).total_seconds() < 120 else 'stale' }}"}
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == pat(^fresh$$)"
     alerts:
       - type: pushover
     ui:
