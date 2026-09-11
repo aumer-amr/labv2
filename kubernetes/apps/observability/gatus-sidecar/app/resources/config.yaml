@@ -116,7 +116,7 @@ endpoints:
     interval: 1m
     conditions:
       - "[STATUS] == 200"
-      - "[BODY] == pat(^fresh$$)"
+      - "[BODY] == pat(*fresh*)"
     alerts:
       - type: pushover
     ui:
