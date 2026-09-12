@@ -1,0 +1,25 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: snapcast
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: snapcast
+      app.kubernetes.io/name: snapcast
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 10.10.1.0/24
+      ports:
+        - port: 1704
+          protocol: TCP
+        - port: 1705
+          protocol: TCP
+        - port: 1780
+          protocol: TCP
+        - port: 4953
+          protocol: TCP

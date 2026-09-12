@@ -1,0 +1,162 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-5.1.0/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: snapcast
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: snapcast
+  interval: 1h
+  values:
+    controllers:
+      snapcast:
+        strategy: Recreate
+        containers:
+          server:
+            image: &image
+              repository: docker.io/sweisgerber/snapcast
+              tag: v0.35.0@sha256:c18b1a99dc95c2add19791e826ec28b1e237ecddddeadecaf4b453ca4c46ee3a
+            command: ["/usr/bin/snapserver"]
+            args: ["--config", "/etc/snapserver/snapserver.conf"]
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: &webPort 1780
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness: *probes
+              startup:
+                <<: *probes
+                spec:
+                  httpGet:
+                    path: /
+                    port: *webPort
+                  failureThreshold: 30
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                memory: 128Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 1000
+              runAsGroup: 1000
+              capabilities: { drop: ["ALL"] }
+          client:
+            image: *image
+            command: ["/usr/bin/snapclient"]
+            args:
+              - --host
+              - 127.0.0.1
+              - --player
+              - alsa
+              - --soundcard
+              - default
+            resources:
+              requests:
+                cpu: 10m
+                memory: 16Mi
+              limits:
+                memory: 64Mi
+            securityContext:
+              privileged: true
+              readOnlyRootFilesystem: true
+              runAsUser: 0
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: deathscythe
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+    service:
+      app:
+        controller: snapcast
+        type: LoadBalancer
+        annotations:
+          lbipam.cilium.io/ips: "10.10.1.114"
+        allocateLoadBalancerNodePorts: false
+        externalTrafficPolicy: Local
+        loadBalancerSourceRanges:
+          - 10.10.1.0/24
+        ports:
+          stream:
+            port: 1704
+          control:
+            port: 1705
+          web:
+            port: *webPort
+          source:
+            port: 4953
+    configMaps:
+      config:
+        data:
+          snapserver.conf: |-
+            [server]
+            datadir = /tmp/snapserver
+
+            [http]
+            enabled = true
+            bind_to_address = 0.0.0.0
+            port = 1780
+            publish_http = false
+            doc_root = /usr/share/snapserver/snapweb
+
+            [tcp-control]
+            enabled = true
+            bind_to_address = 0.0.0.0
+            port = 1705
+            publish = false
+
+            [tcp-streaming]
+            enabled = true
+            bind_to_address = 0.0.0.0
+            port = 1704
+            publish = false
+
+            [stream]
+            source = tcp://0.0.0.0:4953?name=Voicemeeter&mode=server&sampleformat=48000:16:2&codec=flac
+            sampleformat = 48000:16:2
+            codec = flac
+            buffer = 1000
+
+            [logging]
+            sink = stdout
+    persistence:
+      config:
+        type: configMap
+        identifier: config
+        advancedMounts:
+          snapcast:
+            server:
+              - path: /etc/snapserver/snapserver.conf
+                subPath: snapserver.conf
+                readOnly: true
+      sound:
+        type: hostPath
+        hostPath: /dev/snd
+        hostPathType: Directory
+        advancedMounts:
+          snapcast:
+            client:
+              - path: /dev/snd
+      tmp:
+        type: emptyDir
+        advancedMounts:
+          snapcast:
+            server:
+              - path: /tmp
+            client:
+              - path: /tmp
