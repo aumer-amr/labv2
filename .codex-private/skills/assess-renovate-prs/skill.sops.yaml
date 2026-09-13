@@ -1813,12 +1813,27 @@ runner_sh: |
   trap 'cleanup_evidence >/dev/null 2>&1 || true; rm -f -- /run/assessment-exchange/weekly-output.txt' EXIT
   cd "$workspace"
   "$helper" begin-weekly >/dev/null
-  if ! hermes --in "$workspace" --oneshot "$(cat "$prompt_file")" >"$output"; then
-      exit 1
-  fi
-  "$helper" validate-output --file "$output"
+  attempt=1
+  while [ "$attempt" -le 3 ]; do
+      if [ "$attempt" -eq 1 ]; then
+          prompt=$(cat "$prompt_file")
+          if ! hermes --in "$workspace" --skills assess-renovate-prs --oneshot "$prompt" >"$output"; then
+              exit 1
+          fi
+      else
+          prompt='The supervised weekly assessment is still incomplete. Continue this same session now. Inspect the existing evidence and ledger, finish every missing PR, write the complete report, and run finalize successfully. Do not defer, delegate, schedule work, or stop at a progress summary.'
+          if ! hermes --in "$workspace" --continue --skills assess-renovate-prs --oneshot "$prompt" >"$output"; then
+              exit 1
+          fi
+      fi
+      "$helper" validate-output --file "$output"
+      if "$helper" complete-weekly >/dev/null 2>&1; then
+          cat "$output"
+          exit 0
+      fi
+      attempt=$((attempt + 1))
+  done
   "$helper" complete-weekly
-  cat "$output"
 sops:
   age:
     - enc: |
