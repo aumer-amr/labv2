@@ -25,8 +25,6 @@ spec:
       hostRoot: /sys/fs/cgroup
     # The stable bond name is defined in talos/all/20-network-links.yaml.tpl
     devices: bond0+
-    dnsProxy:
-      minTtl: 3600
     dashboards:
       enabled: true
     endpointRoutes:
