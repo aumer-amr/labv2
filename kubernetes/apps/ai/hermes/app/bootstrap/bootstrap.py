@@ -75,7 +75,7 @@ def load_jobs() -> list[dict]:
             raise SystemExit(f"Invalid no_agent for cron job {job['name']}")
         if job.get("no_agent") and not isinstance(job.get("script"), str):
             raise SystemExit(f"No-agent cron job requires a script: {job['name']}")
-        for key in ("prompt", "script", "workdir"):
+        for key in ("prompt", "provider", "script", "workdir"):
             if key in job and not isinstance(job[key], str):
                 raise SystemExit(f"Invalid {key} for cron job {job['name']}")
         if not isinstance(job.get("skills", []), list) or not all(
@@ -226,6 +226,8 @@ def reconcile_cron(jobs: list[dict]) -> None:
             prompt,
             "--deliver",
             delivery(job),
+            "--provider",
+            job.get("provider", ""),
         ]
         if matches:
             command = ["hermes", "cron", "edit", matches[0]["id"], *common]
@@ -256,6 +258,8 @@ def reconcile_cron(jobs: list[dict]) -> None:
                 command.extend(["--script", job["script"]])
             if job.get("no_agent"):
                 command.append("--no-agent")
+            if job.get("provider"):
+                command.extend(["--provider", job["provider"]])
             if job.get("workdir"):
                 command.extend(["--workdir", job["workdir"]])
             for skill in job.get("skills", []):
@@ -273,6 +277,7 @@ def reconcile_cron(jobs: list[dict]) -> None:
             "enabled": True,
             "no_agent": bool(job.get("no_agent")),
             "prompt": job.get("prompt", ""),
+            "provider": job.get("provider"),
             "schedule_display": job["schedule"],
             "script": job.get("script"),
             "skills": job.get("skills", []),

@@ -8,10 +8,12 @@ jobs:
   - name: Morning exception brief
     schedule: 30 7 * * *
     deliver_env: DISCORD_ALERTS_CHANNEL
+    provider: lab-litellm
     prompt: >-
       Check today's Home Assistant calendars, unavailable devices, batteries below 20%, unusual energy use compared with recent history, and current Kubernetes or Flux alerts. For HTTP endpoints, evaluate responses against their configured Gatus conditions instead of assuming non-2xx means failure. The Flux webhook base URL is expected to return 404 because only /hook/ is routed; report it only if its HTTPRoute is unhealthy or notification-controller logs show a failed expected delivery. For Kopiur backups, ignore MissingDependency and mover-pod FailedScheduling warnings when the corresponding Snapshot subsequently reached Succeeded; report only Snapshots still Pending beyond their 10-minute staging timeout or in Failed/Stalled state. An unknown last-event time alone is not an exception. Report only items needing attention, with concise evidence and urgency. Make no changes. If nothing needs attention, respond exactly: No exceptions.
   - name: Weekly personal review
     schedule: 0 18 * * 0
     deliver_env: DISCORD_REVIEWS_CHANNEL
+    provider: lab-litellm
     prompt: >-
       Review the past seven days and next seven days using Home Assistant calendars and history, Paperless documents, GitHub activity, and remembered commitments. Summarize unfinished actions, upcoming deadlines, household maintenance, and open technical risks. Return at most five prioritized actions with concise evidence. Make no changes.
