@@ -44,20 +44,24 @@ if ($Action -eq "InstallFfmpeg") {
     exit 0
 }
 
-$ffmpeg = Get-Command ffmpeg.exe -ErrorAction SilentlyContinue
-if (-not $ffmpeg) {
+$ffmpegPath = (Get-Command ffmpeg.exe -ErrorAction SilentlyContinue).Source
+if (-not $ffmpegPath) {
+    $ffmpegPath = Get-Item -Path "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\Gyan.FFmpeg_*\ffmpeg-*\bin\ffmpeg.exe" -ErrorAction SilentlyContinue |
+        Select-Object -First 1 -ExpandProperty FullName
+}
+if (-not $ffmpegPath) {
     throw "ffmpeg.exe not found. Run this script with -Action InstallFfmpeg first."
 }
 
 if ($Action -eq "ListDevices") {
-    & $ffmpeg.Source -hide_banner -list_devices true -f dshow -i dummy
+    & $ffmpegPath -hide_banner -list_devices true -f dshow -i dummy
     exit 0
 }
 
 $target = "tcp://${Snapserver}:$Port"
 Write-Host "Streaming '$InputDevice' to $target. Press Ctrl+C to stop."
 
-& $ffmpeg.Source `
+& $ffmpegPath `
     -hide_banner `
     -loglevel warning `
     -f dshow `
