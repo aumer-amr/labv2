@@ -3,7 +3,7 @@ clusterName: kubernetes
 clusterEndpoint: https://10.10.1.110:6443
 
 # renovate: datasource=github-releases depName=siderolabs/talos
-talosVersion: v1.14.0
+talosVersion: v1.14.1
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
 kubernetesVersion: v1.37.0
 
@@ -13,18 +13,21 @@ nodes:
   - host: "deathscythe"
     ip: "10.10.1.100"
     role: control-plane
-    schematicId: "eff8a38ccf4d7d945a04303b470161ea777afbcf9cb1bc965dcd9b5dbf06240d"
+    schematicId: "b71237fc3206ae1b075aed3c1fe5ca1d79c39fdd660834deaf2c852f66e95212"
     data:
       installDisk: "/dev/nvme0n1"
       installDiskSerial: ""
       macAddr: "48:21:0b:55:d7:e3"
       mtu: 1500
       encryptDisk: false
-      kernelModules: []
+      kernelModules:
+        - snd-hda-codec-alc269
+        - snd-hda-codec-intelhdmi
+        - snd-hda-intel
   - host: "epyon"
     ip: "10.10.1.101"
     role: control-plane
-    schematicId: "eff8a38ccf4d7d945a04303b470161ea777afbcf9cb1bc965dcd9b5dbf06240d"
+    schematicId: "b71237fc3206ae1b075aed3c1fe5ca1d79c39fdd660834deaf2c852f66e95212"
     data:
       installDisk: "/dev/nvme0n1"
       installDiskSerial: ""
@@ -35,7 +38,7 @@ nodes:
   - host: "heavyarms"
     ip: "10.10.1.102"
     role: control-plane
-    schematicId: "eff8a38ccf4d7d945a04303b470161ea777afbcf9cb1bc965dcd9b5dbf06240d"
+    schematicId: "b71237fc3206ae1b075aed3c1fe5ca1d79c39fdd660834deaf2c852f66e95212"
     data:
       installDisk: "/dev/nvme0n1"
       installDiskSerial: ""
