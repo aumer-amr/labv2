@@ -59,7 +59,7 @@ spec:
             command: ["/bin/sh", "-ec"]
             args:
               - |-
-                amixer -c 0 set Master 50% unmute
+                amixer -c 0 set Master 100% unmute
                 exec /usr/bin/snapclient --host 127.0.0.1 --player alsa --soundcard hw:0,0
             resources:
               requests:
