@@ -21,7 +21,7 @@ spec:
           app:
             image:
               repository: docker.io/codewithcj/sparkyfitness_server
-              tag: v1.6.5@sha256:0a365e3d5561ad58ebe1e6cba1d132c7e968958d632bfd9f6a39cd736c3dc9d7
+              tag: v1.7.1@sha256:dd340607b2748941032a5c0db679363eb736ad810e26df10d93810a2b1518d5e
             env:
               TZ: Europe/Amsterdam
               NODE_ENV: production
@@ -130,7 +130,7 @@ spec:
           app:
             image:
               repository: docker.io/codewithcj/sparkyfitness
-              tag: v1.6.5@sha256:4e836f23fa92a762335dcf4552f76696ca77bde16c7d5c14c49946a3e5faf83a
+              tag: v1.7.1@sha256:4dd132cf1db66d6c4f4669bd04d9558ffe5006e40e8b7ee33c0859d52d9de379
             env:
               NGINX_LISTEN_PORT: "8080"
               SPARKY_FITNESS_FRONTEND_URL: https://fitness.${SECRET_DOMAIN}
