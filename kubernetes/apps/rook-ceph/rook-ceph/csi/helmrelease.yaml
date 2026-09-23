@@ -28,8 +28,9 @@ spec:
         clusterName: rook-ceph
         imageSet:
           name: rook-csi-operator-image-set-configmap
-        kernelMountOptions:
-          ms_mode: prefer-crc
+        log:
+          rotation:
+            enabled: false
         controllerPlugin:
           hostNetwork: true
           priorityClassName: system-cluster-critical
@@ -46,6 +47,11 @@ spec:
       rbd:
         enabled: true
         name: rook-ceph.rbd.csi.ceph.com
+        grpcTimeout: 150
+        snapshotPolicy: volumeGroupSnapshot
+        log:
+          rotation:
+            enabled: false
         controllerPlugin:
           hostNetwork: true
           replicas: 2
@@ -103,8 +109,10 @@ spec:
         enabled: true
         name: rook-ceph.cephfs.csi.ceph.com
         snapshotPolicy: volumeGroupSnapshot
-        kernelMountOptions:
-          ms_mode: prefer-crc
+        grpcTimeout: 150
+        log:
+          rotation:
+            enabled: false
         controllerPlugin:
           hostNetwork: true
           replicas: 2
