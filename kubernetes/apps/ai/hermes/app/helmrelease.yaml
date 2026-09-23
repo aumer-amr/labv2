@@ -18,7 +18,7 @@ spec:
           00-fix-permissions:
             image:
               repository: docker.io/nousresearch/hermes-agent
-              tag: v2026.9.11@sha256:9469b3e78b9545b6d576eb8887a95352e9a0ea83730eaf31431cf862ca1010e1
+              tag: v2026.9.21@sha256:6bece0644e29a347e5ae17db43c36938c86f171c6f5e0cef18aa2075d331f3a3
             command:
               - /bin/sh
               - -c
@@ -37,7 +37,7 @@ spec:
           bootstrap:
             image:
               repository: docker.io/nousresearch/hermes-agent
-              tag: v2026.9.11@sha256:9469b3e78b9545b6d576eb8887a95352e9a0ea83730eaf31431cf862ca1010e1
+              tag: v2026.9.21@sha256:6bece0644e29a347e5ae17db43c36938c86f171c6f5e0cef18aa2075d331f3a3
             command:
               - /opt/hermes/.venv/bin/python
               - -I
@@ -60,7 +60,7 @@ spec:
           prepare-merge-broker:
             image:
               repository: docker.io/nousresearch/hermes-agent
-              tag: v2026.9.11@sha256:9469b3e78b9545b6d576eb8887a95352e9a0ea83730eaf31431cf862ca1010e1
+              tag: v2026.9.21@sha256:6bece0644e29a347e5ae17db43c36938c86f171c6f5e0cef18aa2075d331f3a3
             command:
               - /opt/hermes/.venv/bin/python
               - -I
@@ -75,7 +75,7 @@ spec:
           verify-read-token:
             image:
               repository: docker.io/nousresearch/hermes-agent
-              tag: v2026.9.11@sha256:9469b3e78b9545b6d576eb8887a95352e9a0ea83730eaf31431cf862ca1010e1
+              tag: v2026.9.21@sha256:6bece0644e29a347e5ae17db43c36938c86f171c6f5e0cef18aa2075d331f3a3
             command:
               - /opt/hermes/.venv/bin/python
               - -I
@@ -97,7 +97,7 @@ spec:
           app:
             image:
               repository: docker.io/nousresearch/hermes-agent
-              tag: v2026.9.11@sha256:9469b3e78b9545b6d576eb8887a95352e9a0ea83730eaf31431cf862ca1010e1
+              tag: v2026.9.21@sha256:6bece0644e29a347e5ae17db43c36938c86f171c6f5e0cef18aa2075d331f3a3
             args:
               - sleep
               - infinity
@@ -190,7 +190,7 @@ spec:
           merge-broker:
             image:
               repository: docker.io/nousresearch/hermes-agent
-              tag: v2026.9.11@sha256:9469b3e78b9545b6d576eb8887a95352e9a0ea83730eaf31431cf862ca1010e1
+              tag: v2026.9.21@sha256:6bece0644e29a347e5ae17db43c36938c86f171c6f5e0cef18aa2075d331f3a3
             command:
               - /opt/hermes/.venv/bin/python
               - -I
