@@ -11,10 +11,7 @@ spec:
     name: rook-ceph
   values:
     csi:
-      cephFSKernelMountOptions: ms_mode=prefer-crc
-      cephfsPodLabels: platform.home.arpa/tier=0
-      enableLiveness: true
-      rbdPodLabels: platform.home.arpa/tier=0
+      installCsiOperator: true
       serviceMonitor:
         enabled: true
     image:

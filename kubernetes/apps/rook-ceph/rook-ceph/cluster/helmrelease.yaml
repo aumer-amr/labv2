@@ -11,6 +11,9 @@ spec:
   interval: 1h
   timeout: 10m
   values:
+    cephImage:
+      repository: quay.io/ceph/ceph
+      tag: v20.2.4
     cephClusterSpec:
       labels:
         mgr:
