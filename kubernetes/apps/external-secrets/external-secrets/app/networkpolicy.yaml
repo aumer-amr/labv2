@@ -58,6 +58,7 @@ spec:
           rules:
             dns:
               - matchName: onepassword-connect.external-secrets.svc.cluster.local
+              - matchName: kubernetes.default.svc.cluster.local
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
