@@ -1,0 +1,31 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: actions-runner-controller
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: actions-runner-controller
+  interval: 1h
+  values:
+    serviceAccount:
+      name: actions-runner-controller
+    flags:
+      logLevel: info
+      watchSingleNamespace: actions-runners
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        memory: 256Mi
