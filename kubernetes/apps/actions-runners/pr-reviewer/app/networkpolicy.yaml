@@ -1,0 +1,110 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: github-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: labv2-pr-reviewer
+      app.kubernetes.io/instance: labv2-pr-reviewer
+      app.kubernetes.io/component: runner
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchName: api.github.com
+              - matchName: ghcr.io
+              - matchName: codeload.github.com
+              - matchPattern: "*.actions.githubusercontent.com"
+              - matchPattern: "*.githubusercontent.com"
+              - matchPattern: "*.blob.core.windows.net"
+              - matchName: litellm.ai.svc.cluster.local
+              - matchName: konflate.flux-system.svc.cluster.local
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchName: api.github.com
+              - matchName: ghcr.io
+              - matchName: codeload.github.com
+              - matchPattern: "*.actions.githubusercontent.com"
+              - matchPattern: "*.githubusercontent.com"
+              - matchPattern: "*.blob.core.windows.net"
+              - matchName: litellm.ai.svc.cluster.local
+              - matchName: konflate.flux-system.svc.cluster.local
+    - toFQDNs:
+        - matchName: github.com
+        - matchName: api.github.com
+        - matchName: ghcr.io
+        - matchName: codeload.github.com
+        - matchPattern: "*.actions.githubusercontent.com"
+        - matchPattern: "*.githubusercontent.com"
+        - matchPattern: "*.blob.core.windows.net"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: labv2-pr-reviewer
+      app.kubernetes.io/instance: labv2-pr-reviewer
+      app.kubernetes.io/component: runner
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: pr-reviewer-internal
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: labv2-pr-reviewer
+      app.kubernetes.io/instance: labv2-pr-reviewer
+      app.kubernetes.io/component: runner
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: litellm
+      ports:
+        - port: 4000
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flux-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: konflate
+              app.kubernetes.io/instance: konflate
+      ports:
+        - port: 8080
+          protocol: TCP

@@ -1,0 +1,74 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: pr-reviewer
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: pr-reviewer
+  interval: 1h
+  values:
+    githubConfigUrl: https://github.com/aumer-amr/labv2
+    githubConfigSecret: actions-runner-secret
+    runnerScaleSetName: labv2-pr-reviewer
+    minRunners: 0
+    maxRunners: 1
+    controllerServiceAccount:
+      namespace: actions-runner-system
+      name: actions-runner-controller
+    listenerTemplate:
+      spec:
+        containers:
+          - name: listener
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                memory: 128Mi
+    template:
+      spec:
+        automountServiceAccountToken: false
+        runtimeClassName: gvisor
+        dnsConfig:
+          options:
+            - name: ndots
+              value: "1"
+        securityContext:
+          runAsUser: 1001
+          runAsGroup: 1001
+          fsGroup: 1001
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        containers:
+          - name: runner
+            image: ghcr.io/home-operations/actions-runner:2.337.0@sha256:8b8e8326b5a08e658a0a41cfd2867afab69ca4194a152f986aa6fcd5430d09e7
+            command:
+              - /home/runner/run.sh
+            env:
+              - name: LITELLM_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: pr-reviewer-litellm
+                    key: key
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+            resources:
+              requests:
+                cpu: 250m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
