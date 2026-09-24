@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from types import SimpleNamespace as NS
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
@@ -42,6 +43,9 @@ class API:
                     "status": "completed", "conclusion": "success"}
 
     def request(self, path, method="GET", data=None):
+        if method == "POST":
+            self.writes.append((path, data))
+            return {"id": 43}
         if method == "PUT":
             self.writes.append((path, data))
             self.pr.update(state="closed", merged=True)
@@ -69,11 +73,36 @@ class MergeBoundary(unittest.TestCase):
         api = API()
         card = bridge.snapshot(api, 1)
         self.assertTrue(card["eligible"])
-        self.assertEqual(bridge.merge(api, card), "c" * 40)
-        self.assertEqual(api.writes, [("pulls/1/merge", {"sha": HEAD, "merge_method": "merge"})])
+        self.assertEqual(bridge.merge(api, card), ("c" * 40, True))
+        self.assertEqual(api.writes, [
+            ("pulls/1/merge", {"sha": HEAD, "merge_method": "merge"}),
+            ("issues/1/comments", {"body": "/merge"}),
+        ])
         with self.assertRaises(bridge.Blocked):
             bridge.merge(api, card)
-        self.assertEqual(len(api.writes), 1)
+        self.assertEqual(len(api.writes), 2)
+
+    def test_comment_failure_preserves_successful_merge(self):
+        api = API()
+        card = bridge.snapshot(api, 1)
+        request = api.request
+        def fail_comment(path, method="GET", data=None):
+            if method == "POST":
+                raise bridge.Blocked("GitHub refused the request (HTTP 403).")
+            return request(path, method, data)
+        with patch.object(api, "request", side_effect=fail_comment), self.assertLogs(bridge.LOG, "WARNING"):
+            self.assertEqual(bridge.merge(api, card), ("c" * 40, False))
+        self.assertTrue(api.pr["merged"])
+
+    def test_refused_merge_does_not_post_comment(self):
+        api = API()
+        card = bridge.snapshot(api, 1)
+        request = api.request
+        def refuse_merge(path, method="GET", data=None):
+            return {"merged": False} if method == "PUT" else request(path, method, data)
+        with patch.object(api, "request", side_effect=refuse_merge), self.assertRaises(bridge.Blocked):
+            bridge.merge(api, card)
+        self.assertEqual(api.writes, [])
 
     def test_remote_changes_fail_closed_without_write(self):
         mutations = [

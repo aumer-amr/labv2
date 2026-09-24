@@ -165,7 +165,13 @@ def merge(api, expected):
     })
     if result.get("merged") is not True:
         raise Blocked("GitHub did not merge the PR. Refresh its status before retrying.")
-    return result["sha"]
+    commented = False
+    try:
+        api.request(f"issues/{current['number']}/comments", "POST", {"body": "/merge"})
+        commented = True
+    except Exception as exc:
+        LOG.warning("PR %s merged, but /merge comment failed: %s", current["number"], type(exc).__name__)
+    return result["sha"], commented
 
 
 def user_ids(value):
@@ -280,9 +286,10 @@ def main():
                     return
                 number = match["state"]["number"]
                 try:
-                    merged_sha = await asyncio.to_thread(merge, api, match["state"])
+                    merged_sha, commented = await asyncio.to_thread(merge, api, match["state"])
                     LOG.info("PR %s merged by Discord user %s at %s", number, interaction.user.id, merged_sha)
-                    await interaction.followup.send(f"Merged PR #{number} at `{merged_sha[:12]}`.", ephemeral=True)
+                    notice = "" if commented else " GitHub rejected or could not confirm the `/merge` comment; check the PR."
+                    await interaction.followup.send(f"Merged PR #{number} at `{merged_sha[:12]}`.{notice}", ephemeral=True)
                     await self.show(await asyncio.to_thread(snapshot, api, number))
                 except Blocked as exc:
                     await interaction.followup.send(f"Not merged: {exc}", ephemeral=True)
