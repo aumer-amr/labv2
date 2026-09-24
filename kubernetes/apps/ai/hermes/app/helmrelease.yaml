@@ -187,6 +187,43 @@ spec:
               - containerPort: *port
                 name: http
                 protocol: TCP
+          discord-review:
+            image:
+              repository: docker.io/nousresearch/hermes-agent
+              tag: v2026.9.21@sha256:6bece0644e29a347e5ae17db43c36938c86f171c6f5e0cef18aa2075d331f3a3
+            command:
+              - /opt/hermes/.venv/bin/python
+              - -I
+              - /run/discord-review/bridge.py
+            env:
+              DISCORD_REVIEWS_CHANNEL: "1546583979401154582"
+              DISCORD_ALLOWED_USERS:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-secret
+                    key: DISCORD_ALLOWED_USERS
+              DISCORD_BOT_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-secret
+                    key: DISCORD_BOT_TOKEN
+              GH_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-secret
+                    key: GH_MERGE_TOKEN
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
           merge-broker:
             image:
               repository: docker.io/nousresearch/hermes-agent
@@ -244,6 +281,14 @@ spec:
           type: RuntimeDefault
       terminationGracePeriodSeconds: 120
     persistence:
+      discord-review:
+        type: configMap
+        name: hermes-discord-review
+        advancedMounts:
+          hermes:
+            discord-review:
+              - path: /run/discord-review
+                readOnly: true
       assessment-exchange:
         type: emptyDir
         advancedMounts:
@@ -394,6 +439,8 @@ spec:
         existingClaim: hermes-merge-broker-state
         advancedMounts:
           hermes:
+            discord-review:
+              - path: /var/lib/hermes-broker
             merge-broker:
               - path: /var/lib/hermes-broker
       service-account:
