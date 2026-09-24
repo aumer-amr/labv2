@@ -13,6 +13,9 @@ resources:
   - ./ocirepository.yaml
   - ./rbac.yaml
 configMapGenerator:
+  - name: hermes-discord-review
+    files:
+      - bridge.py=discord-review/bridge.py
   - name: hermes-bootstrap
     files:
       - bootstrap.py=bootstrap/bootstrap.py
