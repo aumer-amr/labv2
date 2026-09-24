@@ -16,6 +16,18 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: actions-runners
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: labv2-pr-reviewer
+              app.kubernetes.io/instance: labv2-pr-reviewer
+              app.kubernetes.io/component: runner
+      ports:
+        - port: 8080
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: network
           podSelector:
             matchExpressions:
