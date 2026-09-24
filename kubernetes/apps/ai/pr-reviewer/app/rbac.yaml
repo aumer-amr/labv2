@@ -1,0 +1,23 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pr-reviewer-secret-reader
+rules:
+  - apiGroups: [""]
+    resources: [secrets]
+    resourceNames: [pr-reviewer-litellm]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pr-reviewer-secret-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: pr-reviewer-secret-reader
+subjects:
+  - kind: ServiceAccount
+    name: pr-reviewer-secret-reader
+    namespace: actions-runners

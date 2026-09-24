@@ -1,0 +1,154 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: github-egress-controller
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: gha-rs-controller
+      app.kubernetes.io/instance: actions-runner-controller
+      app.kubernetes.io/component: controller-manager
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchName: api.github.com
+              - matchPattern: "*.actions.githubusercontent.com"
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchName: api.github.com
+              - matchPattern: "*.actions.githubusercontent.com"
+    - toFQDNs:
+        - matchName: github.com
+        - matchName: api.github.com
+        - matchPattern: "*.actions.githubusercontent.com"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: github-egress-listener
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: labv2-pr-reviewer
+      app.kubernetes.io/instance: labv2-pr-reviewer
+      app.kubernetes.io/component: runner-scale-set-listener
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchName: api.github.com
+              - matchPattern: "*.actions.githubusercontent.com"
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchName: api.github.com
+              - matchPattern: "*.actions.githubusercontent.com"
+    - toFQDNs:
+        - matchName: github.com
+        - matchName: api.github.com
+        - matchPattern: "*.actions.githubusercontent.com"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: arc-api-controller
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: gha-rs-controller
+      app.kubernetes.io/instance: actions-runner-controller
+      app.kubernetes.io/component: controller-manager
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: arc-api-listener
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: labv2-pr-reviewer
+      app.kubernetes.io/instance: labv2-pr-reviewer
+      app.kubernetes.io/component: runner-scale-set-listener
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-ingress-controller
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: gha-rs-controller
+      app.kubernetes.io/instance: actions-runner-controller
+      app.kubernetes.io/component: controller-manager
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-ingress-listener
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: labv2-pr-reviewer
+      app.kubernetes.io/instance: labv2-pr-reviewer
+      app.kubernetes.io/component: runner-scale-set-listener
+  policyTypes:
+    - Ingress
