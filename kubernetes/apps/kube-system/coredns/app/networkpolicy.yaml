@@ -14,6 +14,36 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: actions-runner-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: gha-rs-controller
+              app.kubernetes.io/instance: actions-runner-controller
+              app.kubernetes.io/component: controller-manager
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: actions-runner-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: labv2-pr-reviewer
+              app.kubernetes.io/instance: labv2-pr-reviewer
+              app.kubernetes.io/component: runner-scale-set-listener
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: actions-runners
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: labv2-pr-reviewer
+              app.kubernetes.io/instance: labv2-pr-reviewer
+              app.kubernetes.io/component: runner
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
