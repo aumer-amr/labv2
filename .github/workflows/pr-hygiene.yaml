@@ -1,0 +1,42 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: PR Hygiene
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: PR Hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install check tools
+        uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+        with:
+          install_args: oxfmt zizmor yq lefthook
+          cache: false
+
+      - name: Check PR changes
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: mise exec -- python3 scripts/check-pr-hygiene.py "$PR_BASE" "$PR_HEAD"
+
+      - name: Check CI gate regressions
+        run: mise exec -- python3 scripts/check-pr-ci.py
