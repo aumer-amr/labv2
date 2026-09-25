@@ -47,15 +47,28 @@ jobs:
         run: flate test all -p ./kubernetes/flux/cluster
 
   success:
-    if: ${{ !cancelled() }}
-    needs: flate
+    if: ${{ always() }}
+    needs: [filter, flate]
     name: Flate - Success
     runs-on: ubuntu-latest
     steps:
-      - name: Any jobs failed?
-        if: ${{ contains(needs.*.result, 'failure') }}
-        run: exit 1
+      - name: Require validation or a confirmed no-change skip
+        env:
+          FILTER_RESULT: ${{ needs.filter.result }}
+          FLATE_RESULT: ${{ needs.flate.result }}
+          CHANGED_FILES: ${{ needs.filter.outputs.changed-files }}
+        shell: python
+        run: |
+          import json
+          import os
+          import sys
 
-      - name: All jobs passed or skipped?
-        if: ${{ !(contains(needs.*.result, 'failure')) }}
-        run: echo "All jobs passed or skipped" && echo "${{ toJSON(needs.*.result) }}"
+          if os.environ["FILTER_RESULT"] != "success":
+              sys.exit("Flate filter did not succeed")
+          changed = json.loads(os.environ["CHANGED_FILES"])
+          if not isinstance(changed, list) or not all(isinstance(path, str) for path in changed):
+              sys.exit("Invalid changed-file output")
+          expected = "success" if changed else "skipped"
+          if os.environ["FLATE_RESULT"] != expected:
+              sys.exit(f"Expected Flate to be {expected}")
+          print("Flate passed" if changed else "No Kubernetes changes; validation skipped")
