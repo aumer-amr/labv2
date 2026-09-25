@@ -27,6 +27,12 @@ def check(base, head):
         subprocess.run(["oxfmt", "--check", *formatted], check=True)
     if workflows:
         subprocess.run(["zizmor", "--offline", *workflows], check=True)
+    if any(p.startswith("kubernetes/") or p in {
+        "scripts/check-kubernetes-conventions.py", "scripts/check-kubernetes-conventions-test.py",
+        "scripts/check-pr-hygiene.py", ".github/workflows/pr-hygiene.yaml",
+        ".mise/config.toml", ".mise/mise.lock",
+    } for p in changed):
+        subprocess.run([sys.executable, "scripts/check-kubernetes-conventions.py", base, head], check=True)
     if any(p in {
         ".github/workflows/ai-pr-review.yaml", ".github/workflows/pr-hygiene.yaml",
         "scripts/check-pr-reviewer.py", "scripts/check-pr-hygiene.py",

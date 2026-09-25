@@ -29,7 +29,7 @@ jobs:
       - name: Install check tools
         uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
         with:
-          install_args: oxfmt zizmor yq lefthook
+          install_args: oxfmt zizmor yq lefthook flux2
           cache: false
 
       - name: Check PR changes
@@ -39,4 +39,6 @@ jobs:
         run: mise exec -- python3 scripts/check-pr-hygiene.py "$PR_BASE" "$PR_HEAD"
 
       - name: Check CI gate regressions
-        run: mise exec -- python3 scripts/check-pr-ci.py
+        run: |
+          mise exec -- python3 scripts/check-pr-ci.py
+          mise exec -- python3 scripts/check-kubernetes-conventions-test.py
