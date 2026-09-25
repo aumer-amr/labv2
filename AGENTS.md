@@ -2,8 +2,7 @@
 
 ## Environment
 
-- Run every repository and cluster command in WSL Bash from `/mnt/e/code/private/labv2`; never use PowerShell for this repository.
-- Run repository tools through Mise, for example `mise exec -- kubectl ...`.
+- Codex runs natively inside WSL. Run commands directly in Bash from `/mnt/e/code/private/labv2`.
 - Use the repository kubeconfig configured by `.mise/config.toml`; the cluster is remote.
 - Never print, decode, log, or quote secret values. Treat `age.key`, `kubeconfig`, `deploy.key`, and provider credentials as sensitive.
 
@@ -33,9 +32,9 @@
 - After a live change, run at least:
 
 ```bash
-mise exec -- flux get kustomizations --all-namespaces
-mise exec -- kubectl get gateways.gateway.networking.k8s.io --namespace network
-mise exec -- kubectl get httproutes.gateway.networking.k8s.io --all-namespaces
+flux get kustomizations --all-namespaces
+kubectl get gateways.gateway.networking.k8s.io --namespace network
+kubectl get httproutes.gateway.networking.k8s.io --all-namespaces
 ```
 
 ## Repository Layout
