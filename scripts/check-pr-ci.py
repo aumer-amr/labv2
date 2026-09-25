@@ -55,8 +55,10 @@ for changed, existing, tools in [
     ([".github/actions/demo/action.yml"], [".github/actions/demo/action.yml"], ["oxfmt", "zizmor"]),
     ([".github/workflows/test.yaml"], [".github/workflows/test.yaml"], ["oxfmt", "zizmor"]),
     (["scripts/check-pr-reviewer.py"], [], [sys.executable]),
-    (["kubernetes/apps/actions-runners/pr-reviewer/app/helmrelease.yaml"], [], [sys.executable]),
-    ([".mise/config.toml"], [".mise/config.toml"], [sys.executable]),
+    (["kubernetes/apps/actions-runners/pr-reviewer/app/helmrelease.yaml"], [], [sys.executable, sys.executable]),
+    (["kubernetes/apps/home/demo/ks.yaml"], [], [sys.executable]),
+    (["scripts/check-kubernetes-conventions.py"], [], [sys.executable]),
+    ([".mise/config.toml"], [".mise/config.toml"], [sys.executable, sys.executable]),
 ]:
     output = [b"".join(p.encode() + b"\0" for p in paths) for paths in (changed, existing)]
     with patch.object(hygiene.subprocess, "check_output", side_effect=output), \
