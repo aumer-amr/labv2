@@ -92,5 +92,7 @@ jobs:
           ci_timeout_sec: "600"
           publish_review_comment: "true"
           publish_mode: comment
+          # Discord merge approval is bound to exact head/base SHAs, including rebases.
+          skip_if_diff_unchanged: "false"
           allow_approve: "false"
           fail_on_request_changes: "false"

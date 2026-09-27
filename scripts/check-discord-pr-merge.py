@@ -69,6 +69,42 @@ class API:
 
 
 class MergeBoundary(unittest.TestCase):
+    def test_stale_review_explains_which_commit_changed(self):
+        for changed, reason in (
+            ("head", "The PR branch commit changed since this review (including a rebase); a fresh review is required."),
+            ("base", "The target branch advanced since this review; a fresh review against the current base is required."),
+        ):
+            with self.subTest(changed=changed):
+                api = API()
+                api.pr[changed]["sha"] = "d" * 40
+                state = bridge.snapshot(api, 1)
+                self.assertFalse(state["eligible"])
+                self.assertEqual(state["reason"], reason)
+
+    def test_updated_pr_waits_for_current_review_before_showing_verdict(self):
+        for changed in ("head", "base"):
+            for approved in (True, False):
+                with self.subTest(changed=changed, approved=approved):
+                    api = API()
+                    if not approved:
+                        api.comment["body"] = api.comment["body"].replace('"clean"', '"issues"')
+                    old = bridge.snapshot(api, 1)
+                    api.pr[changed]["sha"] = "d" * 40
+                    stale = bridge.snapshot(api, 1)
+                    self.assertEqual(stale["head"], api.pr["head"]["sha"])
+                    self.assertEqual(stale["base"], api.pr["base"]["sha"])
+                    self.assertEqual(stale["recommendation"], "Awaiting fresh review")
+                    self.assertFalse(stale["eligible"])
+                    self.assertNotEqual(stale, old)
+                    api.comment["body"] = api.comment["body"].replace(
+                        HEAD if changed == "head" else BASE, "d" * 40
+                    )
+                    api.run["head_sha"] = api.pr["head"]["sha"]
+                    fresh = bridge.snapshot(api, 1)
+                    self.assertEqual(fresh["recommendation"], "Approve" if approved else "Needs attention")
+                    self.assertEqual(fresh["eligible"], approved)
+                    self.assertNotEqual(fresh, stale)
+
     def test_only_exact_reviewed_head_is_sent_to_merge_api(self):
         api = API()
         card = bridge.snapshot(api, 1)

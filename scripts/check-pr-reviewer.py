@@ -27,6 +27,7 @@ assert checkouts[0]["with"]["ref"] == "${{ github.event.pull_request.base.sha }}
 assert checkouts[0]["with"]["persist-credentials"] is False
 review = job["steps"][-1]["with"]
 assert review["publish_mode"] == "comment"
+assert review["skip_if_diff_unchanged"] == "false"
 assert review["allow_approve"] == "false"
 assert review["tool_enable_for_forks"] == "false"
 assert "evidence_providers_file" not in review

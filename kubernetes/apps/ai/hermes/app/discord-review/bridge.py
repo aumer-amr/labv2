@@ -101,10 +101,14 @@ def snapshot(api, number):
         return state
     comment, metadata = max(reviews, key=lambda pair: (pair[0]["updated_at"], pair[0]["id"]))
     state["comment"] = comment["id"]
-    state["recommendation"] = "Approve" if metadata["approved"] else "Needs attention"
-    if metadata["head_sha"] != state["head"] or metadata["base_sha"] != state["base"]:
-        state["reason"] = "The PR changed since this review; a fresh review is required."
+    state["recommendation"] = "Awaiting fresh review"
+    if metadata["head_sha"] != state["head"]:
+        state["reason"] = "The PR branch commit changed since this review (including a rebase); a fresh review is required."
         return state
+    if metadata["base_sha"] != state["base"]:
+        state["reason"] = "The target branch advanced since this review; a fresh review against the current base is required."
+        return state
+    state["recommendation"] = "Approve" if metadata["approved"] else "Needs attention"
     if not metadata["approved"]:
         state["reason"] = "The AI has not recommended approval."
         return state
