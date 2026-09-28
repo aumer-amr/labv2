@@ -36,6 +36,7 @@ def check(base, head):
     if any(p in {
         ".github/workflows/ai-pr-review.yaml", ".github/workflows/pr-hygiene.yaml",
         "scripts/check-pr-reviewer.py", "scripts/check-pr-hygiene.py",
+        "scripts/pr-review-oci.py", ".github/pr-review-providers.json",
         ".lefthook.toml", ".mise.toml", ".mise/config.toml", ".mise/mise.lock",
     } or p.startswith("kubernetes/apps/actions-runners/pr-reviewer/") for p in changed):
         subprocess.run([sys.executable, "scripts/check-pr-reviewer.py"], check=True)

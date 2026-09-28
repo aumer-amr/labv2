@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """Check the review workflow's trust boundary. Run with mise exec -- python3."""
 
+import base64
+import importlib.util
 import json
 import os
 from pathlib import Path
 import subprocess
 import tempfile
+from unittest.mock import patch
+from urllib.error import HTTPError, URLError
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -30,7 +34,10 @@ assert review["publish_mode"] == "comment"
 assert review["skip_if_diff_unchanged"] == "false"
 assert review["allow_approve"] == "false"
 assert review["tool_enable_for_forks"] == "false"
-assert "evidence_providers_file" not in review
+assert review["evidence_providers_file"] == ".github/pr-review-providers.json"
+assert review["evidence_enable_for_forks"] == "false"
+providers = json.loads((ROOT / review["evidence_providers_file"]).read_text())
+assert providers["providers"][0]["command"] == ["python3", "scripts/pr-review-oci.py"]
 assert review["ai_base_url"].startswith("http://litellm.ai.svc.cluster.local:")
 assert "http://konflate.flux-system.svc.cluster.local:" in review["tool_mcp_servers"]
 
@@ -61,4 +68,41 @@ for value, succeeds in [("test-key", True), ("", False), ("x\ninjected=y", False
         else:
             assert not output.exists()
 
-print("PR review trust-boundary checks passed")
+module_spec = importlib.util.spec_from_file_location("oci", ROOT / "scripts/pr-review-oci.py")
+oci = importlib.util.module_from_spec(module_spec)
+module_spec.loader.exec_module(oci)
+spec = {"url": "oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack", "ref": {"tag": "91.7.1"}}
+manifest = b'{"schemaVersion":2,"config":{"digest":"sha256:example"}}'
+with patch.object(oci, "fetch", side_effect=[b'{"token":"dummy"}', manifest]) as fetch:
+    result = oci.verify(spec)
+    assert result["status"] == "published" and result["digest"].startswith("sha256:")
+    assert fetch.call_args.args[0].endswith("/manifests/91.7.1")
+    assert "dummy" not in json.dumps(result)
+for code, status in [(404, "not_found"), (401, "unknown"), (403, "unknown"), (429, "unknown"), (503, "unknown")]:
+    with patch.object(oci, "fetch", side_effect=[b'{"token":"dummy"}', HTTPError("", code, "", {}, None)]):
+        assert oci.verify(spec)["status"] == status
+for failure in [HTTPError("", 404, "", {}, None), URLError("private error detail")]:
+    with patch.object(oci, "fetch", side_effect=failure):
+        result = oci.verify(spec)
+        assert result["status"] == "unknown" and "private error detail" not in json.dumps(result)
+for url in ["http://127.0.0.1", "oci://ghcr.io.evil.test/a/b", "oci://ghcr.io/a/../b", "oci://user:password@ghcr.io/a/b"]:
+    with patch.object(oci, "fetch") as fetch:
+        assert oci.verify({**spec, "url": url})["status"] == "unknown"
+        fetch.assert_not_called()
+assert oci.NoRedirect().redirect_request(None, None, 302, "", {}, "https://evil.test") is None
+
+# Exercise YAML parsing and exact-head API reads while mocking only external I/O.
+head = "a" * 40
+event = {"repository": {"full_name": "owner/repo"}, "pull_request": {
+    "number": 1, "head": {"sha": head, "repo": {"full_name": "owner/repo"}},
+}}
+path = "kubernetes/apps/test/app/ocirepository.yaml"
+raw = b"kind: OCIRepository\nspec:\n  url: oci://ghcr.io/org/chart\n  ref:\n    tag: 1.2.3\n"
+with patch.object(oci, "gh", side_effect=[json.dumps([{"filename": path, "status": "modified"}]),
+        json.dumps({"content": base64.b64encode(raw).decode()})]) as gh, patch.object(oci, "verify", return_value={"status": "published"}) as verify:
+    result = oci.collect(event)
+    assert result["head_sha"] == head and result["publication"][0]["status"] == "published"
+    assert gh.call_args.args[0].endswith("?ref=" + head)
+    assert verify.call_args.args[0]["ref"]["tag"] == "1.2.3"
+
+print("PR review trust-boundary and OCI publication checks passed")

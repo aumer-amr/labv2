@@ -1,0 +1,10 @@
+{
+  "providers": [
+    {
+      "id": "oci-publication",
+      "command": ["python3", "scripts/pr-review-oci.py"],
+      "timeout_sec": 180,
+      "max_output_bytes": 12000
+    }
+  ]
+}
