@@ -11,7 +11,7 @@ spec:
   values:
     podLabels:
       network.home.arpa/from-envoy-external: allow
-    replicaCount: 3
+    replicaCount: 4
     config:
       kubernetes: true
       trustedProxies:
