@@ -1,0 +1,61 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Rendered Kubernetes Summary
+
+on: # zizmor: ignore[dangerous-triggers] Trusted base scripts; rendering isolated from the write token.
+  pull_request_target:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review, edited]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    outputs:
+      summary: ${{ steps.render.outputs.summary }}
+    steps:
+      - name: Checkout trusted base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Install Flate
+        uses: home-operations/flate/action@631b76b69c4e58c6f4d1cb01e23616fa61aebafa # v0.6.5
+        with:
+          version: 0.6.5
+          base: ""
+          cache: "false"
+      - name: Collect allowlisted changes
+        id: render
+        run: |
+          python3 scripts/check-pr-rendered-summary.py --flate
+          python3 scripts/pr-rendered-summary.py collect
+
+  publish:
+    if: ${{ always() && !cancelled() }}
+    needs: render
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout trusted base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - name: Update revision-bound summary
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RENDERED_SUMMARY: ${{ needs.render.outputs.summary }}
+        run: python3 scripts/pr-rendered-summary.py publish

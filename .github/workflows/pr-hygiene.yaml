@@ -42,3 +42,4 @@ jobs:
         run: |
           mise exec -- python3 scripts/check-pr-ci.py
           mise exec -- python3 scripts/check-kubernetes-conventions-test.py
+          python3 scripts/check-pr-rendered-summary.py
