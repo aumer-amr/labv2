@@ -471,6 +471,9 @@ spec:
             merge-broker:
               - path: /var/run/secrets/kubernetes.io/serviceaccount
                 readOnly: true
+            discord-review:
+              - path: /var/run/secrets/kubernetes.io/serviceaccount
+                readOnly: true
     service:
       app:
         controller: hermes
