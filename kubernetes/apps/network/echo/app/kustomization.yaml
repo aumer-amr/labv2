@@ -5,3 +5,4 @@ resources:
   - ./networkpolicy.yaml
   - ./helmrelease.yaml
   - ./ocirepository.yaml
+  - ./summary-verification.yaml

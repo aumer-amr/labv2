@@ -11,7 +11,7 @@ spec:
   values:
     podLabels:
       network.home.arpa/from-envoy-external: allow
-    replicaCount: 2
+    replicaCount: 3
     config:
       kubernetes: true
       trustedProxies:
@@ -28,7 +28,7 @@ spec:
           namespace: network
     monitoring:
       serviceMonitor:
-        enabled: true
+        enabled: false
     resources:
       requests:
         cpu: 10m

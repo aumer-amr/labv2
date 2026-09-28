@@ -1,0 +1,43 @@
+---
+# Synthetic fixtures for an unmerged draft PR. Never deploy.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: summary-verification
+  namespace: network
+  annotations:
+    verification: SUMMARY_FIXTURE_DO_NOT_PUBLISH_1108
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: summary-verification
+  template:
+    metadata:
+      labels:
+        app: summary-verification
+    spec:
+      containers:
+        - name: fixture
+          image: docker.io/library/nginx:1.27.5
+          env:
+            - name: SYNTHETIC_SECRET
+              value: SUMMARY_FIXTURE_DO_NOT_PUBLISH_1108
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: summary-verification
+  namespace: network
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get"]
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: summary-verification
+  namespace: network
+stringData:
+  synthetic-only: SUMMARY_FIXTURE_DO_NOT_PUBLISH_1108
