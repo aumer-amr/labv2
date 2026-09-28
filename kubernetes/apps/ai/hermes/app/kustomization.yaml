@@ -16,6 +16,7 @@ configMapGenerator:
   - name: hermes-discord-review
     files:
       - bridge.py=discord-review/bridge.py
+      - rollout.py=discord-review/rollout.py
   - name: hermes-bootstrap
     files:
       - bootstrap.py=bootstrap/bootstrap.py

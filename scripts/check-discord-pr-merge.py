@@ -69,6 +69,22 @@ class API:
 
 
 class MergeBoundary(unittest.TestCase):
+    def test_only_merged_main_receives_rollout_feedback(self):
+        for merged, branch in ((False, "main"), (True, "other"), (True, "main")):
+            api = API()
+            api.pr.update(state="closed", merged=merged, merge_commit_sha="c" * 40)
+            api.pr["base"]["ref"] = branch
+            calls = []
+            def observe(pr):
+                calls.append(pr)
+                return {"head": pr["merge_commit_sha"], "reason": "Flux pending", "rollout_done": False}
+            state = bridge.snapshot(api, 1, observe)
+            self.assertFalse(state["eligible"])
+            self.assertEqual(len(calls), int(merged and branch == "main"))
+            if calls:
+                self.assertEqual(state["head"], "c" * 40)
+                self.assertEqual(state["reason"], "Flux pending")
+
     def test_stale_review_explains_which_commit_changed(self):
         for changed, reason in (
             ("head", "The PR branch commit changed since this review (including a rebase); a fresh review is required."),

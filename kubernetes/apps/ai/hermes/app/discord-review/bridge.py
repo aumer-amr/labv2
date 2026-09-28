@@ -83,7 +83,7 @@ def review_metadata(comment):
     return data
 
 
-def snapshot(api, number):
+def snapshot(api, number, on_merge=None):
     pr = api.request(f"pulls/{number}")
     state = {
         "number": number, "title": pr["title"], "head": pr["head"]["sha"],
@@ -92,6 +92,8 @@ def snapshot(api, number):
     }
     if pr["state"] != "open":
         state["reason"] = "Merged." if pr.get("merged") else "Closed."
+        if pr.get("merged") and pr["base"]["ref"] == "main" and on_merge:
+            state.update(on_merge(pr))
         return state
     comments = api.pages(f"issues/{number}/comments")
     # The latest authentic reviewer comment wins, including a newer negative verdict.
@@ -201,6 +203,15 @@ def authorized_card(interaction, cards, allowed, channel_id, bot_id):
 def main():
     # discord.py ships in the pinned Hermes image; no extra package or bot is needed.
     import discord
+    import importlib.util
+    from datetime import datetime, timedelta, timezone
+    from pathlib import Path
+
+    # -I omits the script directory from sys.path; load only the mounted trusted module.
+    spec = importlib.util.spec_from_file_location("rollout", Path(__file__).with_name("rollout.py"))
+    rollout = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rollout)
+    kube = rollout.Kubernetes()
 
     api = GitHub(os.environ["GH_TOKEN"])
     allowed = user_ids(os.environ["DISCORD_ALLOWED_USERS"])
@@ -209,6 +220,10 @@ def main():
     db.execute("CREATE TABLE IF NOT EXISTS cards (number INTEGER PRIMARY KEY, data TEXT NOT NULL)")
     cards = {number: json.loads(data) for number, data in db.execute("SELECT number, data FROM cards")}
     lock = asyncio.Lock()
+
+    def refresh(number):
+        previous = cards.get(number, {}).get("state", {}).get("rollout")
+        return snapshot(api, number, lambda pr: rollout.feedback(api, kube, pr, previous))
 
     def save(number, card):
         db.execute("INSERT OR REPLACE INTO cards VALUES (?, ?)", (number, json.dumps(card)))
@@ -225,7 +240,7 @@ def main():
         async def show(self, state):
             number = state["number"]
             previous = cards.get(number)
-            if previous and state["reason"] in {"Merged.", "Closed."}:
+            if previous and state["reason"] in {"Merged.", "Closed."} and "rollout" not in state:
                 state = {**previous["state"], "eligible": False, "reason": state["reason"]}
             token = secrets.token_urlsafe(18)
             view = discord.ui.View(timeout=None)
@@ -239,7 +254,8 @@ def main():
             embed = discord.Embed(
                 title=f"#{number} {state['title']}"[:256],
                 url=f"https://github.com/{REPO}/pull/{number}",
-                description=f"AI recommendation: **{state['recommendation']}**\n\n{state['reason']}\n\nCommit: `{state['head'][:12]}`",
+                description=("" if "rollout" in state else f"AI recommendation: **{state['recommendation']}**\n\n")
+                + f"{state['reason']}\n\nCommit: `{state['head']}`",
                 color=0x2ECC71 if state["eligible"] else 0xF1C40F,
             )
             channel = self.get_channel(channel_id) or await self.fetch_channel(channel_id)
@@ -263,13 +279,21 @@ def main():
                 try:
                     async with lock:
                         opened = await asyncio.to_thread(api.pages, "pulls?state=open")
+                        # ponytail: latest 100 closures; paginate if this repo exceeds 100 per day.
+                        closed = await asyncio.to_thread(api.request, "pulls?state=closed&sort=updated&direction=desc&per_page=100")
+                        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+                        merged = {p["number"] for p in closed if p.get("merged_at")
+                                  and p["base"]["ref"] == "main"
+                                  and datetime.fromisoformat(p["merged_at"].replace("Z", "+00:00")) >= cutoff
+                                  and not cards.get(p["number"], {}).get("state", {}).get("rollout_done")}
                         numbers = {p["number"] for p in opened} | {
                             n for n, c in cards.items() if c["state"]["reason"] not in {"Merged.", "Closed."}
-                        }
+                            and not c["state"].get("rollout_done")
+                        } | merged
                         for number in sorted(numbers):
                             try:
-                                state = await asyncio.to_thread(snapshot, api, number)
-                                if state["comment"] or number in cards:
+                                state = await asyncio.to_thread(refresh, number)
+                                if state["comment"] or number in cards or "rollout" in state:
                                     await self.show(state)
                             except Exception as exc:
                                 LOG.warning("PR %s refresh failed: %s", number, type(exc).__name__)
@@ -294,7 +318,7 @@ def main():
                     LOG.info("PR %s merged by Discord user %s at %s", number, interaction.user.id, merged_sha)
                     notice = "" if commented else " GitHub rejected or could not confirm the `/merge` comment; check the PR."
                     await interaction.followup.send(f"Merged PR #{number} at `{merged_sha[:12]}`.{notice}", ephemeral=True)
-                    await self.show(await asyncio.to_thread(snapshot, api, number))
+                    await self.show(await asyncio.to_thread(refresh, number))
                 except Blocked as exc:
                     await interaction.followup.send(f"Not merged: {exc}", ephemeral=True)
                 except Exception as exc:

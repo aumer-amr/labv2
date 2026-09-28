@@ -11,6 +11,7 @@ on:
       - kubernetes/apps/ai/hermes/app/helmrelease.yaml
       - kubernetes/apps/ai/hermes/app/kustomization.yaml
       - scripts/check-discord-pr-merge.py
+      - scripts/check-flux-rollout.py
 
 permissions:
   contents: read
@@ -25,4 +26,6 @@ jobs:
         with:
           persist-credentials: false
       - name: Exercise authorization and stale-commit rejection
-        run: python3 scripts/check-discord-pr-merge.py
+        run: |
+          python3 scripts/check-discord-pr-merge.py
+          python3 scripts/check-flux-rollout.py
