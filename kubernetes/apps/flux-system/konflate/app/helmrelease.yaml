@@ -18,7 +18,8 @@ spec:
     config:
       repo: github://aumer-amr/labv2
       statusChecks: true
-      prComments: true
+      # The rendered-summary workflow owns the revision-bound PR summary.
+      prComments: false
       publicUrl: https://konflate.${SECRET_DOMAIN}
       mcp: true
       verifyImages: true
