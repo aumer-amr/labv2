@@ -120,6 +120,11 @@ def snapshot(api, number, on_merge=None):
         or pr.get("mergeable") is not True or pr.get("mergeable_state") != "clean"
     ):
         state["reason"] = "GitHub has not marked this same-repository PR ready to merge."
+        if pr.get("mergeable_state") == "behind":
+            state["reason"] = (
+                "This PR branch is behind main. Update it by merging main or rebasing, "
+                "then wait for checks and a fresh AI review."
+            )
         return state
     checks = api.pages(f"commits/{state['head']}/check-runs?filter=latest", "check_runs")
     statuses = api.pages(f"commits/{state['head']}/statuses")

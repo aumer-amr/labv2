@@ -69,6 +69,21 @@ class API:
 
 
 class MergeBoundary(unittest.TestCase):
+    def test_behind_branch_updates_card_with_actionable_reason(self):
+        api = API()
+        ready = bridge.snapshot(api, 1)
+        self.assertTrue(ready["eligible"])
+        api.pr["mergeable_state"] = "behind"
+        behind = bridge.snapshot(api, 1)
+        self.assertFalse(behind["eligible"])
+        self.assertEqual(behind["reason"],
+                         "This PR branch is behind main. Update it by merging main or rebasing, "
+                         "then wait for checks and a fresh AI review.")
+        self.assertNotEqual(behind, ready)
+        with self.assertRaisesRegex(bridge.Blocked, "behind main"):
+            bridge.merge(api, ready)
+        self.assertEqual(api.writes, [])
+
     def test_only_merged_main_receives_rollout_feedback(self):
         for merged, branch in ((False, "main"), (True, "other"), (True, "main")):
             api = API()
