@@ -1,0 +1,33 @@
+{
+  "type": "custom:waste-bin-card",
+  "streams": [
+    {
+      "entity": "sensor.afvalbeheer_circulus_circulus_gft",
+      "name": "GFT",
+      "icon": "mdi:leaf",
+      "color": "#22c55e"
+    },
+    {
+      "entity": "sensor.afvalbeheer_circulus_circulus_papier",
+      "name": "Paper",
+      "icon": "mdi:newspaper-variant-outline",
+      "color": "#f59e0b"
+    },
+    {
+      "entity": "sensor.afvalbeheer_circulus_circulus_pmd",
+      "name": "PMD",
+      "icon": "mdi:recycle",
+      "color": "#3b82f6"
+    },
+    {
+      "entity": "sensor.afvalbeheer_circulus_circulus_restafval",
+      "name": "Residual",
+      "icon": "mdi:trash-can",
+      "color": "#9e9e9e"
+    }
+  ],
+  "grid_options": {
+    "columns": "full",
+    "rows": "auto"
+  }
+}

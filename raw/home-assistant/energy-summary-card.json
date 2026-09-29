@@ -1,0 +1,12 @@
+{
+  "type": "custom:energy-summary-card",
+  "power": "sensor.electricity_meter_power_consumption",
+  "export": "sensor.electricity_meter_power_production",
+  "tariff": "sensor.electricity_meter_active_tariff",
+  "electricity": [
+    "sensor.electricity_meter_energy_consumption_tarif_1",
+    "sensor.electricity_meter_energy_consumption_tarif_2"
+  ],
+  "gas": "sensor.gas_meter_gas_consumption",
+  "grid_options": { "columns": "full", "rows": "auto" }
+}
