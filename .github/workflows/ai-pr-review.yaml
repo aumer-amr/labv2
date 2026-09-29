@@ -54,8 +54,11 @@ jobs:
           printf 'key=%s\n' "$LITELLM_API_KEY" >> "$GITHUB_OUTPUT"
 
       - name: Install evidence parser
-        uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
+          # Skip discovery through mise.jdx.dev, which the runner cannot resolve.
+          # renovate: datasource=github-releases depName=jdx/mise
+          version: 2026.9.17
           install_args: yq
           cache: false
 

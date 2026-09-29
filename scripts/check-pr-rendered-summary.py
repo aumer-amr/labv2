@@ -71,6 +71,12 @@ assert "credentials" not in body
 assert "unavailable" in summary.body(event, {})
 assert "unavailable" in summary.body(event, {**data, "head": "c" * 40})
 assert "None observed" in summary.body(event, evidence(old, old))
+custom_old = [resource("InferenceService", "model", spec={"image": "example/model:1", "token": SENTINEL})]
+custom_new = deepcopy(custom_old)
+custom_new[0]["spec"]["image"] = "example/model:2"
+custom_body = summary.body(event, evidence(custom_old, custom_new))
+assert "InferenceService demo/model`: changed" in custom_body
+assert SENTINEL not in custom_body
 many = [resource("ConfigMap", f"item-{i}") for i in range(summary.LIMIT + 1)]
 assert "1 additional changed resources omitted" in summary.body(event, evidence([], many))
 defaulted = deepcopy(new)

@@ -132,7 +132,7 @@ def body(event, evidence):
     ambiguous = evidence["ambiguous"]
     if not isinstance(rows, list) or len(rows) > LIMIT or any(type(n) is not int or n < 0 for n in (omitted, ambiguous)):
         raise ValueError("invalid summary")
-    namespaces, workloads, images, replicas, deletions, rbac = [], [], [], [], [], []
+    namespaces, workloads, images, replicas, deletions, rbac, other = [], [], [], [], [], [], []
     for row in rows:
         kind, namespace, name, status, old_count, new_count, old_images, new_images = row
         kind = token(kind, r"[A-Za-z][A-Za-z0-9]{0,100}")
@@ -160,9 +160,11 @@ def body(event, evidence):
             deletions.append(ref)
         if kind in RBAC:
             rbac.append(f"{ref}: {status}")
+        if kind not in WORKLOADS | RBAC:
+            other.append(f"{ref}: {status}")
     lines.append("Namespaces: " + (", ".join(f"`{n}`" for n in sorted(set(namespaces))) or "none"))
     for title, items in (("Workloads", workloads), ("Images", images), ("Replica counts", replicas),
-                         ("Resource deletions", deletions), ("RBAC changes", rbac)):
+                         ("Resource deletions", deletions), ("RBAC changes", rbac), ("Other resources", other)):
         lines.append(f"### {title}\n\n" + ("\n".join(f"- {item}" for item in items) or "None observed in the available render."))
     lines.append("**Evidence limits:** Offline Flate output only. Secret objects and values are excluded; SOPS decryption, live-generated values and suspended producers are unavailable. Replica defaults are 1 where omitted; autoscaler/runtime counts are unavailable. Deletions mean absent rendered objects, not confirmed live deletion. RBAC lists affected objects, not permission analysis.")
     if omitted:
