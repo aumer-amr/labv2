@@ -17,7 +17,7 @@ spec:
           server:
             image: &image
               repository: docker.io/sweisgerber/snapcast
-              tag: v0.35.0@sha256:f58097c9a2d57ec490cc2b82356b741260a58b3b30247767d17acec6b66a863d
+              tag: v0.35.0@sha256:712830c51cdf2506eef810bd3453cf2f02bf6dd55524152923e3c1e160a0cb88
             command: ["/usr/bin/snapserver"]
             args: ["--config", "/etc/snapserver/snapserver.conf"]
             probes:
