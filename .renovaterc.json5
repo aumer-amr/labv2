@@ -59,6 +59,13 @@
       minimumReleaseAge: "3 days",
     },
     {
+      description: "Use GitHub releases for the annotated topf Talos version",
+      matchDatasources: ["custom.talos-factory"],
+      matchFileNames: ["talos/topf.yaml"],
+      matchPackageNames: ["siderolabs/talos"],
+      enabled: false,
+    },
+    {
       description: "Talos Group",
       groupName: "talos",
       matchDatasources: ["github-releases"],
