@@ -63,19 +63,19 @@ jobs:
           cache: false
 
       - name: Review PR
-        uses: misospace/pr-reviewer-action@a962cdfc21c378a3b8cf2d8b194c787408e60e6b # v2.5.0
+        uses: misospace/pr-reviewer-action@c86f3e94191c9078e92714b10f39deb8d3466268 # v3.2.0
         with:
-          github_token: ${{ github.token }}
-          ai_base_url: http://litellm.ai.svc.cluster.local:4000/v1
-          ai_model: gpt-5.6-terra
-          ai_api_key: ${{ steps.model-key.outputs.key }}
-          ai_temperature: ""
-          ai_tokens_param: max_completion_tokens
-          ai_max_tokens: "16000"
-          ai_response_format: json_object
-          ai_primary_retries: "2"
-          system_prompt_mode: append
-          system_prompt: >-
+          github-token: ${{ github.token }}
+          ai-base-url: http://litellm.ai.svc.cluster.local:4000/v1
+          ai-model: gpt-5.6-terra
+          ai-api-key: ${{ steps.model-key.outputs.key }}
+          ai-temperature: ""
+          ai-tokens-param: max_completion_tokens
+          ai-max-tokens: "16000"
+          ai-response-format: json_object
+          ai-primary-retries: "2"
+          system-prompt-mode: append
+          system-prompt: >-
             Review correctness, security, and repository conventions first.
             Apply Caveman review style: concise actionable findings with exact file, line, problem, and fix.
             Apply Ponytail complexity checks: identify unnecessary abstractions, dependencies, and duplicated
@@ -94,24 +94,31 @@ jobs:
             only to live applies; do not invent application/Kubernetes compatibility-matrix requirements.
             For immutable Job warnings, inspect helm.sh/hook and helm.sh/hook-delete-policy before
             recommending force or manual deletion; before-hook-creation handles Helm hook replacement.
-          standards_file: ${{ runner.temp }}/review-standards.md
+          standards-file: ${{ runner.temp }}/review-standards.md
           # Both provider configuration and executable come from the trusted base checkout.
-          evidence_providers_file: .github/pr-review-providers.json
-          review_verbosity: concise
-          allowed_source_hosts: github.com,api.github.com
-          tool_mode: native_loop
-          tool_mcp_servers: konflate=http://konflate.flux-system.svc.cluster.local:8080/mcp
-          tool_allowed_gh_api_repos: aumer-amr/labv2
-          tool_max_rounds: "4"
-          tool_max_requests: "16"
-          tool_loop_wall_clock_sec: "600"
-          tool_enable_for_forks: "false"
-          evidence_enable_for_forks: "false"
-          ci_status_check: "true"
-          ci_timeout_sec: "600"
-          publish_review_comment: "true"
-          publish_mode: comment
+          evidence-providers-file: .github/pr-review-providers.json
+          review-verbosity: concise
+          allowed-source-hosts: github.com,api.github.com
+          tool-mode: native_loop
+          tool-mcp-servers: konflate=http://konflate.flux-system.svc.cluster.local:8080/mcp
+          tool-allowed-gh-api-repos: aumer-amr/labv2
+          tool-max-rounds: "4"
+          tool-max-requests: "16"
+          tool-loop-wall-clock-sec: "600"
+          tool-enable-for-forks: "false"
+          evidence-enable-for-forks: "false"
+          ci-status-check: "true"
+          ci-timeout-sec: "600"
+          publish-review-comment: "true"
+          publish-mode: comment
           # Discord merge approval is bound to exact head/base SHAs, including rebases.
-          skip_if_diff_unchanged: "false"
-          allow_approve: "false"
-          fail_on_request_changes: "false"
+          skip-if-diff-unchanged: "false"
+          allow-approve: "false"
+          fail-on-request-changes: "false"
+          # Preserve v2 behavior where v3 changes defaults.
+          verdict-policy: model
+          deep-review: "false"
+          inline-findings: "false"
+          on-model-failure: fail
+          tool-max-tokens-per-turn: "400"
+          tool-turn-timeout-sec: "60"
