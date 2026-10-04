@@ -230,6 +230,13 @@ spec:
               kubernetes.io/metadata.name: home
           podSelector:
             matchLabels:
+              app.kubernetes.io/instance: sendspin
+              app.kubernetes.io/name: sendspin
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: home
+          podSelector:
+            matchLabels:
               app.kubernetes.io/managed-by: kopiur
         - namespaceSelector: {}
           podSelector:
