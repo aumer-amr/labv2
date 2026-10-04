@@ -11,5 +11,6 @@ resources:
   - ./home-assistant/ks.yaml
   - ./music-assistant/ks.yaml
   - ./network-policies/ks.yaml
+  - ./sendspin/ks.yaml
   - ./snapcast/ks.yaml
   - ./zigbee2mqtt/ks.yaml

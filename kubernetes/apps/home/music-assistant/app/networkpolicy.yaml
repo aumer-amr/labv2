@@ -13,6 +13,14 @@ spec:
     - Egress
   ingress:
     - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: sendspin
+              app.kubernetes.io/name: sendspin
+      ports:
+        - port: 8927
+          protocol: TCP
+    - from:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: network

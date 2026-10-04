@@ -12,6 +12,7 @@ spec:
   values:
     controllers:
       snapcast:
+        replicas: 0
         strategy: Recreate
         containers:
           server:
