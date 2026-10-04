@@ -153,6 +153,11 @@ spec:
     name: immich
   interval: 1h
   values:
+    defaultPodOptions:
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
     global:
       createDefaultServiceAccount: false
     controllers:
