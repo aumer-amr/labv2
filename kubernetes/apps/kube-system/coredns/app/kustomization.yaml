@@ -4,4 +4,5 @@ kind: Kustomization
 resources:
   - ./helmrelease.yaml
   - ./networkpolicy.yaml
+  - ./immich-networkpolicy.yaml
   - ./ocirepository.yaml

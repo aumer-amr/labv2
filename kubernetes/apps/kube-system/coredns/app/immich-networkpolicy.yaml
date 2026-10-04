@@ -1,0 +1,34 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: immich-dns
+spec:
+  podSelector:
+    matchLabels:
+      k8s-app: kube-dns
+  policyTypes:
+    - Ingress
+  ingress:
+    - from: &id001
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: home
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: immich
+              app.kubernetes.io/name: immich
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: home
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: immich-machine-learning
+              app.kubernetes.io/name: immich-machine-learning
+      ports:
+        - port: 53
+          protocol: UDP
+    - from: *id001
+      ports:
+        - port: 53
+          protocol: TCP
