@@ -12,6 +12,14 @@ spec:
     - Ingress
   ingress:
     - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: music-assistant
+              app.kubernetes.io/name: music-assistant
+      ports:
+        - port: 1705
+          protocol: TCP
+    - from:
         - ipBlock:
             cidr: 10.10.1.0/24
         - ipBlock:

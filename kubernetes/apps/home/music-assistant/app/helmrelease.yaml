@@ -1,0 +1,137 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: music-assistant
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: music-assistant
+  interval: 1h
+  values:
+    controllers:
+      music-assistant:
+        strategy: Recreate
+        initContainers:
+          configure-streams:
+            image:
+              repository: ghcr.io/music-assistant/server
+              tag: 2.10.5
+            command: ["python", "-c"]
+            args:
+              - |-
+                import json
+                import os
+                import tempfile
+                from pathlib import Path
+
+                path = Path("/data/settings.json")
+                settings = json.loads(path.read_text()) if path.exists() else {}
+                streams = settings.setdefault("core", {}).setdefault("streams", {})
+                streams["domain"] = "streams"
+                streams.setdefault("values", {})["publish_ip"] = "10.10.1.116"
+                with tempfile.NamedTemporaryFile("w", dir=path.parent, delete=False) as file:
+                    json.dump(settings, file)
+                os.replace(file.name, path)
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: ["ALL"]
+        containers:
+          app:
+            image:
+              repository: ghcr.io/music-assistant/server
+              tag: 2.10.5
+            env:
+              TZ: Europe/Amsterdam
+              LOG_LEVEL: info
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 8095
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness: *probes
+              startup:
+                <<: *probes
+                spec:
+                  httpGet:
+                    path: /
+                    port: 8095
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: ["ALL"]
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+      labels:
+        network.home.arpa/from-envoy-internal: allow
+    service:
+      app:
+        controller: music-assistant
+        ports:
+          http:
+            port: 8095
+            appProtocol: kubernetes.io/ws
+      players:
+        controller: music-assistant
+        type: LoadBalancer
+        annotations:
+          lbipam.cilium.io/ips: 10.10.1.116
+        allocateLoadBalancerNodePorts: false
+        externalTrafficPolicy: Local
+        loadBalancerSourceRanges:
+          - 10.10.1.0/24
+          - 10.20.0.0/24
+        ports:
+          api:
+            port: 8095
+          stream:
+            port: 8097
+          sendspin:
+            port: 8927
+    persistence:
+      data:
+        existingClaim: music-assistant
+        globalMounts:
+          - path: /data
+      tmp:
+        type: emptyDir
+    route:
+      app:
+        hostnames:
+          - music-assistant.${SECRET_DOMAIN}
+          - mass.${SECRET_DOMAIN}
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+            sectionName: https
+        rules:
+          - backendRefs:
+              - identifier: app
+                port: http
+        annotations:
+          gatus.home-operations.com/endpoint: 'conditions: ["[STATUS] == 200"]'
