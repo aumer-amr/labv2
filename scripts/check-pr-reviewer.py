@@ -30,16 +30,22 @@ assert len(checkouts) == 1
 assert checkouts[0]["with"]["ref"] == "${{ github.event.pull_request.base.sha }}"
 assert checkouts[0]["with"]["persist-credentials"] is False
 review = job["steps"][-1]["with"]
-assert review["publish_mode"] == "comment"
-assert review["skip_if_diff_unchanged"] == "false"
-assert review["allow_approve"] == "false"
-assert review["tool_enable_for_forks"] == "false"
-assert review["evidence_providers_file"] == ".github/pr-review-providers.json"
-assert review["evidence_enable_for_forks"] == "false"
-providers = json.loads((ROOT / review["evidence_providers_file"]).read_text())
+assert review["publish-mode"] == "comment"
+assert review["verdict-policy"] == "model"
+assert review["deep-review"] == "false"
+assert review["inline-findings"] == "false"
+assert review["on-model-failure"] == "fail"
+assert review["tool-max-tokens-per-turn"] == "400"
+assert review["tool-turn-timeout-sec"] == "60"
+assert review["skip-if-diff-unchanged"] == "false"
+assert review["allow-approve"] == "false"
+assert review["tool-enable-for-forks"] == "false"
+assert review["evidence-providers-file"] == ".github/pr-review-providers.json"
+assert review["evidence-enable-for-forks"] == "false"
+providers = json.loads((ROOT / review["evidence-providers-file"]).read_text())
 assert providers["providers"][0]["command"] == ["python3", "scripts/pr-review-oci.py"]
-assert review["ai_base_url"].startswith("http://litellm.ai.svc.cluster.local:")
-assert "http://konflate.flux-system.svc.cluster.local:" in review["tool_mcp_servers"]
+assert review["ai-base-url"].startswith("http://litellm.ai.svc.cluster.local:")
+assert "http://konflate.flux-system.svc.cluster.local:" in review["tool-mcp-servers"]
 
 release = read_yaml("kubernetes/apps/actions-runners/pr-reviewer/app/helmrelease.yaml")
 values = release["spec"]["values"]
