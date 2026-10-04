@@ -107,6 +107,7 @@ spec:
     route:
       web:
         annotations:
+          gatus.home-operations.com/enabled: "false"
           gatus.home-operations.com/endpoint: |-
             conditions: ["[STATUS] == 200"]
         hostnames:
