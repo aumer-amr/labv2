@@ -104,6 +104,9 @@ checksum = "sha256:b4d22673e9246cbd628881f1a9ef3b090085dced291e42d804555cee8e8d4
 url = "https://github.com/fluxcd/flux2/releases/download/v2.9.6/flux_2.9.6_linux_amd64.tar.gz"
 url_api = "https://api.github.com/repos/fluxcd/flux2/releases/assets/602941244"
 
+[tools.flux2."platforms.linux-x64".provenance.slsa]
+url = "https://github.com/fluxcd/flux2/releases/download/v2.9.6/provenance.intoto.jsonl"
+
 [tools.flux2."platforms.linux-x64-musl"]
 checksum = "sha256:b4d22673e9246cbd628881f1a9ef3b090085dced291e42d804555cee8e8d42c5"
 url = "https://github.com/fluxcd/flux2/releases/download/v2.9.6/flux_2.9.6_linux_amd64.tar.gz"
