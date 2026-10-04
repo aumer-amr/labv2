@@ -4,4 +4,5 @@ kind: Kustomization
 resources:
   - ./helmrelease.yaml
   - ./networkpolicy.yaml
+  - ./spotify-networkpolicy.yaml
   - ./ocirepository.yaml

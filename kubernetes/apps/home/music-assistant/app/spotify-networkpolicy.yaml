@@ -1,0 +1,40 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: music-assistant-spotify
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: music-assistant
+      app.kubernetes.io/name: music-assistant
+  egress:
+    # Observe DNS answers so dynamic Spotify access points receive an allowance.
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchPattern: "*"
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+    - toFQDNs:
+        - matchPattern: "ap-*.spotify.com"
+      toPorts:
+        - ports:
+            - port: "4070"
+              protocol: TCP
