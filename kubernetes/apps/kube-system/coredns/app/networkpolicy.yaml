@@ -223,6 +223,13 @@ spec:
               kubernetes.io/metadata.name: home
           podSelector:
             matchLabels:
+              app.kubernetes.io/instance: music-assistant
+              app.kubernetes.io/name: music-assistant
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: home
+          podSelector:
+            matchLabels:
               app.kubernetes.io/managed-by: kopiur
         - namespaceSelector: {}
           podSelector:
