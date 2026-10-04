@@ -3,17 +3,31 @@ parallel = true
 skip = ["merge", "rebase"]
 
 [pre-commit.commands.format-just]
-glob = ["*.just", ".justfile"]
+glob = ["justfile", "*.just", ".justfile"]
 run = 'for f in {staged_files}; do just --justfile "$f" --fmt; done'
 stage_fixed = true
 
-[pre-commit.commands.format-mise]
-glob = [".mise.toml", ".mise/config.toml"]
+# Formatting must finish before lock generation reads the config.
+[[pre-commit.jobs]]
+name = "mise"
+glob = [".mise/config.toml", ".mise/conf.d/*.toml"]
+
+[pre-commit.jobs.group]
+piped = true
+
+[[pre-commit.jobs.group.jobs]]
+name = "format-mise"
 run = "mise fmt"
 stage_fixed = true
 
+[[pre-commit.jobs.group.jobs]]
+name = "lock-mise"
+run = 'mise lock && git ls-files --modified --deleted --others --exclude-standard -z -- .mise/mise.lock .mise/locks | xargs -0 -r git add --'
+
 [pre-commit.commands.format-json]
 glob = ["*.json", "*.json5", "*.jsonc"]
+# Native lock sidecars are digest-pinned; formatting changes their identity.
+exclude = [".mise/locks/**"]
 run = "oxfmt {staged_files}"
 stage_fixed = true
 
@@ -24,12 +38,9 @@ stage_fixed = true
 
 [pre-commit.commands.format-yaml]
 glob = ["*.yaml", "*.yml"]
+exclude = [".mise/locks/**"]
 run = "oxfmt {staged_files}"
 stage_fixed = true
-
-[pre-commit.commands.mise-lock]
-glob = [".mise.toml", ".mise/config.toml"]
-run = 'mise lock && { for f in {staged_files}; do l="$(dirname "$f")/mise.lock"; [ -f "$l" ] && git add "$l"; done; true; }'
 
 [pre-commit.commands.zizmor]
 glob = [".github/workflows/*.yaml", ".github/actions/**/action.yaml"]
