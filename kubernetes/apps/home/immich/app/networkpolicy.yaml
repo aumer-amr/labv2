@@ -132,6 +132,7 @@ spec:
         - matchName: huggingface.co
         - matchPattern: "*.huggingface.co"
         - matchName: hf.co
+        - matchName: us.aws.cdn.hf.co
         - matchPattern: "*.hf.co"
         - matchPattern: "*.xethub.hf.co"
       toPorts:
