@@ -107,6 +107,8 @@ spec:
                 memory: 128Mi
       cephfs:
         enabled: true
+        # Preserve the previous chart's shared-volume ownership behavior.
+        fsGroupPolicy: None
         name: rook-ceph.cephfs.csi.ceph.com
         snapshotPolicy: volumeGroupSnapshot
         grpcTimeout: 150
