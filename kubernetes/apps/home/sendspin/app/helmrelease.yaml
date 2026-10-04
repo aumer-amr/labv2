@@ -16,7 +16,7 @@ spec:
           install:
             image: &image
               repository: docker.io/library/python
-              tag: 3.13-slim-bookworm
+              tag: 3.14-slim-bookworm
             command: ["/bin/sh", "-ec"]
             args:
               - |-
