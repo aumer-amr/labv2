@@ -1,0 +1,89 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: immich-share
+  annotations:
+    gatus.home-operations.com/endpoint: |-
+      url: https://share.${SECRET_DOMAIN}/api/server/ping
+      conditions: ["[STATUS] == 200"]
+spec:
+  hostnames:
+    - share.${SECRET_DOMAIN}
+  parentRefs:
+    - name: envoy-external
+      namespace: network
+  rules:
+    # Native share pages and their static assets. The root and login pages have no route.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /share
+          method: GET
+        - path:
+            type: PathPrefix
+            value: /s
+          method: GET
+        - path:
+            type: PathPrefix
+            value: /_app
+          method: GET
+        - path:
+            type: PathPrefix
+            value: /assets
+          method: GET
+        - path:
+            type: PathPrefix
+            value: /fonts
+          method: GET
+        - path:
+            type: PathPrefix
+            value: /icons
+          method: GET
+        - path:
+            type: RegularExpression
+            value: '^/(favicon(-[0-9]+)?\.(ico|png)|immich-logo\.svg|feature-panel\.png|apple-icon-[0-9]+\.png)$'
+          method: GET
+      backendRefs:
+        - name: immich
+          port: 2283
+    # Only read endpoints used by shared albums in Immich v3.2.4.
+    # UUID matching avoids exposing asset/album management and collection endpoints.
+    - matches:
+        - path:
+            type: RegularExpression
+            value: "^/api/(server/(ping|config|features|media-types|version)|shared-links/me|timeline/buckets?|assets/[0-9a-fA-F-]{36}(/(thumbnail|original|video/playback))?|albums/[0-9a-fA-F-]{36}(/map-markers)?)$"
+          method: GET
+        - path:
+            type: RegularExpression
+            value: "^/api/assets/[0-9a-fA-F-]{36}/(thumbnail|original|video/playback)$"
+          method: HEAD
+      backendRefs:
+        - name: immich
+          port: 2283
+    # Immich validates the share key/slug, password, expiry and per-share permissions.
+    # Guest uploads are added to the shared album by Immich itself.
+    - matches:
+        - path:
+            type: Exact
+            value: /api/assets
+          method: POST
+        - path:
+            type: Exact
+            value: /api/download/info
+          method: POST
+        - path:
+            type: Exact
+            value: /api/download/archive
+          method: POST
+        - path:
+            type: Exact
+            value: /api/shared-links/login
+          method: POST
+      backendRefs:
+        - name: immich
+          port: 2283
+      timeouts:
+        request: 0s
+        backendRequest: 0s
