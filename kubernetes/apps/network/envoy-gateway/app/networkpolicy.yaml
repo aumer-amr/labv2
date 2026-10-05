@@ -495,14 +495,6 @@ specs:
                 protocol: TCP
       - toServices:
           - k8sService:
-              serviceName: snapcast-web
-              namespace: home
-        toPorts:
-          - ports:
-              - port: "1780"
-                protocol: TCP
-      - toServices:
-          - k8sService:
               serviceName: zigbee2mqtt
               namespace: home
         toPorts:
