@@ -43,15 +43,6 @@ spec:
         - port: 8927
           protocol: TCP
   egress:
-    # Existing configured Snapcast provider uses its JSON-RPC control port.
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/instance: snapcast
-              app.kubernetes.io/name: snapcast
-      ports:
-        - port: 1705
-          protocol: TCP
     - to:
         - namespaceSelector:
             matchLabels:

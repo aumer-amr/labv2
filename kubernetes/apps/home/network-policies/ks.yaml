@@ -7,7 +7,6 @@ metadata:
 spec:
   dependsOn:
     - name: home-assistant
-    - name: snapcast
     - name: kopiur
       namespace: kube-system
     - name: coredns
