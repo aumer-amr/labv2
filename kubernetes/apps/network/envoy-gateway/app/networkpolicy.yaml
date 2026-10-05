@@ -129,8 +129,9 @@ spec:
     matchLabels:
       gateway.envoyproxy.io/owning-gateway-name: envoy-internal
   ingress:
-    - fromEntities:
-        - world
+    - fromCIDRSet:
+        - cidr: 10.10.1.0/24
+        - cidr: 10.20.0.0/24
       toPorts:
         - ports:
             - port: "10080"
@@ -141,8 +142,9 @@ spec:
         - ports:
             - port: "10080"
               protocol: TCP
-    - fromEntities:
-        - world
+    - fromCIDRSet:
+        - cidr: 10.10.1.0/24
+        - cidr: 10.20.0.0/24
       toPorts:
         - ports:
             - port: "10443"
@@ -153,8 +155,9 @@ spec:
         - ports:
             - port: "10443"
               protocol: TCP
-    - fromEntities:
-        - world
+    - fromCIDRSet:
+        - cidr: 10.10.1.0/24
+        - cidr: 10.20.0.0/24
       toPorts:
         - ports:
             - port: "10443"
@@ -286,19 +289,86 @@ specs:
       matchLabels:
         k8s:io.kubernetes.pod.namespace: network
         gateway.envoyproxy.io/owning-gateway-name: envoy-external
+    # Backend ingress is restricted by each application's own NetworkPolicy.
     egress:
-      - toEndpoints:
-          - matchLabels:
-              network.home.arpa/from-envoy-external: allow
+      - toServices:
+          - k8sService:
+              serviceName: sparkyfitness-frontend
+              namespace: fitness
         toPorts:
-          # ponytail: opted-in backends allow Envoy to all TCP ports; use port-specific capabilities if port isolation becomes necessary.
           - ports:
-              - port: "1"
-                endPort: 65535
+              - port: "8080"
                 protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: konflate
+              namespace: flux-system
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: webhook-receiver
+              namespace: flux-system
+        toPorts:
+          - ports:
+              - port: "9292"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: home-assistant
+              namespace: home
+        toPorts:
+          - ports:
+              - port: "8123"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: immich
+              namespace: home
+        toPorts:
+          - ports:
+              - port: "2283"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: ocharted
+              namespace: kube-system
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: echo
+              namespace: network
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: gatus-sidecar
+              namespace: observability
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: kanidm
+              namespace: security
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+  # network/echo relies on this gateway ingress allowance.
   - endpointSelector:
       matchLabels:
-        network.home.arpa/from-envoy-external: allow
+        k8s:io.kubernetes.pod.namespace: network
+        app.kubernetes.io/instance: echo
+        app.kubernetes.io/name: echo
     ingress:
       - fromEndpoints:
           - matchLabels:
@@ -306,8 +376,22 @@ specs:
               gateway.envoyproxy.io/owning-gateway-name: envoy-external
         toPorts:
           - ports:
-              - port: "1"
-                endPort: 65535
+              - port: "8080"
+                protocol: TCP
+  # observability/gatus-sidecar relies on this gateway ingress allowance.
+  - endpointSelector:
+      matchLabels:
+        k8s:io.kubernetes.pod.namespace: observability
+        app.kubernetes.io/instance: gatus-sidecar
+        app.kubernetes.io/name: gatus-sidecar
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: network
+              gateway.envoyproxy.io/owning-gateway-name: envoy-external
+        toPorts:
+          - ports:
+              - port: "8080"
                 protocol: TCP
 ---
 apiVersion: cilium.io/v2
@@ -319,19 +403,174 @@ specs:
       matchLabels:
         k8s:io.kubernetes.pod.namespace: network
         gateway.envoyproxy.io/owning-gateway-name: envoy-internal
+    # Backend ingress is restricted by each application's own NetworkPolicy.
     egress:
-      - toEndpoints:
-          - matchLabels:
-              network.home.arpa/from-envoy-internal: allow
+      - toServices:
+          - k8sService:
+              serviceName: actual
+              namespace: administration
         toPorts:
-          # ponytail: opted-in backends allow Envoy to all TCP ports; use port-specific capabilities if port isolation becomes necessary.
           - ports:
-              - port: "1"
-                endPort: 65535
+              - port: "5006"
                 protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: paperless
+              namespace: administration
+        toPorts:
+          - ports:
+              - port: "8000"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: hermes
+              namespace: ai
+        toPorts:
+          - ports:
+              - port: "9119"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: litellm
+              namespace: ai
+        toPorts:
+          - ports:
+              - port: "4000"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: memini
+              namespace: ai
+        toPorts:
+          - ports:
+              - port: "8081"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: open-webui
+              namespace: ai
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: searxng
+              namespace: ai
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: atuin
+              namespace: developer-tools
+        toPorts:
+          - ports:
+              - port: "8888"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: konflate
+              namespace: flux-system
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: immich
+              namespace: home
+        toPorts:
+          - ports:
+              - port: "2283"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: music-assistant-app
+              namespace: home
+        toPorts:
+          - ports:
+              - port: "8095"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: snapcast-web
+              namespace: home
+        toPorts:
+          - ports:
+              - port: "1780"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: zigbee2mqtt
+              namespace: home
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: hubble-ui
+              namespace: kube-system
+        toPorts:
+          - ports:
+              - port: "8081"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: grafana-service
+              namespace: observability
+        toPorts:
+          - ports:
+              - port: "3000"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: kube-prometheus-stack-alertmanager
+              namespace: observability
+        toPorts:
+          - ports:
+              - port: "9093"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: kube-prometheus-stack-prometheus
+              namespace: observability
+        toPorts:
+          - ports:
+              - port: "9090"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: victoria-logs
+              namespace: observability
+        toPorts:
+          - ports:
+              - port: "9428"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: rook-ceph-mgr-dashboard
+              namespace: rook-ceph
+        toPorts:
+          - ports:
+              - port: "7000"
+                protocol: TCP
+      # Preserve OIDC token exchange and JWKS discovery for internal routes.
+      - toServices:
+          - k8sService:
+              serviceName: kanidm
+              namespace: security
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+  # observability/grafana-service relies on this gateway ingress allowance.
   - endpointSelector:
       matchLabels:
-        network.home.arpa/from-envoy-internal: allow
+        k8s:io.kubernetes.pod.namespace: observability
+        app: grafana
     ingress:
       - fromEndpoints:
           - matchLabels:
@@ -339,8 +578,53 @@ specs:
               gateway.envoyproxy.io/owning-gateway-name: envoy-internal
         toPorts:
           - ports:
-              - port: "1"
-                endPort: 65535
+              - port: "3000"
+                protocol: TCP
+  # observability/kube-prometheus-stack-alertmanager relies on this gateway ingress allowance.
+  - endpointSelector:
+      matchLabels:
+        k8s:io.kubernetes.pod.namespace: observability
+        alertmanager: kube-prometheus-stack
+        app.kubernetes.io/name: alertmanager
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: network
+              gateway.envoyproxy.io/owning-gateway-name: envoy-internal
+        toPorts:
+          - ports:
+              - port: "9093"
+                protocol: TCP
+  # observability/kube-prometheus-stack-prometheus relies on this gateway ingress allowance.
+  - endpointSelector:
+      matchLabels:
+        k8s:io.kubernetes.pod.namespace: observability
+        app.kubernetes.io/name: prometheus
+        operator.prometheus.io/name: kube-prometheus-stack
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: network
+              gateway.envoyproxy.io/owning-gateway-name: envoy-internal
+        toPorts:
+          - ports:
+              - port: "9090"
+                protocol: TCP
+  # observability/victoria-logs relies on this gateway ingress allowance.
+  - endpointSelector:
+      matchLabels:
+        k8s:io.kubernetes.pod.namespace: observability
+        app: server
+        app.kubernetes.io/instance: victoria-logs
+        app.kubernetes.io/name: victoria-logs-single
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: network
+              gateway.envoyproxy.io/owning-gateway-name: envoy-internal
+        toPorts:
+          - ports:
+              - port: "9428"
                 protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1

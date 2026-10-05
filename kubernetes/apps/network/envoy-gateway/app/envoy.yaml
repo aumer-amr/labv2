@@ -46,6 +46,58 @@ spec:
         compression:
           type: Zstd
 ---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: envoy-internal
+spec:
+  logging:
+    level:
+      default: info
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyDeployment:
+        replicas: 2
+        pod:
+          labels:
+            platform.home.arpa/tier: "0"
+          topologySpreadConstraints:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: proxy
+                  app.kubernetes.io/managed-by: envoy-gateway
+                  app.kubernetes.io/name: envoy
+              matchLabelKeys:
+                - gateway.envoyproxy.io/owning-gateway-name
+                - gateway.envoyproxy.io/owning-gateway-namespace
+              maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+        container:
+          imageRepository: mirror.gcr.io/envoyproxy/envoy
+          resources:
+            requests:
+              cpu: 100m
+            limits:
+              memory: 1Gi
+      envoyPDB:
+        maxUnavailable: 1
+      envoyService:
+        type: LoadBalancer
+        externalTrafficPolicy: Cluster
+        allocateLoadBalancerNodePorts: false
+        loadBalancerSourceRanges:
+          - 10.10.1.0/24
+          - 10.20.0.0/24
+  shutdown:
+    drainTimeout: 180s
+  telemetry:
+    metrics:
+      prometheus:
+        compression:
+          type: Zstd
+---
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
@@ -113,6 +165,10 @@ metadata:
 spec:
   gatewayClassName: envoy
   infrastructure:
+    parametersRef:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: envoy-internal
     annotations:
       external-dns.alpha.kubernetes.io/hostname: internal.${SECRET_DOMAIN}
       external-dns.kubernetes.io/hostname: internal.${SECRET_DOMAIN}
