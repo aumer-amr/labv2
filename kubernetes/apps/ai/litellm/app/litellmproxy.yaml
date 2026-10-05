@@ -5,6 +5,25 @@ kind: LiteLLMProxy
 metadata:
   name: litellm
 spec:
+  automountServiceAccountToken: false
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: ["ALL"]
+  volumes:
+    - name: tmp
+      emptyDir: {}
+  volumeMounts:
+    - name: tmp
+      mountPath: /tmp
   apiAccess:
     masterKeyRef:
       name: litellm-secret
@@ -56,6 +75,10 @@ spec:
         keys:
           - open-webui
   env:
+    - name: HOME
+      value: /tmp
+    - name: XDG_CACHE_HOME
+      value: /tmp/.cache
     - name: DATABASE_URL
       valueFrom:
         secretKeyRef:

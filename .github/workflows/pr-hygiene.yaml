@@ -31,8 +31,11 @@ jobs:
         with:
           # renovate: datasource=github-releases depName=jdx/mise
           version: 2026.10.2
-          install_args: oxfmt zizmor yq lefthook flux2
+          install_args: node zizmor yq lefthook flux2
           cache: false
+
+      - name: Install formatter after Node
+        run: mise install --locked oxfmt
 
       - name: Check PR changes
         env:
