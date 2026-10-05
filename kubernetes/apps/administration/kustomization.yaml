@@ -11,3 +11,4 @@ resources:
   - ./namespace.yaml
   - ./actual/ks.yaml
   - ./paperless/ks.yaml
+  - ./network-policies/ks.yaml
