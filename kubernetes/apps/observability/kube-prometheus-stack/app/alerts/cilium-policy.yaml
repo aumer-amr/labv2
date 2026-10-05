@@ -8,16 +8,22 @@ spec:
   groups:
     - name: cilium-policy
       rules:
-        - alert: CiliumPolicyDenied
+        - alert: CiliumPolicyDeniedFanout
           annotations:
-            description: Cilium network policy denied {{ $value }} {{ $labels.protocol }} flows in the {{ $labels.traffic_direction }} direction from {{ $labels.source_namespace }}/{{ $labels.source_workload }} to {{ $labels.destination_namespace }}/{{ $labels.destination_workload }} ({{ $labels.destination_ip }}) during the last 5 minutes.
-            summary: Cilium denied {{ $value }} flows from {{ $labels.source_namespace }}/{{ $labels.source_workload }} to {{ $labels.destination_namespace }}/{{ $labels.destination_workload }} ({{ $labels.destination_ip }}) in the last 5 minutes.
+            description: Cilium network policy denied traffic from pod {{ $labels.source_namespace }}/{{ $labels.source_pod }} (workload {{ $labels.source_workload }}) to {{ $value }} distinct IPs in the pod network during the last 5 minutes. Investigate possible scanning or lateral movement.
+            summary: Pod {{ $labels.source_namespace }}/{{ $labels.source_pod }} attempted {{ $value }} blocked cluster destinations in the last 5 minutes.
           expr: |-
-            sum by (source_namespace, source_workload, destination_ip, destination_namespace, destination_workload, traffic_direction, protocol) (
-              increase(hubble_drop_total{reason=~"(?i)policy[ _]denied"}[5m])
-              unless on (source_namespace, source_workload, protocol, destination_ip)
-              hubble:policy_denied:exclusion
-            ) >= 3
-          for: 2m
+            count by (source_namespace, source_pod, source_workload) (
+              sum by (source_namespace, source_pod, source_workload, destination_ip) (
+                increase(hubble_drop_total{
+                  reason=~"(?i)policy[ _]denied",
+                  source_namespace!="",
+                  source_pod!="",
+                  destination_ip=~"^10[.]42[.][0-9]{1,3}[.][0-9]{1,3}$"
+                }[5m])
+                unless on (source_namespace, source_workload, protocol, destination_ip)
+                hubble:policy_denied:exclusion
+              ) > 0
+            ) >= 10
           labels:
             severity: warning
