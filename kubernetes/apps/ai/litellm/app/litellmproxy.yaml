@@ -35,6 +35,7 @@ spec:
   image: ghcr.io/berriai/litellm:v1.104.0@sha256:625981c83410a3ea68eb0697590a57ec1d764d634514d54fa5db0591077ee839
   replicas: 1
   generalSettings:
+    disable_env_credential_login: true
     health_check_endpoint: /v1/health
     use_x_forwarded_for: true
     mcp_trusted_proxy_ranges:
