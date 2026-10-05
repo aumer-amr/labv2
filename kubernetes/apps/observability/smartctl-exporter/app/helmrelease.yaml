@@ -1,0 +1,29 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: smartctl-exporter
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: smartctl-exporter
+  interval: 1h
+  values:
+    fullnameOverride: smartctl-exporter
+    serviceMonitor:
+      enabled: true
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node
+    prometheusRules:
+      enabled: true
+      rules:
+        smartCTLDInterfaceSlow:
+          enabled: false
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 128Mi

@@ -578,6 +578,14 @@ spec:
     - to:
         - podSelector:
             matchLabels:
+              app.kubernetes.io/instance: smartctl-exporter
+              app.kubernetes.io/name: prometheus-smartctl-exporter
+      ports:
+        - port: 9633
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
               app.kubernetes.io/name: victoria-logs-collector
       ports:
         - port: 9429
