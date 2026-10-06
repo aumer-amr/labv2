@@ -15,6 +15,12 @@
   },
   packageRules: [
     {
+      description: "Let mise manage generated npm lock sidecars",
+      matchManagers: ["npm"],
+      matchFileNames: [".mise/locks/**"],
+      enabled: false,
+    },
+    {
       description: "Auto-merge trusted OCI digests",
       matchDatasources: ["docker"],
       matchUpdateTypes: ["digest"],
