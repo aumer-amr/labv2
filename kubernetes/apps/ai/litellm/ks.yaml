@@ -16,6 +16,8 @@ spec:
       namespace: ai
     - name: llmkube-models
       namespace: ai
+    - name: whisper
+      namespace: ai
     - name: envoy-gateway
       namespace: network
     - name: kube-prometheus-stack

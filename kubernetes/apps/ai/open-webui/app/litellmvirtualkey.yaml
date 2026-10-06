@@ -11,6 +11,7 @@ spec:
     - gpt-5.6-terra
     - gpt-5.6-sol
     - qwen3-embedding
+    - whisper-base
   proxyRef: litellm
   secretKey: key
   secretName: open-webui-litellm

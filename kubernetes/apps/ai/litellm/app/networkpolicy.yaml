@@ -169,6 +169,7 @@ spec:
               - matchName: qwen3-embedding-0-6b.ai.svc.cluster.local
               - matchName: unifi-mcp.ai.svc.cluster.local
               - matchName: victorialogs-mcp.ai.svc.cluster.local
+              - matchName: whisper.ai.svc.cluster.local
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -190,6 +191,7 @@ spec:
               - matchName: qwen3-embedding-0-6b.ai.svc.cluster.local
               - matchName: unifi-mcp.ai.svc.cluster.local
               - matchName: victorialogs-mcp.ai.svc.cluster.local
+              - matchName: whisper.ai.svc.cluster.local
     - toFQDNs:
         - matchName: api.openai.com
         - matchName: idm.${SECRET_DOMAIN}

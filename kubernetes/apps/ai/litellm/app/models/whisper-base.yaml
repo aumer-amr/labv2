@@ -1,0 +1,14 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/litellm.home-operations.com/litellmmodel_v1alpha1.json
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMModel
+metadata:
+  name: whisper-base
+spec:
+  modelName: whisper-base
+  params:
+    model: openai/Systran/faster-whisper-base
+    apiBase: http://whisper.ai.svc.cluster.local:8080/v1
+    apiKey: none
+  info:
+    mode: audio_transcription

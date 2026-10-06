@@ -1,0 +1,103 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: whisper
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: whisper
+  interval: 1h
+  values:
+    global:
+      createDefaultServiceAccount: false
+    controllers:
+      whisper:
+        strategy: Recreate
+        containers:
+          app:
+            image:
+              repository: ghcr.io/speaches-ai/speaches
+              tag: 0.9.0-rc.3-cpu@sha256:2163775b6df5e451a71200e8f675fed68dbd8ab184fc604453d549e486f22fd2
+            env:
+              ENABLE_UI: "false"
+              HF_HOME: /cache/huggingface
+              HF_HUB_DISABLE_TELEMETRY: "1"
+              HF_HUB_DISABLE_XET: "1"
+              LOG_LEVEL: info
+              PRELOAD_MODELS: '["Systran/faster-whisper-base"]'
+              TZ: Europe/Amsterdam
+              UVICORN_PORT: "8080"
+              WHISPER__COMPUTE_TYPE: int8
+              WHISPER__CPU_THREADS: "4"
+              WHISPER__INFERENCE_DEVICE: cpu
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: &port 8080
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: *port
+                  failureThreshold: 60
+                  periodSeconds: 5
+            resources:
+              requests:
+                cpu: 500m
+                memory: 512Mi
+              limits:
+                cpu: "4"
+                memory: 2Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: ["ALL"]
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+    service:
+      app:
+        controller: whisper
+        ports:
+          http:
+            port: *port
+    persistence:
+      cache:
+        type: emptyDir
+        globalMounts:
+          - path: /cache
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
