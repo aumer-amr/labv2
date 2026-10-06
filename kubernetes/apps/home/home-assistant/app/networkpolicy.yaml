@@ -24,6 +24,9 @@ spec:
           protocol: TCP
   egress:
     - to:
+        - ipBlock:
+            cidr: 10.40.0.0/16
+    - to:
         - podSelector:
             matchLabels:
               app.kubernetes.io/instance: zigbee2mqtt
