@@ -119,6 +119,13 @@ spec:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
+              app.kubernetes.io/instance: whisper
+              app.kubernetes.io/name: whisper
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
               app.kubernetes.io/managed-by: kopiur
         - namespaceSelector:
             matchLabels:
