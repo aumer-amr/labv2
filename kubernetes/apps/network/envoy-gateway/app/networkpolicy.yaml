@@ -132,6 +132,7 @@ spec:
     - fromCIDRSet:
         - cidr: 10.10.1.0/24
         - cidr: 10.20.0.0/24
+        - cidr: 192.168.2.0/24
       toPorts:
         - ports:
             - port: "10080"
@@ -145,6 +146,7 @@ spec:
     - fromCIDRSet:
         - cidr: 10.10.1.0/24
         - cidr: 10.20.0.0/24
+        - cidr: 192.168.2.0/24
       toPorts:
         - ports:
             - port: "10443"
@@ -158,6 +160,7 @@ spec:
     - fromCIDRSet:
         - cidr: 10.10.1.0/24
         - cidr: 10.20.0.0/24
+        - cidr: 192.168.2.0/24
       toPorts:
         - ports:
             - port: "10443"
