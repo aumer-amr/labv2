@@ -51,6 +51,14 @@ spec:
     - from:
         - podSelector:
             matchLabels:
+              app: rook-ceph-osd-prepare
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
               app: rook-ceph-osd
               rook_cluster: rook-ceph
       ports:
@@ -545,6 +553,27 @@ spec:
         - ports:
             - port: "6443"
               protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rook-ceph-osd-prepare
+spec:
+  podSelector:
+    matchLabels:
+      app: rook-ceph-osd-prepare
+      rook_cluster: rook-ceph
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: rook-ceph-mon
+              rook_cluster: rook-ceph
+      ports:
+        - port: 3300
+          protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
