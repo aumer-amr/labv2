@@ -153,6 +153,16 @@ spec:
     - Egress
   ingress:
     - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus-mcp
+      ports:
+        - port: 9090
+          protocol: TCP
+    - from:
         - podSelector:
             matchLabels:
               app: grafana
