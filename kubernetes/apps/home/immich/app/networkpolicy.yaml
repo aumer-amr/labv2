@@ -136,6 +136,7 @@ spec:
         - matchPattern: "*.hf.co"
         - matchPattern: "*.xethub.hf.co"
         - matchName: www.modelscope.cn
+        - matchName: cdn-lfs-cn-1.modelscope.cn
       toPorts:
         - ports:
             - port: "443"
