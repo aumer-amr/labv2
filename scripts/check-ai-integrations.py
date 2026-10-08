@@ -38,6 +38,16 @@ hermes_env = hermes_release["spec"]["values"]["controllers"]["hermes"]["containe
 environment = {key: str(value) for key, value in webui_env.items() if key.startswith("MEMINI_") and isinstance(value, str)}
 environment["MEMINI_NAMESPACE"] = hermes_env["MEMINI_NAMESPACE"]
 
+dns_policy = next(item for item in yaml.safe_load_all(
+    (ROOT / "kubernetes/apps/kube-system/coredns/app/networkpolicy.yaml").read_text()
+) if item and item["metadata"]["name"] == "coredns")
+assert any(
+    peer.get("namespaceSelector", {}).get("matchLabels", {}).get("kubernetes.io/metadata.name") == "ai"
+    and peer.get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name") == "prometheus-mcp"
+    and {(port["port"], port["protocol"]) for port in rule["ports"]} == {(53, "UDP"), (53, "TCP")}
+    for rule in dns_policy["spec"]["ingress"] for peer in rule.get("from", [])
+), "Prometheus MCP needs CoreDNS ingress as well as workload DNS egress"
+
 
 async def memory_checks():
     memories = {}
