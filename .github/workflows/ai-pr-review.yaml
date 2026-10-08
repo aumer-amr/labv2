@@ -58,7 +58,7 @@ jobs:
         with:
           # Skip discovery through mise.jdx.dev, which the runner cannot resolve.
           # renovate: datasource=github-releases depName=jdx/mise
-          version: 2026.10.3
+          version: 2026.10.4
           install_args: yq
           cache: false
 
