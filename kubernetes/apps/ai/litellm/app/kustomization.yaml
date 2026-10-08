@@ -6,6 +6,7 @@ components:
   - ../../../../components/cnpg
   - ../../../../components/valkey
 resources:
+  - ./grafanadashboard.yaml
   - ./externalsecret.yaml
   - ./guardrails.yaml
   - ./httproute.yaml
@@ -13,3 +14,11 @@ resources:
   - ./models/
   - ./networkpolicy.yaml
   - ./servicemonitor.yaml
+configMapGenerator:
+  - name: litellm-usage-dashboard
+    files:
+      - dashboard.json=resources/dashboard.json
+generatorOptions:
+  disableNameSuffixHash: true
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled

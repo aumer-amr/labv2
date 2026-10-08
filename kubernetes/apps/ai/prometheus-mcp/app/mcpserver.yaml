@@ -1,0 +1,54 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/litellm.home-operations.com/litellmmcpserver_v1alpha1.json
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMMCPServer
+metadata:
+  name: prometheus-mcp
+spec:
+  alias: prometheus
+  params:
+    # Keep gateway access private until per-key grants are supported by the operator.
+    allow_all_keys: false
+    allowed_tools:
+      - query
+      - range_query
+      - metric_metadata
+      - label_names
+      - label_values
+      - series
+      - list_alerts
+      - list_rules
+      - list_targets
+  proxyRef: litellm
+  transport: http
+  workload:
+    automountServiceAccountToken: false
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 65534
+      runAsGroup: 65534
+      seccompProfile:
+        type: RuntimeDefault
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      readOnlyRootFilesystem: true
+    # renovate: datasource=docker depName=ghcr.io/tjhop/prometheus-mcp-server
+    image: ghcr.io/tjhop/prometheus-mcp-server:v0.18.0@sha256:f36084c0b510b8cfb43e03cdaaa83011f3618884b37a4ffe89a46f6241ada0fc
+    port: 8080
+    args:
+      - --prometheus.url=http://kube-prometheus-stack-prometheus.observability.svc.cluster.local:9090
+      - --prometheus.timeout=20s
+      - --prometheus.truncation-limit=100
+      - --mcp.transport=http
+      - --web.listen-address=:8080
+      - --mcp.tools=list_alerts
+      - --mcp.tools=list_rules
+      - --mcp.tools=list_targets
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        memory: 256Mi

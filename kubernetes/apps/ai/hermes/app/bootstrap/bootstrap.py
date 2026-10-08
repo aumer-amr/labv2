@@ -75,9 +75,13 @@ def load_jobs() -> list[dict]:
             raise SystemExit(f"Invalid no_agent for cron job {job['name']}")
         if job.get("no_agent") and not isinstance(job.get("script"), str):
             raise SystemExit(f"No-agent cron job requires a script: {job['name']}")
-        for key in ("prompt", "provider", "script", "workdir"):
+        for key in ("prompt", "provider", "script", "workdir", "model"):
             if key in job and not isinstance(job[key], str):
                 raise SystemExit(f"Invalid {key} for cron job {job['name']}")
+        if "reasoning_effort" in job and job["reasoning_effort"] not in (
+            "none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"
+        ):
+            raise SystemExit(f"Invalid reasoning_effort for cron job {job['name']}")
         if not isinstance(job.get("skills", []), list) or not all(
             isinstance(skill, str) for skill in job.get("skills", [])
         ):
@@ -231,6 +235,8 @@ def reconcile_cron(jobs: list[dict]) -> None:
         ]
         if matches:
             command = ["hermes", "cron", "edit", matches[0]["id"], *common]
+            command.extend(["--model", job.get("model", "")])
+            command.extend(["--reasoning-effort", job.get("reasoning_effort", "")])
             command.extend(["--script", job.get("script", "")])
             command.append("--no-agent" if job.get("no_agent") else "--agent")
             command.extend(["--workdir", job.get("workdir", "")])
@@ -260,6 +266,10 @@ def reconcile_cron(jobs: list[dict]) -> None:
                 command.append("--no-agent")
             if job.get("provider"):
                 command.extend(["--provider", job["provider"]])
+            if job.get("model"):
+                command.extend(["--model", job["model"]])
+            if job.get("reasoning_effort"):
+                command.extend(["--reasoning-effort", job["reasoning_effort"]])
             if job.get("workdir"):
                 command.extend(["--workdir", job["workdir"]])
             for skill in job.get("skills", []):
@@ -278,6 +288,8 @@ def reconcile_cron(jobs: list[dict]) -> None:
             "no_agent": bool(job.get("no_agent")),
             "prompt": job.get("prompt", ""),
             "provider": job.get("provider"),
+            "model": job.get("model") or None,
+            "reasoning_effort": job.get("reasoning_effort") or None,
             "schedule_display": job["schedule"],
             "script": job.get("script"),
             "skills": job.get("skills", []),

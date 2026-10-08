@@ -7,6 +7,8 @@ spec:
   keyAlias: pr-reviewer
   models:
     - gpt-5.6-terra
+    - gpt-6.1-sol
+    - gpt-6-astra
   proxyRef: litellm
   secretKey: key
   secretName: pr-reviewer-litellm

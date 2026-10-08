@@ -25,6 +25,13 @@ spec:
           protocol: TCP
   egress:
     - to:
+        - podSelector:
+            matchLabels:
+              inference.llmkube.dev/service: qwen3-reranker-0.6b
+      ports:
+        - port: 8080
+          protocol: TCP
+    - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: network
@@ -94,6 +101,7 @@ spec:
               - matchName: litellm.ai.svc.cluster.local
               - matchName: open-webui-valkey.ai.svc.cluster.local
               - matchName: searxng.ai.svc.cluster.local
+              - matchName: qwen3-reranker-0-6b.ai.svc.cluster.local
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -108,6 +116,7 @@ spec:
               - matchName: litellm.ai.svc.cluster.local
               - matchName: open-webui-valkey.ai.svc.cluster.local
               - matchName: searxng.ai.svc.cluster.local
+              - matchName: qwen3-reranker-0-6b.ai.svc.cluster.local
     - toFQDNs:
         - matchName: idm.${SECRET_DOMAIN}
       toPorts:

@@ -139,6 +139,10 @@ spec:
     - from:
         - podSelector:
             matchLabels:
+              app.kubernetes.io/instance: open-webui
+              app.kubernetes.io/name: open-webui
+        - podSelector:
+            matchLabels:
               app.kubernetes.io/instance: memini
               app.kubernetes.io/name: memini
         - namespaceSelector:

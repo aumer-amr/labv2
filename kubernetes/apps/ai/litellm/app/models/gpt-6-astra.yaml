@@ -1,0 +1,16 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/litellm.home-operations.com/litellmmodel_v1alpha1.json
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMModel
+metadata:
+  name: gpt-6-astra
+spec:
+  modelName: gpt-6-astra
+  params:
+    model: openai/responses/gpt-6-astra
+    additional:
+      additional_drop_params:
+        - temperature
+    apiKeyRef:
+      name: litellm-secret
+      key: OPENAI_API_KEY

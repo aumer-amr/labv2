@@ -24,6 +24,8 @@ spec:
       namespace: ai
     - name: victoria-logs-mcp
       namespace: observability
+    - name: prometheus-mcp
+      namespace: ai
     - name: rook-ceph-cluster
       namespace: rook-ceph
   interval: 1h

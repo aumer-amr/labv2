@@ -7,6 +7,7 @@ metadata:
 spec:
   keyAlias: memini
   models:
+    - gpt-6-luna
     - gpt-5.6-luna
     - qwen3-embedding
   proxyRef: litellm

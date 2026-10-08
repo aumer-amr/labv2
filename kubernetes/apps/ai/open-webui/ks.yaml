@@ -17,6 +17,8 @@ spec:
       namespace: home
     - name: litellm
       namespace: ai
+    - name: llmkube-models
+      namespace: ai
     - name: memini
       namespace: ai
     - name: onepassword-connect

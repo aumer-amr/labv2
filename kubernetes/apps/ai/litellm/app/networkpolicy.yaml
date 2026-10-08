@@ -65,6 +65,13 @@ spec:
           protocol: TCP
   egress:
     - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus-mcp
+      ports:
+        - port: 8080
+          protocol: TCP
+    - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: network
@@ -166,6 +173,7 @@ spec:
               - matchName: litellm-rw.ai.svc.cluster.local
               - matchName: litellm-valkey.ai.svc.cluster.local
               - matchName: paperless-mcp.ai.svc.cluster.local
+              - matchName: prometheus-mcp.ai.svc.cluster.local
               - matchName: qwen3-embedding-0-6b.ai.svc.cluster.local
               - matchName: unifi-mcp.ai.svc.cluster.local
               - matchName: victorialogs-mcp.ai.svc.cluster.local
@@ -188,6 +196,7 @@ spec:
               - matchName: litellm-rw.ai.svc.cluster.local
               - matchName: litellm-valkey.ai.svc.cluster.local
               - matchName: paperless-mcp.ai.svc.cluster.local
+              - matchName: prometheus-mcp.ai.svc.cluster.local
               - matchName: qwen3-embedding-0-6b.ai.svc.cluster.local
               - matchName: unifi-mcp.ai.svc.cluster.local
               - matchName: victorialogs-mcp.ai.svc.cluster.local

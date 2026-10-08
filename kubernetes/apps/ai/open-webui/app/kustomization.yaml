@@ -11,3 +11,11 @@ resources:
   - ./litellmvirtualkey.yaml
   - ./networkpolicy.yaml
   - ./ocirepository.yaml
+configMapGenerator:
+  - name: open-webui-integrations
+    files:
+      - bootstrap.py=integrations/bootstrap.py
+      # Vendored from eleboucher/memini v0.7.32; only _namespace adds pinned-account sharing.
+      - memini_memory.py=integrations/memini_memory.py
+generatorOptions:
+  disableNameSuffixHash: true

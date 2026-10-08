@@ -25,6 +25,13 @@ spec:
           protocol: TCP
   egress:
     - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus-mcp
+      ports:
+        - port: 8080
+          protocol: TCP
+    - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: kube-system
@@ -173,6 +180,7 @@ spec:
               - matchName: litellm.ai.svc.cluster.local
               - matchName: memini.ai.svc.cluster.local
               - matchName: searxng.ai.svc.cluster.local
+              - matchName: prometheus-mcp.ai.svc.cluster.local
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -195,6 +203,7 @@ spec:
               - matchName: litellm.ai.svc.cluster.local
               - matchName: memini.ai.svc.cluster.local
               - matchName: searxng.ai.svc.cluster.local
+              - matchName: prometheus-mcp.ai.svc.cluster.local
     - toFQDNs:
         - matchName: discord.com
         - matchName: discord.com.ai.svc.cluster.local

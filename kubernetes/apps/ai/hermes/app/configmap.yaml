@@ -10,7 +10,7 @@ data:
     database:
       journal_mode: delete
     model:
-      default: gpt-5.6-terra
+      default: gpt-6.1-sol
       provider: lab-litellm
     providers:
       lab-litellm:
@@ -40,6 +40,9 @@ data:
         url: http://litellm.ai.svc.cluster.local:4000/victorialogs/mcp
         headers:
           Authorization: Bearer $${LITELLM_API_KEY}
+      prometheus:
+        # The operator cannot declare per-key MCP grants; network policy restricts this read-only endpoint to Hermes.
+        url: http://prometheus-mcp.ai.svc.cluster.local:8080/mcp
     web:
       search_backend: searxng
     curator:

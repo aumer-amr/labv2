@@ -28,6 +28,7 @@ spec:
             args:
               - |
                 set -eu
+                python /run/integrations/bootstrap.py
                 export TOOL_SERVER_CONNECTIONS="$(
                   python -c 'import json, os; print(json.dumps([{"type": "mcp", "url": "http://litellm.ai.svc.cluster.local:4000/ha_mcp/mcp", "path": "", "auth_type": "bearer", "key": os.environ["OPENAI_API_KEY"], "config": {"enable": True}, "info": {"id": "ha-control", "name": "Home Assistant", "description": "Restricted Home Assistant controls"}}]))'
                 )"
@@ -44,12 +45,14 @@ spec:
                     key: key
               BYPASS_WEB_SEARCH_WEB_LOADER: "true"
               DO_NOT_TRACK: "true"
+              DEFAULT_MODELS: gpt-6.1-sol
               ENABLE_DIRECT_CONNECTIONS: "false"
               ENABLE_LOGIN_FORM: "false"
               ENABLE_OAUTH_PERSISTENT_CONFIG: "false"
               ENABLE_OAUTH_SIGNUP: "true"
               ENABLE_OLLAMA_API: "false"
               ENABLE_OPENAI_API: "true"
+              ENABLE_RAG_HYBRID_SEARCH: "true"
               ENABLE_PERSISTENT_CONFIG: "false"
               ENABLE_SIGNUP: "false"
               ENABLE_VERSION_UPDATE_CHECK: "false"
@@ -61,6 +64,8 @@ spec:
                     name: memini-secret
                     key: MEMINI_API_KEY
               MEMINI_BASE_URL: http://memini.ai.svc.cluster.local:8081
+              MEMINI_SHARED_NAMESPACE: hermes
+              MEMINI_SHARED_USER_ID: e071d5e0-ff79-4227-80e4-1c3159d57b18
               OAUTH_CODE_CHALLENGE_METHOD: S256
               OAUTH_PROVIDER_NAME: Kanidm
               OAUTH_SCOPES: openid email profile
@@ -80,9 +85,15 @@ spec:
                   secretKeyRef:
                     name: open-webui-litellm
                     key: key
+              RAG_RERANKING_ENGINE: external
+              RAG_RERANKING_MODEL: qwen3-reranker-0.6b
+              RAG_EXTERNAL_RERANKER_URL: http://qwen3-reranker-0-6b.ai.svc.cluster.local:8080/v1/rerank
+              RAG_EXTERNAL_RERANKER_TIMEOUT: "15"
+              RAG_TOP_K: "10"
+              RAG_TOP_K_RERANKER: "3"
               REDIS_KEY_PREFIX: open-webui
               SEARXNG_QUERY_URL: "http://searxng.ai.svc.cluster.local:8080/search?q=<query>"
-              TASK_MODEL_EXTERNAL: gpt-5.6-luna
+              TASK_MODEL_EXTERNAL: gpt-6-luna
               TZ: Europe/Amsterdam
               WEB_SEARCH_ENGINE: searxng
               WEBUI_URL: https://chat.${SECRET_DOMAIN}
@@ -145,6 +156,12 @@ spec:
           http:
             port: *port
     persistence:
+      integrations:
+        type: configMap
+        name: open-webui-integrations
+        globalMounts:
+          - path: /run/integrations
+            readOnly: true
       data:
         existingClaim: open-webui
         globalMounts:

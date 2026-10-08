@@ -1,0 +1,196 @@
+{
+  "uid": "labv2-litellm-usage",
+  "title": "AI usage \u2014 LiteLLM",
+  "description": "Estimated LiteLLM spend, requests, tokens, errors and latency. Spend is derived from collected counters, not a provider invoice.",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "refresh": "1m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {
+          "text": "prometheus",
+          "value": "prometheus"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Spend by application (selected range)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (api_key_alias) (increase(litellm_spend_metric_total[$__range]))",
+          "legendFormat": "{{api_key_alias}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Spend by model (selected range)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (requested_model) (increase(litellm_spend_metric_total[$__range]))",
+          "legendFormat": "{{requested_model}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Requests per second",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (api_key_alias, requested_model) (rate(litellm_requests_metric_total[$__rate_interval]))",
+          "legendFormat": "{{api_key_alias}} / {{requested_model}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Tokens per second",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "tps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (api_key_alias, requested_model) (rate(litellm_total_tokens_metric_total[$__rate_interval]))",
+          "legendFormat": "{{api_key_alias}} / {{requested_model}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Failed provider requests per second",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (api_key_alias, model) (rate(litellm_llm_api_failed_requests_metric_total[$__rate_interval]))",
+          "legendFormat": "{{api_key_alias}} / {{model}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Request latency p95",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, api_key_alias, requested_model) (rate(litellm_request_total_latency_metric_bucket[$__rate_interval])))",
+          "legendFormat": "{{api_key_alias}} / {{requested_model}}"
+        }
+      ]
+    }
+  ]
+}
