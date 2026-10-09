@@ -15,7 +15,8 @@ def check(base, head):
     existing = subprocess.check_output([
         "git", "diff", "--name-only", "--no-renames", "--diff-filter=ACMT", "-z", revision, "--",
     ]).decode().split("\0")[:-1]
-    formatted = [f"./{p}" for p in existing if PurePosixPath(p).suffix in {
+    # Native lock sidecars are digest-pinned; match Lefthook's exclusion.
+    formatted = [f"./{p}" for p in existing if not p.startswith(".mise/locks/") and PurePosixPath(p).suffix in {
         ".yaml", ".yml", ".json", ".json5", ".jsonc", ".md", ".markdown", ".mdx",
     }]
     workflows = [f"./{p}" for p in existing if (

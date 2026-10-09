@@ -63,7 +63,7 @@ jobs:
           cache: false
 
       - name: Review PR
-        uses: misospace/pr-reviewer-action@829f395f7154b4d87c229500fd09b30a8ad2224d # v3.3.0
+        uses: misospace/pr-reviewer-action@768a1320d67f14b99737633a5f8ba58449c3caeb # v3.4.1
         with:
           github-token: ${{ github.token }}
           ai-base-url: http://litellm.ai.svc.cluster.local:4000/v1

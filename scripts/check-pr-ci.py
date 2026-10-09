@@ -52,6 +52,10 @@ for changed, existing, tools in [
     (["plain.txt"], ["plain.txt"], []),
     (["old.yaml", "space name.yml"], ["space name.yml"], ["oxfmt"]),
     (["deleted.json"], [], []),
+    ([".mise/locks/oxfmt/0.72.0/aube-lock.yaml", ".mise/locks/oxfmt/0.72.0/package.json"],
+     [".mise/locks/oxfmt/0.72.0/aube-lock.yaml", ".mise/locks/oxfmt/0.72.0/package.json"], []),
+    ([".mise/locks/oxfmt/0.72.0/aube-lock.yaml", ".mise/locks/oxfmt/0.72.0/package.json", "ordinary.yaml", "ordinary.json"],
+     [".mise/locks/oxfmt/0.72.0/aube-lock.yaml", ".mise/locks/oxfmt/0.72.0/package.json", "ordinary.yaml", "ordinary.json"], ["oxfmt"]),
     ([".github/actions/demo/action.yml"], [".github/actions/demo/action.yml"], ["oxfmt", "zizmor"]),
     ([".github/workflows/test.yaml"], [".github/workflows/test.yaml"], ["oxfmt", "zizmor"]),
     (["scripts/check-pr-reviewer.py"], [], [sys.executable]),
@@ -69,6 +73,8 @@ for changed, existing, tools in [
         assert all(call.kwargs["check"] for call in run.call_args_list)
         if "space name.yml" in existing:
             assert run.call_args_list[1].args[0] == ["oxfmt", "--check", "./space name.yml"]
+        if "ordinary.yaml" in existing:
+            assert run.call_args_list[1].args[0] == ["oxfmt", "--check", "./ordinary.yaml", "./ordinary.json"]
 
 with tempfile.TemporaryDirectory() as directory:
     root = Path(directory)
