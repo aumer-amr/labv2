@@ -12,15 +12,50 @@ spec:
     customLabels:
       platform.home.arpa/tier: "0"
     fullnameOverride: k8s-gateway
-    domain: "${SECRET_DOMAIN}"
-    ttl: 1
+    servers:
+      - zones:
+          - zone: .
+            use_tcp: true
+        port: 1053
+        servicePort: 53
+        plugins:
+          - name: k8s_gateway
+            parameters: "${SECRET_DOMAIN}"
+            configBlock: |-
+              apex k8s-gateway.network
+              ttl 1
+              resources HTTPRoute Service
+          - name: log
+          - name: errors
+          - name: health
+            configBlock: |-
+              lameduck 5s
+          - name: ready
+          - name: prometheus
+            parameters: 0.0.0.0:9153
+          - name: forward
+            parameters: . /etc/resolv.conf
+          - name: loop
+          - name: reload
+          - name: loadbalance
+    serviceType: LoadBalancer
     service:
-      type: LoadBalancer
-      port: 53
       annotations:
         lbipam.cilium.io/ips: "10.10.1.112"
+        prometheus.io/port: "9153"
+        prometheus.io/scrape: "true"
       externalTrafficPolicy: Cluster
-    watchedResources: ["HTTPRoute", "Service"]
+    deployment:
+      dnsPolicy: ClusterFirst
+    securityContext:
+      runAsUser: 1000
+    resources:
+      limits: null
+      requests: null
+    readinessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      failureThreshold: 5
     replicaCount: 2
     topologySpreadConstraints:
       - labelSelector:

@@ -46,12 +46,16 @@ spec:
         - ports:
             - port: "1053"
               protocol: UDP
+            - port: "1053"
+              protocol: TCP
     - fromEntities:
         - remote-node
       toPorts:
         - ports:
             - port: "1053"
               protocol: UDP
+            - port: "1053"
+              protocol: TCP
   egress:
     - toEntities:
         - kube-apiserver
