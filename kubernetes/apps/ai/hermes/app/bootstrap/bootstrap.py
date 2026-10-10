@@ -73,6 +73,8 @@ def load_jobs() -> list[dict]:
             raise SystemExit(f"Invalid delivery environment for {job['name']}")
         if "no_agent" in job and not isinstance(job["no_agent"], bool):
             raise SystemExit(f"Invalid no_agent for cron job {job['name']}")
+        if "enabled" in job and not isinstance(job["enabled"], bool):
+            raise SystemExit(f"Invalid enabled for cron job {job['name']}")
         if job.get("no_agent") and not isinstance(job.get("script"), str):
             raise SystemExit(f"No-agent cron job requires a script: {job['name']}")
         for key in ("prompt", "provider", "script", "workdir", "model"):
@@ -247,7 +249,7 @@ def reconcile_cron(jobs: list[dict]) -> None:
             else:
                 command.append("--clear-skills")
             run(*command)
-            run("hermes", "cron", "resume", matches[0]["id"])
+            run("hermes", "cron", "resume" if job.get("enabled", True) else "pause", matches[0]["id"])
         else:
             command = [
                 "hermes",
@@ -275,6 +277,11 @@ def reconcile_cron(jobs: list[dict]) -> None:
             for skill in job.get("skills", []):
                 command.extend(["--skill", skill])
             run(*command)
+            if not job.get("enabled", True):
+                created = [item for item in stored_jobs() if item.get("name") == job["name"]]
+                if len(created) != 1:
+                    raise SystemExit(f"Expected exactly one cron job named {job['name']}")
+                run("hermes", "cron", "pause", created[0]["id"])
         existing = stored_jobs()
 
     existing = stored_jobs()
@@ -284,7 +291,7 @@ def reconcile_cron(jobs: list[dict]) -> None:
             raise SystemExit(f"Expected exactly one cron job named {job['name']}")
         expected = {
             "deliver": delivery(job),
-            "enabled": True,
+            "enabled": job.get("enabled", True),
             "no_agent": bool(job.get("no_agent")),
             "prompt": job.get("prompt", ""),
             "provider": job.get("provider"),

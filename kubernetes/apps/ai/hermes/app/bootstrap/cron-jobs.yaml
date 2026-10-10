@@ -6,6 +6,7 @@ jobs:
     no_agent: true
     workdir: /opt/data/renovate-workspace
   - name: Morning exception brief
+    enabled: false
     schedule: 30 7 * * *
     deliver_env: DISCORD_ALERTS_CHANNEL
     provider: lab-litellm

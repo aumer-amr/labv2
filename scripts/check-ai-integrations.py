@@ -165,6 +165,12 @@ def cron_checks():
                     cron.reconcile_cron([{k: v for k, v in job.items() if k not in ("model", "reasoning_effort")}])
                     assert calls[0][calls[0].index("--model") + 1] == ""
                     assert calls[0][calls[0].index("--reasoning-effort") + 1] == ""
+        for existing in ([], [record]):
+            disabled = {**record, "enabled": False}
+            states = [existing, [disabled], [disabled]] if existing else [existing, [disabled], [disabled], [disabled]]
+            with patch.object(cron, "stored_jobs", side_effect=states), patch.object(cron, "run") as run, patch.object(cron, "delivery", return_value="discord:test"):
+                cron.reconcile_cron([{**job, "enabled": False}])
+                assert run.call_args.args == ("hermes", "cron", "pause", "existing")
         with patch.object(cron, "stored_jobs", return_value=[{**record, "model": "old-model"}]), patch.object(cron, "run"), patch.object(cron, "delivery", return_value="discord:test"):
             try:
                 cron.reconcile_cron([job])
