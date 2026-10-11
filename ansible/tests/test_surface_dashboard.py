@@ -79,6 +79,22 @@ class DashboardTests(unittest.TestCase):
                            camera_name="\\_SB_.PCI0.I2C2.CAMF", idle_seconds=120,
                            motion_threshold=1500)
 
+    def test_browser_configures_touch_kiosk_before_launch(self):
+        with tempfile.TemporaryDirectory() as temporary, \
+                patch.object(dashboard.Path, "home", return_value=Path(temporary)), \
+                patch.object(dashboard, "urlopen"), \
+                patch.object(dashboard.os, "execvp") as launch:
+            dashboard.browser(self.config)
+            profile = Path(temporary) / ".local/share/surface-dashboard/firefox"
+            preferences = (profile / "user.js").read_text()
+            self.assertIn('user_pref("dom.screenwakelock.enabled", false);', preferences)
+            self.assertIn('user_pref("browser.chrome.toolbar_tips", false);', preferences)
+            self.assertIn('user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);', preferences)
+            self.assertEqual((profile / "chrome/userContent.css").read_text(),
+                             '* { cursor: none !important; }\n')
+            launch.assert_called_once_with("firefox", ["firefox", "--no-remote", "--profile",
+                                                       str(profile), "--kiosk", self.config["dashboard_url"]])
+
     def test_idle_requires_both_input_and_motion_inactivity(self):
         display = dashboard.Display(0)
         self.assertEqual(display.desired(119, 1000, None, 120), "on")

@@ -181,7 +181,14 @@ def check(config):
 def browser(config):
     profile = Path.home() / ".local/share/surface-dashboard/firefox"
     profile.mkdir(mode=0o700, parents=True, exist_ok=True)
-    (profile / "user.js").write_text('user_pref("dom.screenwakelock.enabled", false);\n')
+    (profile / "user.js").write_text(
+        'user_pref("dom.screenwakelock.enabled", false);\n'
+        'user_pref("browser.chrome.toolbar_tips", false);\n'
+        'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);\n'
+    )
+    chrome = profile / "chrome"
+    chrome.mkdir(mode=0o700, exist_ok=True)
+    (chrome / "userContent.css").write_text('* { cursor: none !important; }\n')
     while True:
         try:
             with urlopen(config["dashboard_url"], timeout=10):
