@@ -27,7 +27,7 @@
 - Run `oxfmt --check` on changed YAML, JSON, and Markdown files.
 - Build every touched Kustomize directory with `--load-restrictor=LoadRestrictionsNone`.
 - Before a live apply, render locally, load substitutions without exposing secrets, run `flux envsubst --strict`, inspect rendered kinds, names, and namespaces, then prefer server-side dry-run or `kubectl diff`.
-- Never bypass Lefthook, hooks, or signing. If `oxfmt` reports `Permission denied`, provide its Linux Node runtime in WSL and rerun it.
+- Never bypass Lefthook or hooks. Commit signing is not required. If `oxfmt` reports `Permission denied`, provide its Linux Node runtime in WSL and rerun it.
 - After a live change, inspect affected Flux Kustomizations, HelmReleases, workloads, pods, routes, conditions, and recent error logs. A running pod alone is not proof of health.
 - After a live change, run at least:
 
