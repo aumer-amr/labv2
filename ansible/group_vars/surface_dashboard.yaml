@@ -1,0 +1,6 @@
+dashboard_user: tablet
+dashboard_url: https://hass.aumer.dev/front-door/home
+dashboard_camera_name: ""
+dashboard_idle_seconds: 120
+dashboard_motion_threshold: 1500
+dashboard_hardware_verified: false

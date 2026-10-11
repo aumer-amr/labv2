@@ -1,0 +1,13 @@
+all:
+  children:
+    surface_dashboard:
+      hosts:
+        front-door-tablet:
+          ansible_host: surface-tablet.home.arpa # Replace with the tablet's hostname or IP.
+          ansible_user: tablet
+          ansible_python_interpreter: /usr/bin/python3
+          dashboard_url: https://hass.aumer.dev/front-door/home
+          dashboard_camera_name: "" # Exact front-camera ID from cam --list, after prepare/reboot.
+          dashboard_idle_seconds: 120
+          dashboard_motion_threshold: 1500
+          dashboard_hardware_verified: false # Set true only after the camera/backlight check.

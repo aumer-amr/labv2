@@ -1,0 +1,372 @@
+---
+- name: Provision the front-door Surface dashboard
+  hosts: surface_dashboard
+  become: true
+  gather_facts: true
+  vars:
+    dashboard_kiosk_stage: "{{ 'kiosk' in ansible_run_tags or 'all' in ansible_run_tags }}"
+    dashboard_config:
+      dashboard_url: "{{ dashboard_url }}"
+      camera_name: "{{ dashboard_camera_name }}"
+      idle_seconds: "{{ dashboard_idle_seconds }}"
+      motion_threshold: "{{ dashboard_motion_threshold }}"
+
+  pre_tasks:
+    - name: Read target OS identity
+      ansible.builtin.slurp:
+        src: /etc/os-release
+      register: dashboard_os_release
+      tags: always
+
+    - name: Require a Surface Pro 4 running Mint 22.x
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.architecture == 'x86_64'
+          - ansible_facts.product_name | default('') == 'Surface Pro 4'
+          - (dashboard_os_release.content | b64decode) is search('(?m)^ID="?linuxmint"?$')
+          - (dashboard_os_release.content | b64decode) is search('(?m)^VERSION_ID="?22\.')
+        fail_msg: Install Linux Mint 22.x Xfce on the Surface Pro 4 first; this playbook must not run on WSL or cluster nodes.
+      tags: always
+
+    - name: Look up the existing tablet desktop user
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ dashboard_user }}"
+      tags: always
+
+    - name: Require an existing non-root desktop account
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.getent_passwd[dashboard_user][1] | int > 0
+          - ansible_facts.getent_passwd[dashboard_user][4] is match('^/')
+        fail_msg: Set dashboard_user to the non-root account created during Mint installation.
+      tags: always
+
+    - name: Resolve desktop paths and permissions
+      ansible.builtin.set_fact:
+        dashboard_home: "{{ ansible_facts.getent_passwd[dashboard_user][4] }}"
+        dashboard_uid: "{{ ansible_facts.getent_passwd[dashboard_user][1] }}"
+        dashboard_gid: "{{ ansible_facts.getent_passwd[dashboard_user][2] }}"
+      tags: always
+
+    - name: Require hardware verification before enabling kiosk startup
+      ansible.builtin.assert:
+        that:
+          - "'surface' in ansible_facts.kernel"
+          - dashboard_camera_name | length > 0
+          - dashboard_hardware_verified is sameas true
+        fail_msg: Run --tags prepare, reboot, verify the front camera and physical backlight from the X11 desktop, then set the camera ID and dashboard_hardware_verified in inventory.
+      tags: kiosk
+
+    - name: Check that the verified desktop session is running
+      ansible.builtin.stat:
+        path: "/run/user/{{ dashboard_uid }}/bus"
+      register: dashboard_user_bus
+      tags: kiosk
+
+    - name: Require a logged-in desktop for user-service management
+      ansible.builtin.assert:
+        that: dashboard_user_bus.stat.exists
+        fail_msg: Log in to the tablet Xfce desktop before running --tags kiosk.
+      tags: kiosk
+
+  tasks:
+    - name: Repair the verified 6.19 autofocus-driver regression
+      tags: camera-fix
+      block:
+        - name: Limit this driver backport to Surface kernel 6.19
+          ansible.builtin.assert:
+            that:
+              - ansible_facts.kernel is match('^6\.19\.')
+              - "'surface' in ansible_facts.kernel"
+            fail_msg: This backport targets Surface 6.19 only; newer kernels must use their upstream driver.
+
+        - name: Install driver build prerequisites
+          ansible.builtin.apt:
+            name: [build-essential, dkms]
+            state: present
+
+        - name: Install the upstream autofocus-driver backport source
+          ansible.builtin.copy:
+            src: files/surface-camera-dw9719/
+            dest: /usr/src/surface-camera-dw9719-6.19.1/
+            owner: root
+            group: root
+            mode: "0644"
+            directory_mode: "0755"
+
+        - name: Check whether the autofocus backport is installed for this kernel
+          ansible.builtin.command:
+            argv: [dkms, status]
+          register: dashboard_dkms_status
+          changed_when: false
+
+        - name: Build and install the signed autofocus driver through DKMS
+          ansible.builtin.command:
+            argv:
+              - dkms
+              - install
+              - -m
+              - surface-camera-dw9719
+              - -v
+              - "6.19.1"
+              - -k
+              - "{{ ansible_facts.kernel }}"
+          when: "('surface-camera-dw9719/6.19.1, ' ~ ansible_facts.kernel ~ ', x86_64: installed') not in dashboard_dkms_status.stdout"
+          changed_when: true
+
+        - name: Explain the camera-fix handoff
+          ansible.builtin.debug:
+            msg: Reboot manually so the patched driver binds, then run cam --list. This stage does not enable the kiosk or reload active camera drivers.
+
+    - name: Prepare the Surface kernel and camera dependencies
+      tags: prepare
+      block:
+        - name: Install APT repository prerequisites
+          ansible.builtin.apt:
+            name:
+              - ca-certificates
+              - python3-apt
+            state: present
+            update_cache: true
+            cache_valid_time: 3600
+
+        - name: Create the APT keyring directory
+          ansible.builtin.file:
+            path: /etc/apt/keyrings
+            state: directory
+            owner: root
+            group: root
+            mode: "0755"
+
+        - name: Fetch the official linux-surface signing key
+          ansible.builtin.get_url:
+            url: https://raw.githubusercontent.com/linux-surface/linux-surface/master/pkg/keys/surface.asc
+            dest: /etc/apt/keyrings/linux-surface.asc
+            owner: root
+            group: root
+            mode: "0644"
+
+        - name: Configure the signed linux-surface APT repository
+          ansible.builtin.apt_repository:
+            repo: deb [arch=amd64 signed-by=/etc/apt/keyrings/linux-surface.asc] https://pkg.surfacelinux.com/debian release main
+            filename: linux-surface
+            state: present
+            update_cache: true
+
+        - name: Install the kernel, touch support, camera stack, and kiosk utilities
+          ansible.builtin.apt:
+            name:
+              - linux-image-surface
+              - linux-headers-surface
+              - libwacom-surface
+              - iptsd
+              - gstreamer1.0-libcamera
+              - libcamera-tools
+              - libcamera-ipa
+              - gstreamer1.0-tools
+              - gstreamer1.0-plugins-base
+              - gstreamer1.0-plugins-good
+              - v4l2loopback-dkms
+              - v4l-utils
+              - motion
+              - xprintidle
+              - x11-xserver-utils
+              - firefox
+              - python3
+            state: present
+
+        - name: Disable the distro Motion service
+          ansible.builtin.systemd_service:
+            name: motion.service
+            enabled: false
+            state: stopped
+
+        - name: Configure the dedicated loopback camera at boot
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+            owner: root
+            group: root
+            mode: "0644"
+          loop:
+            - dest: /etc/modules-load.d/surface-dashboard.conf
+              content: "v4l2loopback\n"
+            - dest: /etc/modprobe.d/surface-dashboard.conf
+              content: "options v4l2loopback devices=1 video_nr=42 card_label=surface-dashboard exclusive_caps=1 max_buffers=4\n"
+
+        - name: Grant the desktop account camera access
+          ansible.builtin.user:
+            name: "{{ dashboard_user }}"
+            groups: video
+            append: true
+
+    - name: Create the runtime installation directory
+      ansible.builtin.file:
+        path: /usr/local/lib/surface-dashboard
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      tags: [prepare, kiosk]
+
+    - name: Install the existing dashboard runtime
+      ansible.builtin.copy:
+        src: files/surface-dashboard/dashboard.py
+        dest: /usr/local/lib/surface-dashboard/dashboard.py
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Reload dashboard user units
+        - Restart an active dashboard
+      tags: [prepare, kiosk]
+
+    - name: Explain the prepare-stage handoff
+      ansible.builtin.debug:
+        msg: Before rebooting with Secure Boot enabled, run sudo apt install linux-surface-secureboot-mok in the tablet terminal and follow its enrollment instructions. Keep the stock Mint kernel for recovery. Then reboot and follow README.md for camera/backlight verification and --tags kiosk.
+      tags: prepare
+
+    - name: Configure the verified kiosk
+      tags: kiosk
+      block:
+        - name: Validate configuration using the runtime before writing it
+          ansible.builtin.command:
+            argv:
+              - /usr/bin/python3
+              - -B
+              - -c
+              - >-
+                import importlib.util, json, sys;
+                spec = importlib.util.spec_from_file_location('dashboard', '/usr/local/lib/surface-dashboard/dashboard.py');
+                module = importlib.util.module_from_spec(spec);
+                spec.loader.exec_module(module);
+                module.validate(json.load(sys.stdin))
+            stdin: "{{ dashboard_config | to_json }}"
+          changed_when: false
+          check_mode: false
+          no_log: true
+
+        - name: Create desktop configuration directories
+          ansible.builtin.file:
+            path: "{{ dashboard_home }}/{{ item.path }}"
+            state: directory
+            owner: "{{ dashboard_user }}"
+            group: "{{ dashboard_gid }}"
+            mode: "{{ item.mode }}"
+          loop:
+            - path: .config/surface-dashboard
+              mode: "0700"
+            - path: .config/systemd/user
+              mode: "0755"
+            - path: .config/autostart
+              mode: "0755"
+
+        - name: Manage calibration and dashboard settings
+          ansible.builtin.copy:
+            dest: "{{ dashboard_home }}/.config/surface-dashboard/config.json"
+            content: "{{ dashboard_config | to_nice_json }}\n"
+            owner: "{{ dashboard_user }}"
+            group: "{{ dashboard_gid }}"
+            mode: "0600"
+            backup: true
+          notify: Restart an active dashboard
+
+        - name: Install supervised user services
+          ansible.builtin.template:
+            src: surface-dashboard.service.j2
+            dest: "{{ dashboard_home }}/.config/systemd/user/surface-dashboard-{{ dashboard_action }}.service"
+            owner: "{{ dashboard_user }}"
+            group: "{{ dashboard_gid }}"
+            mode: "0644"
+          loop: [camera, motion, display, browser]
+          loop_control:
+            loop_var: dashboard_action
+          notify:
+            - Reload dashboard user units
+            - Restart an active dashboard
+
+        - name: Install the dashboard target and Xfce login autostart
+          ansible.builtin.copy:
+            dest: "{{ dashboard_home }}/{{ item.path }}"
+            content: "{{ item.content }}"
+            owner: "{{ dashboard_user }}"
+            group: "{{ dashboard_gid }}"
+            mode: "0644"
+          loop:
+            - path: .config/systemd/user/surface-dashboard.target
+              content: |
+                [Unit]
+                Description=Front-door Surface dashboard
+                Wants=surface-dashboard-camera.service surface-dashboard-motion.service surface-dashboard-display.service surface-dashboard-browser.service
+            - path: .config/autostart/surface-dashboard.desktop
+              content: |
+                [Desktop Entry]
+                Type=Application
+                Name=Front Door Dashboard
+                Exec=/usr/bin/python3 /usr/local/lib/surface-dashboard/dashboard.py session
+                OnlyShowIn=XFCE;
+                Terminal=false
+            - path: .config/autostart/light-locker.desktop
+              content: |
+                [Desktop Entry]
+                Type=Application
+                Name=Screen Locker
+                Hidden=true
+          notify:
+            - Reload dashboard user units
+            - Restart an active dashboard
+
+        - name: Stop the desktop locker so DPMS wake returns to the dashboard
+          ansible.builtin.command:
+            argv: [pkill, -u, "{{ dashboard_uid }}", -x, light-locker]
+          become_user: "{{ dashboard_user }}"
+          register: dashboard_locker_stop
+          changed_when: dashboard_locker_stop.rc == 0
+          failed_when: dashboard_locker_stop.rc not in [0, 1]
+
+        - name: Create the LightDM configuration directory
+          ansible.builtin.file:
+            path: /etc/lightdm/lightdm.conf.d
+            state: directory
+            owner: root
+            group: root
+            mode: "0755"
+
+        - name: Enable automatic login for the verified tablet user
+          ansible.builtin.copy:
+            dest: /etc/lightdm/lightdm.conf.d/90-surface-dashboard.conf
+            content: |
+              [Seat:*]
+              autologin-user={{ dashboard_user }}
+              autologin-user-timeout=0
+              user-session=xfce
+            owner: root
+            group: root
+            mode: "0644"
+            backup: true
+
+        - name: Explain first launch
+          ansible.builtin.debug:
+            msg: From the tablet Xfce terminal, run python3 /usr/local/lib/surface-dashboard/dashboard.py session, or reboot. Log in to Home Assistant using the non-admin tablet account.
+
+  handlers:
+    - name: Reload dashboard user units
+      ansible.builtin.systemd_service:
+        scope: user
+        daemon_reload: true
+      become_user: "{{ dashboard_user }}"
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ dashboard_uid }}"
+        DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ dashboard_uid }}/bus"
+      when: dashboard_kiosk_stage
+
+    - name: Restart an active dashboard
+      ansible.builtin.command:
+        argv: [systemctl, --user, try-restart, surface-dashboard.target]
+      become_user: "{{ dashboard_user }}"
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ dashboard_uid }}"
+        DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ dashboard_uid }}/bus"
+      changed_when: true
+      when: dashboard_kiosk_stage

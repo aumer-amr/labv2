@@ -1,0 +1,16 @@
+[Unit]
+Description=Surface dashboard {{ dashboard_action }}
+PartOf=surface-dashboard.target
+StartLimitIntervalSec=0
+{% if dashboard_action == 'motion' %}
+Wants=surface-dashboard-camera.service
+After=surface-dashboard-camera.service
+{% endif %}
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/lib/surface-dashboard/dashboard.py {{ dashboard_action }}
+Restart=always
+RestartSec=5
+TimeoutStopSec=10
+UMask=0077
+NoNewPrivileges=true
