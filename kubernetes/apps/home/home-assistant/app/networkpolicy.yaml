@@ -24,6 +24,14 @@ spec:
           protocol: TCP
   egress:
     - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: music-assistant
+              app.kubernetes.io/name: music-assistant
+      ports:
+        - port: 8095
+          protocol: TCP
+    - to:
         - ipBlock:
             cidr: 10.40.0.0/16
     - to:

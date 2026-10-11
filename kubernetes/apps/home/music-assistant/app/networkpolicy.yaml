@@ -15,6 +15,14 @@ spec:
     - from:
         - podSelector:
             matchLabels:
+              app.kubernetes.io/instance: home-assistant
+              app.kubernetes.io/name: home-assistant
+      ports:
+        - port: 8095
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
               app.kubernetes.io/instance: sendspin
               app.kubernetes.io/name: sendspin
       ports:
