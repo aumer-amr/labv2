@@ -30,7 +30,7 @@ spec:
                 set -eu
                 PYTHONPATH=/app/backend python /run/integrations/bootstrap.py
                 export TOOL_SERVER_CONNECTIONS="$(
-                  python -c 'import json, os; print(json.dumps([{"type": "mcp", "url": "http://litellm.ai.svc.cluster.local:4000/mcp/proxy", "path": "", "auth_type": "bearer", "key": os.environ["OPENAI_API_KEY"], "config": {"enable": True}, "info": {"id": "ha-control", "name": "Home Assistant", "description": "Restricted Home Assistant controls"}}]))'
+                  python -c 'import json, os; print(json.dumps([{"type": "mcp", "url": "http://litellm.ai.svc.cluster.local:4000/mcp/proxy", "path": "", "auth_type": "bearer", "key": os.environ["OPENAI_API_KEY"], "config": {"enable": True}, "info": {"id": "litellm-mcp", "name": "LiteLLM MCP", "description": "Home Assistant tools through LiteLLM"}}]))'
                 )"
                 exec bash start.sh
             env:
