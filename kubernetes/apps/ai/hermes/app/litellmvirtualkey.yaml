@@ -6,6 +6,8 @@ metadata:
   name: hermes
 spec:
   keyAlias: hermes
+  mcpToolsets:
+    - 2144065e-cc91-4615-9626-f5e3b3aa7de3
   models:
     - gpt-5.6-terra
     - gpt-5.6-luna

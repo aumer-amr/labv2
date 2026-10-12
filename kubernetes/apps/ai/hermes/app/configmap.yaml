@@ -33,16 +33,9 @@ data:
         - youtube-content
     mcp_servers:
       litellm:
-        url: http://litellm.ai.svc.cluster.local:4000/toolset/litellm/mcp
+        url: http://litellm.ai.svc.cluster.local:4000/mcp/proxy
         headers:
-          Authorization: Bearer $${LITELLM_API_KEY}
-      victorialogs:
-        url: http://litellm.ai.svc.cluster.local:4000/victorialogs/mcp
-        headers:
-          Authorization: Bearer $${LITELLM_API_KEY}
-      prometheus:
-        # The operator cannot declare per-key MCP grants; network policy restricts this read-only endpoint to Hermes.
-        url: http://prometheus-mcp.ai.svc.cluster.local:8080/mcp
+          x-litellm-api-key: Bearer $${LITELLM_API_KEY}
     web:
       search_backend: searxng
     curator:

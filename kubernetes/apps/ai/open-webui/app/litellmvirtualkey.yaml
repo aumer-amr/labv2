@@ -6,6 +6,8 @@ metadata:
   name: open-webui
 spec:
   keyAlias: open-webui
+  mcpToolsets:
+    - 8d99ba5f-d06c-423c-9014-e2e8a9e3f9b5
   models:
     - gpt-6-luna
     - gpt-6.1-sol

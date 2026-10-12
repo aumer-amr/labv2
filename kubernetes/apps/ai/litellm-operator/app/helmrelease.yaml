@@ -9,6 +9,8 @@ spec:
     kind: OCIRepository
     name: litellm-operator
   interval: 30m
+  upgrade:
+    crds: CreateReplace
   values:
     resources:
       requests:

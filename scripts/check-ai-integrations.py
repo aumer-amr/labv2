@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline memory privacy and cron routing checks; requires aiohttp, pydantic, PyYAML."""
+"""Offline MCP access, memory privacy and cron routing checks; requires aiohttp, pydantic, PyYAML."""
 
 import asyncio
 import importlib.util
@@ -15,6 +15,19 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 AI = ROOT / "kubernetes/apps/ai"
+
+# Public registrations bypass the application keys' intended MCP boundaries.
+for path in (ROOT / "kubernetes/apps").rglob("mcpserver.yaml"):
+    server = yaml.safe_load(path.read_text())
+    assert server["spec"].get("params", {}).get("allow_all_keys") is False, f"{path}: MCP servers must require grants"
+
+for name in ("memini", "pr-reviewer"):
+    key = yaml.safe_load((AI / name / "app/litellmvirtualkey.yaml").read_text())["spec"]
+    assert not key.get("mcpToolsets") and not key.get("teamID"), f"{name}: model-only keys must not inherit MCP grants"
+
+for name in ("hermes", "open-webui"):
+    key = yaml.safe_load((AI / name / "app/litellmvirtualkey.yaml").read_text())["spec"]
+    assert key.get("mcpToolsets") and not key.get("teamID"), f"{name}: MCP access must use an explicit toolset"
 
 
 def load(name, path):
@@ -183,4 +196,4 @@ with patch.dict(os.environ, environment):
     asyncio.run(memory_checks())
     asyncio.run(installer_checks())
 cron_checks()
-print("AI integration checks passed: bidirectional memory, user isolation, registration, cron model routing")
+print("AI integration checks passed: private MCP access, model-only keys, bidirectional memory, user isolation, registration, cron model routing")

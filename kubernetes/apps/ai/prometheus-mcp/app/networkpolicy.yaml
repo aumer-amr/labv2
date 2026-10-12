@@ -16,10 +16,6 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: litellm
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/instance: hermes
-              app.kubernetes.io/name: hermes
       ports:
         - port: 8080
           protocol: TCP
