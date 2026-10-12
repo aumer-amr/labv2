@@ -27,22 +27,26 @@ class ThemeToggleBadge extends HTMLElement {
 
   render() {
     if (!this.button || !this._hass) return;
-    const dark = this._hass.themes.default_theme === "Graphite";
+    // Graphite uses dark colors without declaring HA native dark mode.
+    const dark = this._hass.themes.theme === "Graphite";
     this.nextTheme = dark ? "Graphite Light" : "Graphite";
     this.icon.setAttribute("icon", dark ? "mdi:weather-sunny" : "mdi:weather-night");
-    const label = `Switch to ${dark ? "light" : "dark"} theme until the next sun automation run`;
+    const label = `Switch to ${dark ? "light" : "dark"} theme for this account`;
     this.button.setAttribute("aria-label", label);
     this.button.title = label;
   }
 
-  async toggle() {
+  toggle() {
     if (!this._hass || !this.nextTheme || this.button.disabled) return;
     this.button.disabled = true;
     try {
-      await this._hass.callService("frontend", "set_theme", {
-        name: this.nextTheme,
-        name_dark: this.nextTheme,
-      });
+      this.dispatchEvent(
+        new CustomEvent("settheme", {
+          detail: { theme: this.nextTheme, dark: this.nextTheme === "Graphite" },
+          bubbles: true,
+          composed: true,
+        }),
+      );
     } catch {
       this.dispatchEvent(
         new CustomEvent("hass-notification", {
