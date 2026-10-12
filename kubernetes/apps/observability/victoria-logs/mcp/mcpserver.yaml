@@ -7,7 +7,7 @@ metadata:
 spec:
   alias: victorialogs
   params:
-    allow_all_keys: true
+    allow_all_keys: false
     allowed_tools:
       - facets
       - field_names
