@@ -227,6 +227,18 @@
         msg: Before rebooting with Secure Boot enabled, run sudo apt install linux-surface-secureboot-mok in the tablet terminal and follow its enrollment instructions. Keep the stock Mint kernel for recovery. Then reboot and follow README.md for camera/backlight verification and --tags kiosk.
       tags: prepare
 
+    - name: Install the independent Home Assistant reporter
+      ansible.builtin.copy:
+        src: files/surface-dashboard/reporter.py
+        dest: /usr/local/lib/surface-dashboard/reporter.py
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Reload dashboard user units
+        - Restart an active dashboard
+      tags: [prepare, kiosk]
+
     - name: Configure the verified kiosk
       tags: kiosk
       block:
@@ -279,7 +291,7 @@
             owner: "{{ dashboard_user }}"
             group: "{{ dashboard_gid }}"
             mode: "0644"
-          loop: [camera, motion, display, browser]
+          loop: [camera, motion, display, browser, reporter]
           loop_control:
             loop_var: dashboard_action
           notify:
@@ -298,7 +310,7 @@
               content: |
                 [Unit]
                 Description=Front-door Surface dashboard
-                Wants=surface-dashboard-camera.service surface-dashboard-motion.service surface-dashboard-display.service surface-dashboard-browser.service
+                Wants=surface-dashboard-camera.service surface-dashboard-motion.service surface-dashboard-display.service surface-dashboard-browser.service surface-dashboard-reporter.service
             - path: .config/autostart/surface-dashboard.desktop
               content: |
                 [Desktop Entry]

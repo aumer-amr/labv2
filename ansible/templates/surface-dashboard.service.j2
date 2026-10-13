@@ -6,9 +6,16 @@ StartLimitIntervalSec=0
 Wants=surface-dashboard-camera.service
 After=surface-dashboard-camera.service
 {% endif %}
+{% if dashboard_action == 'reporter' %}
+After=surface-dashboard-display.service
+{% endif %}
 
 [Service]
+{% if dashboard_action == 'reporter' %}
+ExecStart=/usr/bin/python3 /usr/local/lib/surface-dashboard/reporter.py
+{% else %}
 ExecStart=/usr/bin/python3 /usr/local/lib/surface-dashboard/dashboard.py {{ dashboard_action }}
+{% endif %}
 Restart=always
 RestartSec=5
 TimeoutStopSec=10

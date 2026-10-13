@@ -24,6 +24,17 @@ spec:
           protocol: TCP
   egress:
     - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: piper
+              app.kubernetes.io/name: piper
+      ports:
+        - port: 10200
+          protocol: TCP
+    - to:
         - podSelector:
             matchLabels:
               app.kubernetes.io/instance: music-assistant

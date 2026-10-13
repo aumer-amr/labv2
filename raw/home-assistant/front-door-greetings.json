@@ -1,0 +1,553 @@
+{
+  "helpers": [
+    {
+      "helper_type": "input_boolean",
+      "name": "Surface Display",
+      "icon": "mdi:monitor"
+    },
+    {
+      "helper_type": "input_datetime",
+      "name": "Surface Last Wake",
+      "has_date": true,
+      "has_time": true
+    },
+    {
+      "helper_type": "input_datetime",
+      "name": "Surface Last Seen",
+      "has_date": true,
+      "has_time": true
+    },
+    {
+      "helper_type": "input_datetime",
+      "name": "Surface Away Since",
+      "has_date": true,
+      "has_time": true
+    },
+    {
+      "helper_type": "input_datetime",
+      "name": "Surface Welcome Until",
+      "has_date": true,
+      "has_time": true
+    },
+    {
+      "helper_type": "input_datetime",
+      "name": "Surface Last Morning",
+      "has_date": true,
+      "has_time": false
+    }
+  ],
+  "scripts": {
+    "surface_report_display": {
+      "alias": "Surface: Report physical display",
+      "mode": "queued",
+      "max": 5,
+      "fields": {
+        "display_on": {
+          "required": true,
+          "selector": {
+            "boolean": {}
+          }
+        },
+        "wake_at": {
+          "default": 0,
+          "selector": {
+            "number": {
+              "min": 0,
+              "max": 4102444800,
+              "mode": "box"
+            }
+          }
+        }
+      },
+      "sequence": [
+        {
+          "action": "input_datetime.set_datetime",
+          "target": {
+            "entity_id": "input_datetime.surface_last_seen"
+          },
+          "data": {
+            "timestamp": "{{ as_timestamp(now()) }}"
+          }
+        },
+        {
+          "if": [
+            {
+              "condition": "template",
+              "value_template": "{{ display_on is sameas true }}"
+            }
+          ],
+          "then": [
+            {
+              "action": "input_boolean.turn_on",
+              "target": {
+                "entity_id": "input_boolean.surface_display"
+              }
+            }
+          ],
+          "else": [
+            {
+              "action": "input_boolean.turn_off",
+              "target": {
+                "entity_id": "input_boolean.surface_display"
+              }
+            }
+          ]
+        },
+        {
+          "if": [
+            {
+              "condition": "template",
+              "value_template": "{{ display_on is sameas true and is_number(wake_at) and 0 <= as_timestamp(now()) - (wake_at | float) < 15 }}"
+            }
+          ],
+          "then": [
+            {
+              "action": "input_datetime.set_datetime",
+              "target": {
+                "entity_id": "input_datetime.surface_last_wake"
+              },
+              "data": {
+                "timestamp": "{{ wake_at | float }}"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "automations": {
+    "surface_presence": {
+      "alias": "Surface: Arm welcome after returning home",
+      "mode": "queued",
+      "max": 5,
+      "triggers": [
+        {
+          "trigger": "state",
+          "entity_id": "person.sem",
+          "to": null
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "template",
+          "value_template": "{{ trigger.from_state is not none and trigger.to_state is not none and trigger.from_state.state not in ['unknown','unavailable'] and trigger.to_state.state not in ['unknown','unavailable'] }}"
+        }
+      ],
+      "actions": [
+        {
+          "choose": [
+            {
+              "conditions": [
+                {
+                  "condition": "template",
+                  "value_template": "{{ trigger.from_state.state == 'home' and trigger.to_state.state != 'home' }}"
+                }
+              ],
+              "sequence": [
+                {
+                  "action": "input_datetime.set_datetime",
+                  "target": {
+                    "entity_id": "input_datetime.surface_away_since"
+                  },
+                  "data": {
+                    "timestamp": "{{ as_timestamp(now()) }}"
+                  }
+                },
+                {
+                  "action": "input_datetime.set_datetime",
+                  "target": {
+                    "entity_id": "input_datetime.surface_welcome_until"
+                  },
+                  "data": {
+                    "timestamp": 0
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "condition": "template",
+                  "value_template": "{{ trigger.from_state.state != 'home' and trigger.to_state.state == 'home' }}"
+                }
+              ],
+              "sequence": [
+                {
+                  "if": [
+                    {
+                      "condition": "template",
+                      "value_template": "{{ state_attr('input_datetime.surface_away_since','timestamp') | float(0) > 0 and as_timestamp(now()) - (state_attr('input_datetime.surface_away_since','timestamp') | float(0)) >= 300 }}"
+                    }
+                  ],
+                  "then": [
+                    {
+                      "action": "input_datetime.set_datetime",
+                      "target": {
+                        "entity_id": "input_datetime.surface_welcome_until"
+                      },
+                      "data": {
+                        "timestamp": "{{ as_timestamp(now()) + 600 }}"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "action": "input_datetime.set_datetime",
+                  "target": {
+                    "entity_id": "input_datetime.surface_away_since"
+                  },
+                  "data": {
+                    "timestamp": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "surface_greetings": {
+      "alias": "Surface: Welcome and daily morning briefing",
+      "mode": "single",
+      "max_exceeded": "silent",
+      "triggers": [
+        {
+          "trigger": "state",
+          "entity_id": "input_datetime.surface_last_wake",
+          "to": null
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "template",
+          "value_template": "{{ trigger.from_state is not none and trigger.from_state.state not in ['unknown','unavailable'] and trigger.to_state is not none and 0 <= as_timestamp(now()) - (trigger.to_state.attributes.timestamp | float(0)) < 30 }}"
+        },
+        {
+          "condition": "state",
+          "entity_id": "input_boolean.surface_display",
+          "state": "on"
+        },
+        {
+          "condition": "template",
+          "value_template": "{{ (trigger.to_state.attributes.timestamp | float(0) | timestamp_custom('%Y-%m-%d', true)) == now().strftime('%Y-%m-%d') }}"
+        }
+      ],
+      "actions": [
+        {
+          "variables": {
+            "deadline": "{{ as_timestamp(now()) + 15 }}"
+          }
+        },
+        {
+          "if": [
+            {
+              "condition": "not",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity_id": "person.sem",
+                  "state": "home"
+                }
+              ]
+            }
+          ],
+          "then": [
+            {
+              "wait_for_trigger": [
+                {
+                  "trigger": "state",
+                  "entity_id": "person.sem",
+                  "to": "home"
+                }
+              ],
+              "timeout": {
+                "seconds": "{{ [0, deadline | float - as_timestamp(now())] | max }}"
+              },
+              "continue_on_timeout": false
+            }
+          ]
+        },
+        {
+          "if": [
+            {
+              "condition": "template",
+              "value_template": "{{ states('media_player.surface') in ['unknown','unavailable'] }}"
+            }
+          ],
+          "then": [
+            {
+              "wait_for_trigger": [
+                {
+                  "trigger": "state",
+                  "entity_id": "media_player.surface",
+                  "from": ["unknown", "unavailable"]
+                }
+              ],
+              "timeout": {
+                "seconds": "{{ [0, deadline | float - as_timestamp(now())] | max }}"
+              },
+              "continue_on_timeout": false
+            }
+          ]
+        },
+        {
+          "condition": "state",
+          "entity_id": "person.sem",
+          "state": "home"
+        },
+        {
+          "condition": "state",
+          "entity_id": "input_boolean.surface_display",
+          "state": "on"
+        },
+        {
+          "condition": "template",
+          "value_template": "{{ states('media_player.surface') not in ['unknown','unavailable'] and 0 <= as_timestamp(now()) - (state_attr('input_datetime.surface_last_seen','timestamp') | float(0)) < 60 }}"
+        },
+        {
+          "variables": {
+            "morning": "{{ (trigger.to_state.attributes.timestamp | float | timestamp_custom('%H', true) | int) >= 4 and states('input_datetime.surface_last_morning') != now().strftime('%Y-%m-%d') }}",
+            "welcome": "{{ state_attr('input_datetime.surface_welcome_until','timestamp') | float(0) > as_timestamp(now()) }}",
+            "personal_events": {},
+            "birthday_events": {},
+            "holiday_events": {}
+          }
+        },
+        {
+          "condition": "template",
+          "value_template": "{{ morning or welcome }}"
+        },
+        {
+          "if": [
+            {
+              "condition": "template",
+              "value_template": "{{ morning }}"
+            }
+          ],
+          "then": [
+            {
+              "action": "calendar.get_events",
+              "target": {
+                "entity_id": "calendar.sem_semevers_com"
+              },
+              "data": {
+                "start_date_time": "{{ today_at().isoformat() }}",
+                "end_date_time": "{{ (today_at() + timedelta(days=1)).isoformat() }}"
+              },
+              "response_variable": "personal_events",
+              "continue_on_error": true
+            },
+            {
+              "action": "calendar.get_events",
+              "target": {
+                "entity_id": "calendar.birthdays"
+              },
+              "data": {
+                "start_date_time": "{{ today_at().isoformat() }}",
+                "end_date_time": "{{ (today_at() + timedelta(days=1)).isoformat() }}"
+              },
+              "response_variable": "birthday_events",
+              "continue_on_error": true
+            },
+            {
+              "action": "calendar.get_events",
+              "target": {
+                "entity_id": "calendar.holidays_in_netherlands"
+              },
+              "data": {
+                "start_date_time": "{{ today_at().isoformat() }}",
+                "end_date_time": "{{ (today_at() + timedelta(days=1)).isoformat() }}"
+              },
+              "response_variable": "holiday_events",
+              "continue_on_error": true
+            }
+          ]
+        },
+        {
+          "variables": {
+            "message": "{% set out = namespace(parts=[]) %}\n{% if welcome %}{% set out.parts = out.parts + ['Welcome home, Sem.'] %}{% endif %}\n{% if morning %}\n  {% set out.parts = out.parts + ['Good morning, Sem.'] %}\n  {% set agenda = namespace(events=[]) %}\n  {% for result in [personal_events, birthday_events, holiday_events] %}\n    {% for cal, response in result.items() %}\n      {% for event in response.get('events', []) %}\n        {% if as_timestamp(event.end, 0) > as_timestamp(now()) %}\n          {% set agenda.events = agenda.events + [dict(start=as_timestamp(event.start, 0), all_day=(event.start | length == 10), summary=event.summary)] %}\n        {% endif %}\n      {% endfor %}\n    {% endfor %}\n  {% endfor %}\n  {% if agenda.events %}\n    {% set out.parts = out.parts + [\"On today's agenda:\"] %}\n    {% for event in agenda.events | sort(attribute='start') %}\n      {% set when = 'All day' if event.all_day else event.start | timestamp_custom('%H:%M', true) %}\n      {% set out.parts = out.parts + [when ~ ', ' ~ event.summary ~ '.'] %}\n    {% endfor %}\n  {% endif %}\n  {% set battery = states('sensor.garage_audi_battery_level') %}\n  {% set range = states('sensor.garage_audi_range') %}\n  {% set charging = states('sensor.garage_audi_charging_status') %}\n  {% if is_number(battery) %}{% set out.parts = out.parts + ['Your Audi battery is at ' ~ battery ~ ' percent.'] %}{% endif %}\n  {% if is_number(range) %}{% set out.parts = out.parts + ['Remaining range is ' ~ range ~ ' ' ~ ('kilometres' if state_attr('sensor.garage_audi_range','unit_of_measurement') == 'km' else 'miles' if state_attr('sensor.garage_audi_range','unit_of_measurement') == 'mi' else state_attr('sensor.garage_audi_range','unit_of_measurement') or 'kilometres') ~ '.'] %}{% endif %}\n  {% if charging not in ['unknown','unavailable','none',''] %}\n    {% set out.parts = out.parts + ['Charging status: ' ~ charging | replace('_',' ') ~ '.'] %}\n  {% endif %}\n  {% for stream, label in [('gft','food and garden waste'),('papier','paper'),('pmd','plastic, metal and drink cartons'),('restafval','residual waste')] %}\n    {% set entity = 'sensor.afvalbeheer_circulus_circulus_' ~ stream %}\n    {% set days = state_attr(entity, 'Days_until') %}\n    {% if states(entity) not in ['unknown','unavailable'] and days is not none and is_number(days) and days | int(-1) in [0,1] and state_attr(entity, 'Sort_date') | string == (now() + timedelta(days=days | int)).strftime('%Y%m%d') %}\n      {% set when = 'today' if days | int == 0 else 'tomorrow' %}\n      {% set out.parts = out.parts + ['The ' ~ label ~ ' bin is collected ' ~ when ~ '.'] %}\n    {% endif %}\n  {% endfor %}\n{% endif %}\n{{ out.parts | join(' ') }}"
+          }
+        },
+        {
+          "condition": "state",
+          "entity_id": "person.sem",
+          "state": "home"
+        },
+        {
+          "condition": "state",
+          "entity_id": "input_boolean.surface_display",
+          "state": "on"
+        },
+        {
+          "condition": "template",
+          "value_template": "{{ 0 <= as_timestamp(now()) - (trigger.to_state.attributes.timestamp | float(0)) < 60 }}"
+        },
+        {
+          "condition": "template",
+          "value_template": "{{ (trigger.to_state.attributes.timestamp | float(0) | timestamp_custom('%Y-%m-%d', true)) == now().strftime('%Y-%m-%d') }}"
+        },
+        {
+          "action": "tts.speak",
+          "target": {
+            "entity_id": "tts.piper"
+          },
+          "data": {
+            "media_player_entity_id": "media_player.surface",
+            "message": "{{ message }}",
+            "language": "en_US",
+            "cache": false
+          }
+        },
+        {
+          "if": [
+            {
+              "condition": "template",
+              "value_template": "{{ morning }}"
+            }
+          ],
+          "then": [
+            {
+              "action": "input_datetime.set_datetime",
+              "target": {
+                "entity_id": "input_datetime.surface_last_morning"
+              },
+              "data": {
+                "date": "{{ now().strftime('%Y-%m-%d') }}"
+              }
+            }
+          ]
+        },
+        {
+          "if": [
+            {
+              "condition": "template",
+              "value_template": "{{ welcome }}"
+            }
+          ],
+          "then": [
+            {
+              "action": "input_datetime.set_datetime",
+              "target": {
+                "entity_id": "input_datetime.surface_welcome_until"
+              },
+              "data": {
+                "timestamp": 0
+              }
+            }
+          ]
+        },
+        {
+          "if": [
+            {
+              "condition": "not",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity_id": "media_player.surface",
+                  "state": "playing"
+                }
+              ]
+            }
+          ],
+          "then": [
+            {
+              "wait_for_trigger": [
+                {
+                  "trigger": "state",
+                  "entity_id": "media_player.surface",
+                  "to": "playing"
+                }
+              ],
+              "timeout": "00:00:05",
+              "continue_on_timeout": true
+            }
+          ]
+        },
+        {
+          "if": [
+            {
+              "condition": "state",
+              "entity_id": "media_player.surface",
+              "state": "playing"
+            }
+          ],
+          "then": [
+            {
+              "wait_for_trigger": [
+                {
+                  "trigger": "state",
+                  "entity_id": "media_player.surface",
+                  "from": "playing"
+                }
+              ],
+              "timeout": "00:02:00",
+              "continue_on_timeout": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "initialize_new_helpers": [
+    {
+      "action": "input_datetime.set_datetime",
+      "target": {
+        "entity_id": "input_datetime.surface_last_wake"
+      },
+      "data": {
+        "timestamp": 0
+      }
+    },
+    {
+      "action": "input_datetime.set_datetime",
+      "target": {
+        "entity_id": "input_datetime.surface_last_seen"
+      },
+      "data": {
+        "timestamp": 0
+      }
+    },
+    {
+      "action": "input_datetime.set_datetime",
+      "target": {
+        "entity_id": "input_datetime.surface_away_since"
+      },
+      "data": {
+        "timestamp": 0
+      }
+    },
+    {
+      "action": "input_datetime.set_datetime",
+      "target": {
+        "entity_id": "input_datetime.surface_welcome_until"
+      },
+      "data": {
+        "timestamp": 0
+      }
+    },
+    {
+      "action": "input_datetime.set_datetime",
+      "target": {
+        "entity_id": "input_datetime.surface_last_morning"
+      },
+      "data": {
+        "date": "1970-01-01"
+      }
+    }
+  ],
+  "integrations": {
+    "wyoming": {
+      "host": "piper.ai.svc.cluster.local",
+      "port": 10200,
+      "voice": "en_US-lessac-medium"
+    },
+    "browser_mod": {
+      "version": "v3.3.0",
+      "browserID": "surface",
+      "media_player": "media_player.surface"
+    },
+    "home_assistant": {
+      "internal_url": "https://hass.aumer.dev"
+    }
+  }
+}

@@ -66,7 +66,7 @@ class ProvisioningTests(unittest.TestCase):
             self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
             self.assertRegex(second.stdout, r"changed=0\s+unreachable=0\s+failed=0")
             units = list((directory / "home/.config/systemd/user").glob("*"))
-            self.assertEqual(len(units), 5)
+            self.assertEqual(len(units), 6)
             if shutil.which("systemd-analyze"):
                 result = subprocess.run(["systemd-analyze", "verify", "--man=no", *map(str, units)],
                                         capture_output=True, text=True, timeout=30)
@@ -89,11 +89,12 @@ class DashboardTests(unittest.TestCase):
             preferences = (profile / "user.js").read_text()
             self.assertIn('user_pref("dom.screenwakelock.enabled", false);', preferences)
             self.assertIn('user_pref("browser.chrome.toolbar_tips", false);', preferences)
+            self.assertIn('user_pref("media.autoplay.default", 0);', preferences)
             self.assertIn('user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);', preferences)
             self.assertEqual((profile / "chrome/userContent.css").read_text(),
                              '* { cursor: none !important; }\n')
             launch.assert_called_once_with("firefox", ["firefox", "--no-remote", "--profile",
-                                                       str(profile), "--kiosk", self.config["dashboard_url"]])
+                                                       str(profile), "--kiosk", self.config["dashboard_url"] + "?BrowserID=surface"])
 
     def test_idle_requires_both_input_and_motion_inactivity(self):
         display = dashboard.Display(0)

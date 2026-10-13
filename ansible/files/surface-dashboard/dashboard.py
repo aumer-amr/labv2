@@ -184,6 +184,7 @@ def browser(config):
     (profile / "user.js").write_text(
         'user_pref("dom.screenwakelock.enabled", false);\n'
         'user_pref("browser.chrome.toolbar_tips", false);\n'
+        'user_pref("media.autoplay.default", 0);\n'
         'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);\n'
     )
     chrome = profile / "chrome"
@@ -201,7 +202,7 @@ def browser(config):
         print("Waiting for Home Assistant HTTPS connectivity", flush=True)
         time.sleep(5)
     os.execvp("firefox", ["firefox", "--no-remote", "--profile", str(profile),
-                           "--kiosk", config["dashboard_url"]])
+                           "--kiosk", config["dashboard_url"] + "?BrowserID=surface"])
 
 
 def stop(*_):
