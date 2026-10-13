@@ -60,6 +60,15 @@ spec:
       readOnlyRootFilesystem: true
       capabilities:
         drop: [ALL]
+    # Talos /var/lib is 0700; mounting it hides the traversable image directory.
+    defaultVolumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+    defaultVolumeMounts:
+      - name: varlog
+        mountPath: /var/log
+        readOnly: true
     podMonitor:
       enabled: true
     remoteWrite:
