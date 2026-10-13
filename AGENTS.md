@@ -12,6 +12,7 @@
 - Obtain explicit permission before any live state change unless the current request authorizes the exact action and target. This includes apply, patch, annotate, scale, restart, delete, suspend, resume, and forced reconciliation.
 - Never commit or push unless explicitly requested. Permission to commit does not permit pushing.
 - Never delete or recreate a resource without explicit permission and a verified recovery path.
+- Always prefer non-root containers. If root is the only viable option for a new application, warn the user and explain why before applying or committing it.
 
 ## Desired State and Namespace Safety
 
