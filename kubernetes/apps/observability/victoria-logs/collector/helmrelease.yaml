@@ -9,11 +9,57 @@ spec:
   chartRef:
     kind: OCIRepository
     name: victoria-logs-collector
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: DaemonSet
+              name: victoria-logs-collector
+            patch: |-
+              apiVersion: apps/v1
+              kind: DaemonSet
+              metadata:
+                name: victoria-logs-collector
+              spec:
+                template:
+                  spec:
+                    initContainers:
+                      - name: queue-permissions
+                        image: docker.io/library/busybox:1.37.0@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+                        command:
+                          - /bin/sh
+                          - -ec
+                          - chown -R 65534:65534 /var/lib/vl-collector
+                        securityContext:
+                          runAsUser: 0
+                          runAsGroup: 0
+                          runAsNonRoot: false
+                          allowPrivilegeEscalation: false
+                          readOnlyRootFilesystem: true
+                          capabilities:
+                            drop: [ALL]
+                            add: [CHOWN]
+                        volumeMounts:
+                          - name: vl-collector-data
+                            mountPath: /var/lib/vl-collector
   values:
     fullnameOverride: victoria-logs-collector
     global:
       image:
         registry: quay.io
+    podSecurityContext:
+      # Host pod logs are root:root 0640; group access avoids changing them.
+      supplementalGroups: [0]
+      seccompProfile:
+        type: RuntimeDefault
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 65534
+      runAsGroup: 65534
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: [ALL]
     podMonitor:
       enabled: true
     remoteWrite:
