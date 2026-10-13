@@ -23,3 +23,6 @@ spec:
       key: KOPIA_PASSWORD
   scheduleDefaults:
     timezone: Europe/Amsterdam
+  parameters:
+    epoch:
+      minDuration: 6h
