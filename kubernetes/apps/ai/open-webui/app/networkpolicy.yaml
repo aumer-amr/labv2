@@ -27,6 +27,14 @@ spec:
     - to:
         - podSelector:
             matchLabels:
+              app.kubernetes.io/instance: piper
+              app.kubernetes.io/name: piper
+      ports:
+        - port: 8555
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
               inference.llmkube.dev/service: qwen3-reranker-0.6b
       ports:
         - port: 8080
@@ -99,6 +107,7 @@ spec:
             dns:
               - matchName: idm.${SECRET_DOMAIN}
               - matchName: litellm.ai.svc.cluster.local
+              - matchName: piper.ai.svc.cluster.local
               - matchName: open-webui-valkey.ai.svc.cluster.local
               - matchName: searxng.ai.svc.cluster.local
               - matchName: qwen3-reranker-0-6b.ai.svc.cluster.local
@@ -114,6 +123,7 @@ spec:
             dns:
               - matchName: idm.${SECRET_DOMAIN}
               - matchName: litellm.ai.svc.cluster.local
+              - matchName: piper.ai.svc.cluster.local
               - matchName: open-webui-valkey.ai.svc.cluster.local
               - matchName: searxng.ai.svc.cluster.local
               - matchName: qwen3-reranker-0-6b.ai.svc.cluster.local

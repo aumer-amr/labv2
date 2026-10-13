@@ -11,6 +11,14 @@ spec:
   policyTypes: [Ingress, Egress]
   ingress:
     - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: open-webui
+              app.kubernetes.io/name: open-webui
+      ports:
+        - port: 8555
+          protocol: TCP
+    - from:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: home

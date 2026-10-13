@@ -54,6 +54,54 @@ spec:
               readOnlyRootFilesystem: true
               capabilities:
                 drop: [ALL]
+          gateway:
+            image:
+              repository: ghcr.io/archmonger/wyoming-openai-gateway
+              tag: v0.2.1@sha256:d826f1ef5c6f313a7d85dcbbbd19dd2f4f8033ea0101b7671669f70e8c0a2d48
+            env:
+              TTS_HOST: 127.0.0.1
+              TTS_PORT: "10200"
+              PYTHONDONTWRITEBYTECODE: "1"
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: &httpPort 8555
+                  timeoutSeconds: 5
+                  periodSeconds: 30
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /readyz
+                    port: *httpPort
+                  timeoutSeconds: 20
+                  periodSeconds: 30
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: *httpPort
+                  timeoutSeconds: 5
+                  periodSeconds: 10
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: [ALL]
     defaultPodOptions:
       automountServiceAccountToken: false
       dnsConfig:
@@ -74,6 +122,8 @@ spec:
         ports:
           wyoming:
             port: 10200
+          http:
+            port: *httpPort
     persistence:
       data:
         existingClaim: piper
