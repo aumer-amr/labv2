@@ -10,7 +10,7 @@ spec:
   allocateLoadBalancerNodePorts: false
   externalTrafficPolicy: Local
   loadBalancerSourceRanges:
-    - 10.10.1.1/32
+    - 10.10.0.0/16
   selector:
     app.kubernetes.io/instance: victoria-logs
     app.kubernetes.io/name: victoria-logs-single
