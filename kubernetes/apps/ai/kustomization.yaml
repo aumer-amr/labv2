@@ -17,6 +17,7 @@ resources:
   - ./open-webui/ks.yaml
   - ./searxng/ks.yaml
   - ./whisper/ks.yaml
+  - ./piper/ks.yaml
   - ./paperless-mcp/ks.yaml
   - ./context7/ks.yaml
   - ./unifi-mcp/ks.yaml

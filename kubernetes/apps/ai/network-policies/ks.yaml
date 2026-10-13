@@ -16,6 +16,7 @@ spec:
     - name: open-webui
     - name: searxng
     - name: whisper
+    - name: piper
     - name: unifi-mcp
     - name: victoria-logs-mcp
       namespace: observability
