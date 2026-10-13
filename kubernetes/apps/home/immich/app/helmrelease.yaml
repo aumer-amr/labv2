@@ -93,8 +93,12 @@ spec:
                   - ALL
     defaultPodOptions:
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
         fsGroup: 1000
-        fsGroupChangePolicy: OnRootMismatch
+        # The volume root matches already, but existing library directories do not allow group writes.
+        fsGroupChangePolicy: Always
     global:
       createDefaultServiceAccount: false
     persistence:
@@ -154,6 +158,11 @@ spec:
   interval: 1h
   values:
     defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       dnsConfig:
         options:
           - name: ndots
@@ -169,6 +178,7 @@ spec:
               tag: v3.3.1@sha256:513c831cfb010ad319341a0c86b42c575a0d5b688d3e8cae346ee624074a58ed
             env:
               TZ: Europe/Amsterdam
+              HOME: /cache
               MPLCONFIGDIR: /cache/matplotlib
             probes:
               readiness:
