@@ -46,6 +46,9 @@ spec:
         - ipBlock:
             cidr: 10.40.0.0/16
     - to:
+        - ipBlock:
+            cidr: 10.10.1.3/32
+    - to:
         - podSelector:
             matchLabels:
               app.kubernetes.io/instance: zigbee2mqtt
