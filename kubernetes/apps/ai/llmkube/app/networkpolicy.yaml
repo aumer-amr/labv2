@@ -165,6 +165,7 @@ spec:
       - key: inference.llmkube.dev/service
         operator: In
         values:
+          - qwen3.5-9b
           - qwen3-embedding-0.6b
           - qwen3-reranker-0.6b
   egress:

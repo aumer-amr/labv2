@@ -130,6 +130,7 @@ spec:
               - key: inference.llmkube.dev/service
                 operator: In
                 values:
+                  - qwen3.5-9b
                   - qwen3-embedding-0.6b
       ports:
         - port: 8080
@@ -175,6 +176,7 @@ spec:
               - matchName: paperless-mcp.ai.svc.cluster.local
               - matchName: prometheus-mcp.ai.svc.cluster.local
               - matchName: qwen3-embedding-0-6b.ai.svc.cluster.local
+              - matchName: qwen3-5-9b.ai.svc.cluster.local
               - matchName: unifi-mcp.ai.svc.cluster.local
               - matchName: victorialogs-mcp.ai.svc.cluster.local
               - matchName: whisper.ai.svc.cluster.local
@@ -198,6 +200,7 @@ spec:
               - matchName: paperless-mcp.ai.svc.cluster.local
               - matchName: prometheus-mcp.ai.svc.cluster.local
               - matchName: qwen3-embedding-0-6b.ai.svc.cluster.local
+              - matchName: qwen3-5-9b.ai.svc.cluster.local
               - matchName: unifi-mcp.ai.svc.cluster.local
               - matchName: victorialogs-mcp.ai.svc.cluster.local
               - matchName: whisper.ai.svc.cluster.local

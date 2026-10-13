@@ -9,6 +9,7 @@ spec:
   mcpToolsets:
     - 2144065e-cc91-4615-9626-f5e3b3aa7de3
   models:
+    - qwen3.5-9b
     - gpt-5.6-terra
     - gpt-5.6-luna
     - gpt-5.6-sol

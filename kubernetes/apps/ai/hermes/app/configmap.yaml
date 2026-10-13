@@ -12,11 +12,24 @@ data:
     model:
       default: gpt-6.1-sol
       provider: lab-litellm
+    fallback_providers:
+      - provider: lab-litellm
+        model: qwen3.5-9b
+        base_url: http://litellm.ai.svc.cluster.local:4000/v1
+        key_env: LITELLM_API_KEY
+    model_overrides:
+      lab-litellm:
+        qwen3.5-9b:
+          context_window: 32768
+          supports_tools: true
+          supports_vision: false
+          supports_reasoning: false
     providers:
       lab-litellm:
         api: http://litellm.ai.svc.cluster.local:4000/v1
         key_env: LITELLM_API_KEY
         transport: chat_completions
+        request_timeout_seconds: 1800
     memory:
       provider: memini
     plugins:
@@ -66,6 +79,8 @@ data:
       restart_drain_timeout: 60
       api_max_retries: 2
       reasoning_effort: medium
+      reasoning_overrides:
+        qwen3.5-9b: false
       disabled_toolsets:
         - browser
         - code_execution

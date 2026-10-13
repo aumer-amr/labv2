@@ -178,6 +178,12 @@ def cron_checks():
                     cron.reconcile_cron([{k: v for k, v in job.items() if k not in ("model", "reasoning_effort")}])
                     assert calls[0][calls[0].index("--model") + 1] == ""
                     assert calls[0][calls[0].index("--reasoning-effort") + 1] == ""
+                    calls.clear()
+                    unpinned = {**record, "model": None, "provider": None}
+                    stored.side_effect = [[record], [unpinned], [unpinned]]
+                    cron.reconcile_cron([{k: v for k, v in job.items() if k not in ("model", "provider")}])
+                    assert calls[0][calls[0].index("--model") + 1] == ""
+                    assert calls[0][calls[0].index("--provider") + 1] == ""
         for existing in ([], [record]):
             disabled = {**record, "enabled": False}
             states = [existing, [disabled], [disabled]] if existing else [existing, [disabled], [disabled], [disabled]]
