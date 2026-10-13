@@ -28,6 +28,8 @@ spec:
             args:
               - |
                 set -eu
+                mkdir -p "$STATIC_DIR"
+                cp -R /app/backend/open_webui/static/. "$STATIC_DIR/"
                 PYTHONPATH=/app/backend python /run/integrations/bootstrap.py
                 export TOOL_SERVER_CONNECTIONS="$(
                   python -c 'import json, os; print(json.dumps([{"type": "mcp", "url": "http://litellm.ai.svc.cluster.local:4000/mcp/proxy", "path": "", "auth_type": "bearer", "key": os.environ["OPENAI_API_KEY"], "config": {"enable": True}, "info": {"id": "litellm-mcp", "name": "LiteLLM MCP", "description": "Home Assistant tools through LiteLLM"}}]))'
@@ -64,6 +66,7 @@ spec:
               ENABLE_VERSION_UPDATE_CHECK: "false"
               ENABLE_WEB_SEARCH: "true"
               ENABLE_WEBSOCKET_SUPPORT: "true"
+              HOME: /app/backend/data
               MEMINI_API_KEY:
                 valueFrom:
                   secretKeyRef:
@@ -99,6 +102,7 @@ spec:
               RAG_TOP_K_RERANKER: "3"
               REDIS_KEY_PREFIX: open-webui
               SEARXNG_QUERY_URL: "http://searxng.ai.svc.cluster.local:8080/search?q=<query>"
+              STATIC_DIR: /app/backend/data/static
               TASK_MODEL_EXTERNAL: gpt-6-luna
               TZ: Europe/Amsterdam
               WEB_SEARCH_ENGINE: searxng
@@ -153,6 +157,12 @@ spec:
         network.home.arpa/from-envoy-internal: allow
         network.home.arpa/to-envoy-external: allow
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        # Existing root-owned database/cache files need group write access.
+        fsGroupChangePolicy: Always
         seccompProfile:
           type: RuntimeDefault
     service:

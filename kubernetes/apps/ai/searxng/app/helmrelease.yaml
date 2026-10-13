@@ -70,12 +70,15 @@ spec:
               readOnlyRootFilesystem: true
               capabilities:
                 drop: ["ALL"]
-                add: ["CHOWN", "SETGID", "SETUID", "DAC_OVERRIDE"]
     defaultPodOptions:
       automountServiceAccountToken: false
       labels:
         network.home.arpa/from-envoy-internal: allow
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 977
+        runAsGroup: 977
+        fsGroup: 977
         seccompProfile:
           type: RuntimeDefault
     service:
