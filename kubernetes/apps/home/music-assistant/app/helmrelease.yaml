@@ -17,7 +17,7 @@ spec:
           configure-streams:
             image:
               repository: ghcr.io/music-assistant/server
-              tag: 2.10.5
+              tag: 2.10.6
             command: ["python", "-c"]
             args:
               - |-
@@ -42,7 +42,7 @@ spec:
           app:
             image:
               repository: ghcr.io/music-assistant/server
-              tag: 2.10.5
+              tag: 2.10.6
             env:
               TZ: Europe/Amsterdam
               LOG_LEVEL: info
