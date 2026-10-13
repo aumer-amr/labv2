@@ -21,11 +21,37 @@ kube-state-metrics:
         verbs:
           - list
           - watch
+      - apiGroups:
+          - kopiur.home-operations.com
+        resources:
+          - clusterrepositories
+        verbs:
+          - list
+          - watch
   customResourceState:
     enabled: true
     config:
       spec:
         resources:
+          - groupVersionKind:
+              group: kopiur.home-operations.com
+              version: v1alpha1
+              kind: ClusterRepository
+            metricNamePrefix: kopiur
+            labelsFromPath:
+              repository:
+                - metadata
+                - name
+            metrics:
+              - name: repository_index_blobs
+                help: The last observed number of content-index blobs in a Kopiur cluster repository.
+                each:
+                  type: Gauge
+                  gauge:
+                    path:
+                      - status
+                      - storageStats
+                      - indexBlobCount
           - groupVersionKind:
               group: kustomize.toolkit.fluxcd.io
               version: v1

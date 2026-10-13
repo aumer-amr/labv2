@@ -6,5 +6,6 @@ resources:
   - ./cilium-policy.yaml
   - ./dockerhub-rate-limit.yaml
   - ./kopiur-snapshot-pending.yaml
+  - ./kopiur-repository-index-blobs.yaml
   - ./oom-killed.yaml
   - ./zfs-unexpected-pool-state.yaml

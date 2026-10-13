@@ -1,0 +1,22 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kopiur-repository-index-blobs
+spec:
+  groups:
+    - name: kopiur-repository-index-blobs
+      rules:
+        - alert: KopiurRepositoryIndexBlobsHigh
+          annotations:
+            summary: Kopiur repository {{ $labels.repository }} has a persistently high index blob count.
+            description: >-
+              Kopiur repository {{ $labels.repository }} has reported more than 1,000
+              content-index blobs for 24 hours (currently {{ $value }}). Repository
+              connections and backups may slow down. Check maintenance completion,
+              lease ownership, and epoch parameters before changing the warning threshold.
+          expr: max by (repository) (kopiur_repository_index_blobs) > 1000
+          for: 24h
+          labels:
+            severity: warning
