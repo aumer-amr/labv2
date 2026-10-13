@@ -180,6 +180,25 @@ Increase the motion threshold to reduce false wakes or lower it for smaller move
 Credentials never belong in these settings. If using SSH password authentication,
 add `--ask-pass`; sudo credentials use `--ask-become-pass`.
 
+### Home Assistant greetings
+
+The independent `surface-dashboard-reporter.service` observes actual X11 DPMS
+state and reports display changes and a heartbeat to `script.surface_report_display`.
+It never controls the display, and startup or reconnect does not replay old wakes.
+Wakes within 15 seconds of a browser or display-service start are ignored, because
+launching Firefox can reset input idle without a person approaching.
+Create a long-lived access token using the tablet's non-admin Home Assistant account
+and save it as `~/.config/surface-dashboard/ha-token`, owned by the tablet user with
+mode `0600`. Keep this file out of inventory and Git; the reporter never reads browser
+credentials or logs tokens and HTTP responses.
+
+The HA helpers, reporter script, and greeting automations are recorded in
+`../raw/home-assistant/front-door-greetings.json` and installed through HA's config
+APIs. Initialize bookkeeping only when creating new helpers. Playback uses
+`tts.piper` and the registered Browser Mod player `media_player.surface`. The kiosk
+launches with `BrowserID=surface` and allows audio autoplay in its dedicated Firefox
+profile. Piper runs in `ai`; HA owns presence, calendar, car, bin, and once-daily logic.
+
 The front webcam detects **movement**, not a stationary person's continued presence.
 Frames are reduced to 320×240 at 5 fps before Motion detection. Recording, snapshots,
 streaming, and web control are disabled. Movement or touch wakes the display locally,
