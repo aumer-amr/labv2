@@ -410,6 +410,14 @@ specs:
     egress:
       - toServices:
           - k8sService:
+              serviceName: karakeep
+              namespace: administration
+        toPorts:
+          - ports:
+              - port: "3000"
+                protocol: TCP
+      - toServices:
+          - k8sService:
               serviceName: actual
               namespace: administration
         toPorts:
