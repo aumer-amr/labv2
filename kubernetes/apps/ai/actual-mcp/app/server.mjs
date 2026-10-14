@@ -12,16 +12,22 @@ import { z } from "zod";
 import { registerAllTools } from "../dist/tools/index.js";
 import { actualApiVersion } from "../dist/utils/version.js";
 
-export function readTools() {
+export function budgetTools(readOnly = true) {
   const tools = [];
-  process.env.ACTUAL_READ_ONLY = "1";
-  registerAllTools({
-    tool(name, description, schema, annotations) {
-      // Upstream keeps repair_sync in read-only mode; never expose maintenance.
-      if (annotations?.readOnlyHint === true)
-        tools.push({ name, description, schema, annotations });
-    },
-  });
+  const previous = process.env.ACTUAL_READ_ONLY;
+  process.env.ACTUAL_READ_ONLY = readOnly ? "1" : "0";
+  try {
+    registerAllTools({
+      tool(name, description, schema, annotations) {
+        // Maintenance belongs to the write endpoint even when upstream allows it read-only.
+        if (annotations?.readOnlyHint === readOnly)
+          tools.push({ name, description, schema, annotations });
+      },
+    });
+  } finally {
+    if (previous === undefined) delete process.env.ACTUAL_READ_ONLY;
+    else process.env.ACTUAL_READ_ONLY = previous;
+  }
   return tools;
 }
 
@@ -100,6 +106,7 @@ async function queryBudgetIsolated(
   name,
   args,
   passwords,
+  readOnly = true,
   makeClient = () => new Client({ name: "actual-http", version: "1" }),
 ) {
   const cache = createHash("sha256").update(budgetId).digest("hex");
@@ -109,14 +116,14 @@ async function queryBudgetIsolated(
     args: ["/app/dist/index.js"],
     env: {
       ...process.env,
-      ACTUAL_READ_ONLY: "1",
+      ACTUAL_READ_ONLY: readOnly ? "1" : "0",
       ACTUAL_BUDGET_ID: budgetId,
       ACTUAL_DATA_DIR: "/data/budgets/" + cache,
       ACTUAL_ENCRYPTION_PASSWORD: passwords[budgetId] ?? "",
     },
     stderr: "ignore",
   });
-  // shortcut: one isolated process per read, reuse per-budget workers if startup latency becomes material.
+  // shortcut: one isolated process per call, reuse per-budget workers if startup latency becomes material.
   try {
     await client.connect(transport);
     return await client.callTool({ name, arguments: args }, undefined, { timeout: 120_000 });
@@ -125,7 +132,12 @@ async function queryBudgetIsolated(
   }
 }
 
-export function createServer({ list = listBudgets, query = queryBudget, passwords = {} } = {}) {
+export function createServer({
+  list = listBudgets,
+  query = queryBudget,
+  passwords = {},
+  readOnly = true,
+} = {}) {
   const server = new McpServer({ name: "actual-budget", version: "1" });
   const secrets = [
     process.env.ACTUAL_SESSION_TOKEN,
@@ -141,24 +153,25 @@ export function createServer({ list = listBudgets, query = queryBudget, password
         content: [
           {
             type: "text",
-            text: "Actual read failed. Check credentials, budget encryption, and matching server/API versions.",
+            text: "Actual operation failed. Check credentials, budget encryption, and matching server/API versions. Verify the result before retrying a write.",
           },
         ],
       };
     }
   };
-  server.registerTool(
-    "list_budgets",
-    {
-      description:
-        "List every budget accessible to the configured Actual user. Use its budget_id on subsequent reads.",
-      inputSchema: {},
-      annotations: { readOnlyHint: true },
-    },
-    () =>
-      guarded(async () => ({ content: [{ type: "text", text: JSON.stringify(await list()) }] })),
-  );
-  for (const { name, description, schema, annotations } of readTools()) {
+  if (readOnly)
+    server.registerTool(
+      "list_budgets",
+      {
+        description:
+          "List every budget accessible to the configured Actual user. Use its budget_id on subsequent reads.",
+        inputSchema: {},
+        annotations: { readOnlyHint: true },
+      },
+      () =>
+        guarded(async () => ({ content: [{ type: "text", text: JSON.stringify(await list()) }] })),
+    );
+  for (const { name, description, schema, annotations } of budgetTools(readOnly)) {
     server.registerTool(
       name,
       {
@@ -182,7 +195,7 @@ export function createServer({ list = listBudgets, query = queryBudget, password
               ],
             };
           }
-          return query(budget_id, name, args, passwords);
+          return query(budget_id, name, args, passwords, readOnly);
         }),
     );
   }
@@ -221,8 +234,9 @@ export function start() {
     if (req.headers.origin) return res.sendStatus(403);
     next();
   });
-  app.post("/mcp", async (req, res) => {
-    const server = createServer({ passwords });
+  app.post(["/mcp", "/mcp-write"], async (req, res) => {
+    // LiteLLM grants the separate write registration only to the codex virtual key.
+    const server = createServer({ passwords, readOnly: req.path !== "/mcp-write" });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse: true,

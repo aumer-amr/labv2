@@ -11,7 +11,7 @@ import {
   authorize,
   createServer,
   queryBudget,
-  readTools,
+  budgetTools,
   redact,
   remoteBudgets,
 } from "./server.mjs";
@@ -38,10 +38,20 @@ assert.deepEqual(
 assert.deepEqual(redact({ text: 'quoted "token" and password' }, ['"token"', "password"]), {
   text: "quoted [redacted] and [redacted]",
 });
-const tools = readTools();
+const tools = budgetTools();
 assert.equal(tools.length, 15);
 assert.ok(tools.every((tool) => tool.annotations.readOnlyHint === true));
 assert.ok(!tools.some((tool) => tool.name === "repair_sync"));
+const writes = budgetTools(false);
+assert.equal(writes.length, 26);
+assert.ok(writes.every((tool) => tool.annotations.readOnlyHint === false));
+assert.ok(writes.some((tool) => tool.name === "create_transaction"));
+assert.ok(writes.some((tool) => tool.name === "repair_sync"));
+assert.deepEqual(
+  budgetTools().map((tool) => tool.name),
+  tools.map((tool) => tool.name),
+  "write discovery must not change read discovery",
+);
 
 const calls = [];
 const server = createServer({
@@ -96,16 +106,64 @@ try {
   await server.close();
 }
 
-for (const id of ["one", "../../two"]) {
+const writeCalls = [];
+const writeServer = createServer({
+  readOnly: false,
+  list: async () => [{ budget_id: "one", name: "One" }],
+  query: async (...args) => {
+    writeCalls.push(args);
+    return { content: [] };
+  },
+});
+const writeClient = new Client({ name: "write-test", version: "1" });
+const [writeClientTransport, writeServerTransport] = InMemoryTransport.createLinkedPair();
+await writeServer.connect(writeServerTransport);
+await writeClient.connect(writeClientTransport);
+try {
+  const exposed = (await writeClient.listTools()).tools;
+  assert.equal(exposed.length, writes.length);
+  assert.ok(exposed.every((tool) => tool.annotations.readOnlyHint === false));
+  assert.equal(
+    (await writeClient.callTool({ name: "get_transactions", arguments: {} })).isError,
+    true,
+  );
+  assert.equal(
+    (
+      await writeClient.callTool({
+        name: "create_payee",
+        arguments: { budget_id: "unknown", name: "Test" },
+      })
+    ).isError,
+    true,
+  );
+  assert.equal(
+    (
+      await writeClient.callTool({
+        name: "create_payee",
+        arguments: { budget_id: "one", name: "Test" },
+      })
+    ).isError,
+    undefined,
+  );
+  assert.deepEqual(writeCalls, [["one", "create_payee", { name: "Test" }, {}, false]]);
+} finally {
+  await writeClient.close();
+  await writeServer.close();
+}
+
+for (const [id, readOnly] of [
+  ["one", true],
+  ["../../two", false],
+]) {
   let transport;
   let closed = false;
-  await queryBudget(id, "list_accounts", {}, { [id]: "encryption" }, () => ({
+  await queryBudget(id, "list_accounts", {}, { [id]: "encryption" }, readOnly, () => ({
     connect: async (value) => {
       transport = value;
     },
     callTool: async (request) => {
       assert.equal(transport._serverParams.env.ACTUAL_BUDGET_ID, id);
-      assert.equal(transport._serverParams.env.ACTUAL_READ_ONLY, "1");
+      assert.equal(transport._serverParams.env.ACTUAL_READ_ONLY, readOnly ? "1" : "0");
       assert.equal(transport._serverParams.env.ACTUAL_ENCRYPTION_PASSWORD, "encryption");
       assert.match(transport._serverParams.env.ACTUAL_DATA_DIR, /^\/data\/budgets\/[a-f0-9]{64}$/);
       assert.deepEqual(request, { name: "list_accounts", arguments: {} });
@@ -122,7 +180,7 @@ const active = new Map();
 let maximumParallel = 0;
 await Promise.all(
   ["one", "one", "two"].map((id) =>
-    queryBudget(id, "list_accounts", {}, {}, () => ({
+    queryBudget(id, "list_accounts", {}, {}, true, () => ({
       connect: async () => {
         active.set(id, (active.get(id) ?? 0) + 1);
         assert.equal(active.get(id), 1, "same-budget reads must serialize");
@@ -143,7 +201,7 @@ await Promise.all(
 );
 assert.equal(maximumParallel, 2, "different-budget reads may run in parallel");
 await assert.rejects(
-  queryBudget("one", "list_accounts", {}, {}, () => ({
+  queryBudget("one", "list_accounts", {}, {}, true, () => ({
     connect: async () => {
       throw new Error("Startup failed");
     },
@@ -200,6 +258,19 @@ try {
     new StreamableHTTPClientTransport(endpoint, { requestInit: { headers } }),
   );
   assert.equal((await httpClient.listTools()).tools.length, 16);
+  const writeHttpClient = new Client({ name: "write-http-test", version: "1" });
+  try {
+    await writeHttpClient.connect(
+      new StreamableHTTPClientTransport(new URL("http://127.0.0.1:8080/mcp-write"), {
+        requestInit: { headers },
+      }),
+    );
+    const exposed = (await writeHttpClient.listTools()).tools;
+    assert.equal(exposed.length, writes.length);
+    assert.ok(exposed.every((tool) => tool.annotations.readOnlyHint === false));
+  } finally {
+    await writeHttpClient.close();
+  }
 } finally {
   await httpClient.close();
   if (child.exitCode === null) {
@@ -212,5 +283,5 @@ try {
   await rmdir(projection);
 }
 console.log(
-  "Actual MCP checks passed: read-only discovery, authorization, all-budget selection, concurrent isolation, and child cleanup.",
+  "Actual MCP checks passed: separate read/write discovery, authorization, all-budget selection, concurrent isolation, and child cleanup.",
 );

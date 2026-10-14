@@ -67,7 +67,8 @@ spec:
       - name: ACTUAL_SERVER_URL
         value: http://actual.administration.svc.cluster.local.:5006
       - name: ACTUAL_READ_ONLY
-        value: "1"
+        # The bridge forces read-only mode on /mcp and enables writes only on /mcp-write.
+        value: "0"
       - name: ACTUAL_DATA_DIR
         value: /data
     resources:
@@ -97,3 +98,47 @@ spec:
         mountPath: /data
       - name: tmp
         mountPath: /tmp
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMMCPServer
+metadata:
+  name: actual-mcp-write
+spec:
+  alias: actual_write
+  params:
+    # Grant only through the codex toolset; the actual registration stays read-only.
+    allow_all_keys: false
+    allowed_tools:
+      - repair_sync
+      - create_transaction
+      - create_transactions
+      - create_split_transaction
+      - reconcile_currency_residual
+      - update_budget_amount
+      - transfer_between_categories
+      - recategorize_transaction
+      - create_transfer
+      - update_transaction
+      - delete_transaction
+      - run_bank_sync
+      - create_account
+      - delete_account
+      - update_account
+      - create_category
+      - update_category
+      - delete_category
+      - create_category_group
+      - update_category_group
+      - delete_category_group
+      - create_payee
+      - update_payee
+      - delete_payee
+      - create_rule
+      - delete_rule
+  proxyRef: litellm
+  transport: http
+  url: http://actual-mcp.ai.svc.cluster.local:8080/mcp-write
+  authType: bearer_token
+  authTokenRef:
+    name: actual-mcp-secret
+    key: ACTUAL_MCP_TOKEN
