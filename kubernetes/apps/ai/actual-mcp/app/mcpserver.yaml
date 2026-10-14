@@ -1,0 +1,97 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMMCPServer
+metadata:
+  name: actual-mcp
+spec:
+  alias: actual
+  params:
+    allow_all_keys: false
+    allowed_tools:
+      - list_budgets
+      - list_accounts
+      - get_budget_month
+      - get_transactions
+      - get_category_balance
+      - get_budget_summary
+      - get_categories
+      - get_payees
+      - budget_vs_actual
+      - spending_projection
+      - category_trends
+      - spending_by_category
+      - monthly_summary
+      - balance_history
+      - reconcile_account
+      - get_rules
+  proxyRef: litellm
+  transport: http
+  authType: bearer_token
+  authTokenRef:
+    name: actual-mcp-secret
+    key: ACTUAL_MCP_TOKEN
+  workload:
+    automountServiceAccountToken: false
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+    # renovate: datasource=docker depName=ghcr.io/henfrydls/actual-budget-mcp
+    image: ghcr.io/henfrydls/actual-budget-mcp:0.10.5@sha256:f75851eef7429d970490051fdeb260b828c1d94c98ad517d2f8d2695e08f09f2
+    port: 8080
+    env:
+      - name: ACTUAL_SESSION_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: actual-mcp-secret
+            key: ACTUAL_SESSION_TOKEN
+      - name: ACTUAL_MCP_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: actual-mcp-secret
+            key: ACTUAL_MCP_TOKEN
+      - name: ACTUAL_ENCRYPTION_PASSWORDS
+        valueFrom:
+          secretKeyRef:
+            name: actual-mcp-secret
+            key: ACTUAL_ENCRYPTION_PASSWORDS
+      - name: ACTUAL_SERVER_URL
+        value: http://actual.administration.svc.cluster.local:5006
+      - name: ACTUAL_READ_ONLY
+        value: "1"
+      - name: ACTUAL_DATA_DIR
+        value: /data
+    resources:
+      requests:
+        cpu: 25m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
+    command:
+      - node
+      - /app/bridge/server.mjs
+    volumes:
+      - name: bridge
+        configMap:
+          name: actual-mcp
+      - name: data
+        emptyDir: {}
+      - name: tmp
+        emptyDir: {}
+    volumeMounts:
+      - name: bridge
+        mountPath: /app/bridge
+        readOnly: true
+      - name: data
+        mountPath: /data
+      - name: tmp
+        mountPath: /tmp

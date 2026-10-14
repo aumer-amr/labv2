@@ -1,0 +1,81 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMMCPServer
+metadata:
+  name: grafana-mcp
+spec:
+  alias: grafana
+  params:
+    allow_all_keys: false
+    allowed_tools:
+      - alerting_rules_read
+      - alerting_silences_read
+      - check_datasources_health
+      - get_dashboard_by_uid
+      - get_dashboard_panel_queries
+      - get_dashboard_property
+      - get_dashboard_summary
+      - get_datasource
+      - list_dashboard_versions
+      - list_datasources
+      - list_prometheus_label_names
+      - list_prometheus_label_values
+      - list_prometheus_metric_metadata
+      - list_prometheus_metric_names
+      - query_prometheus
+      - query_prometheus_histogram
+      - search_dashboards
+      - search_folders
+  proxyRef: litellm
+  transport: http
+  authType: bearer_token
+  authTokenRef:
+    name: grafana-mcp-secret
+    key: MCP_GRAFANA_SERVER_TOKEN
+  workload:
+    automountServiceAccountToken: false
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+    # renovate: datasource=docker depName=docker.io/grafana/mcp-grafana
+    image: docker.io/grafana/mcp-grafana:2.0.2@sha256:78d208116ec52b09b44f0eca66892073b39aefcb64483c54d43255c8eab7e97a
+    port: 8000
+    env:
+      - name: GRAFANA_SERVICE_ACCOUNT_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: grafana-mcp-secret
+            key: GRAFANA_SERVICE_ACCOUNT_TOKEN
+      - name: MCP_GRAFANA_SERVER_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: grafana-mcp-secret
+            key: MCP_GRAFANA_SERVER_TOKEN
+      - name: GRAFANA_URL
+        value: http://grafana-service.observability.svc.cluster.local:3000
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        memory: 256Mi
+    command:
+      - /app/mcp-grafana
+    args:
+      - --transport=streamable-http
+      - --address=0.0.0.0:8000
+      - --disable-write
+      - --enabled-tools=search,dashboard,datasource,prometheus,alerting
+      - --disable-api
+      - --usage-stats=disabled
+      - --allowed-hosts=grafana-mcp:8000,grafana-mcp.ai:8000,grafana-mcp.ai.svc:8000,grafana-mcp.ai.svc.cluster.local:8000

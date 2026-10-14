@@ -23,4 +23,6 @@ resources:
   - ./unifi-mcp/ks.yaml
   - ./truenas-mcp/ks.yaml
   - ./prometheus-mcp/ks.yaml
+  - ./actual-mcp/ks.yaml
+  - ./grafana-mcp/ks.yaml
   - ./network-policies/ks.yaml
