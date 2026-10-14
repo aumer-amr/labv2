@@ -54,8 +54,15 @@ spec:
             dns:
               - matchName: idm.${SECRET_DOMAIN}
               - matchName: idm.${SECRET_DOMAIN}.administration.svc.cluster.local
+              - matchName: api.enablebanking.com
     - toFQDNs:
         - matchName: idm.${SECRET_DOMAIN}
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    - toFQDNs:
+        - matchName: api.enablebanking.com
       toPorts:
         - ports:
             - port: "443"
