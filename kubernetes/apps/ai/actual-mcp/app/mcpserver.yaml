@@ -65,7 +65,7 @@ spec:
             name: actual-mcp-secret
             key: ACTUAL_ENCRYPTION_PASSWORDS
       - name: ACTUAL_SERVER_URL
-        value: http://actual.administration.svc.cluster.local:5006
+        value: http://actual.administration.svc.cluster.local.:5006
       - name: ACTUAL_READ_ONLY
         value: "1"
       - name: ACTUAL_DATA_DIR

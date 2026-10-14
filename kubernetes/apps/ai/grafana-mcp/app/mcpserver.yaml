@@ -62,7 +62,7 @@ spec:
             name: grafana-mcp-secret
             key: MCP_GRAFANA_SERVER_TOKEN
       - name: GRAFANA_URL
-        value: http://grafana-service.observability.svc.cluster.local:3000
+        value: http://grafana-service.observability.svc.cluster.local.:3000
     resources:
       requests:
         cpu: 25m
