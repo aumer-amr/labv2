@@ -6,8 +6,10 @@ namespace: security
 
 components:
   - ../../components/sops
+  - ../../components/kopiur/secret
 
 resources:
   - ./namespace.yaml
+  - ./network-policies/kopiur-mover.yaml
   - ./kanidm/ks.yaml
   - ./network-policies/ks.yaml
