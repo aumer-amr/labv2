@@ -6,9 +6,11 @@ namespace: administration
 
 components:
   - ../../components/sops
+  - ../../components/kopiur/secret
 
 resources:
   - ./namespace.yaml
+  - ./network-policies/kopiur-mover.yaml
   - ./actual/ks.yaml
   - ./karakeep/ks.yaml
   - ./paperless/ks.yaml
