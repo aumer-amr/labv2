@@ -102,6 +102,12 @@ spec:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
+              app.kubernetes.io/name: karakeep-mcp
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
               app.kubernetes.io/name: actual-mcp
         - namespaceSelector:
             matchLabels:
@@ -159,6 +165,12 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/managed-by: kopiur
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: administration
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: karakeep
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: administration
