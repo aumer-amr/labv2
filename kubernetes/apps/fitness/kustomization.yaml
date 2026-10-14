@@ -5,8 +5,10 @@ namespace: fitness
 
 components:
   - ../../components/sops
+  - ../../components/kopiur/secret
 
 resources:
   - ./namespace.yaml
+  - ./network-policies/kopiur-mover.yaml
   - ./sparkyfitness/ks.yaml
   - ./network-policies/ks.yaml

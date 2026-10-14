@@ -7,7 +7,6 @@ metadata:
 spec:
   components:
     - ../../../../components/kopiur/backup
-    - ../../../../components/kopiur/secret
   dependsOn:
     - name: barman-cloud
       namespace: database
