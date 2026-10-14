@@ -5,9 +5,11 @@ namespace: ai
 
 components:
   - ../../components/sops
+  - ../../components/kopiur/secret
 
 resources:
   - ./namespace.yaml
+  - ./network-policies/kopiur-mover.yaml
   - ./litellm-operator/ks.yaml
   - ./litellm/ks.yaml
   - ./llmkube/ks.yaml
