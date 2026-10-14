@@ -27,7 +27,7 @@ spec:
               ACTUAL_OPENID_ENFORCE: "true"
               ACTUAL_OPENID_SERVER_HOSTNAME: https://actual.${SECRET_DOMAIN}
               ACTUAL_PORT: &port 5006
-              ACTUAL_TOKEN_EXPIRATION: openid-provider
+              ACTUAL_TOKEN_EXPIRATION: "2592000"
               ACTUAL_USER_CREATION_MODE: login
               TZ: Europe/Amsterdam
               ACTUAL_OPENID_CLIENT_ID:
