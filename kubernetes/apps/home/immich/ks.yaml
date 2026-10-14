@@ -8,7 +8,6 @@ spec:
     - ../../../../components/cnpg
     - ../../../../components/valkey
     - ../../../../components/kopiur/backup
-    - ../../../../components/kopiur/secret
   dependsOn:
     - name: barman-cloud
       namespace: database

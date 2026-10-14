@@ -5,9 +5,11 @@ namespace: home
 
 components:
   - ../../components/sops
+  - ../../components/kopiur/secret
 
 resources:
   - ./namespace.yaml
+  - ./network-policies/kopiur-mover.yaml
   - ./home-assistant/ks.yaml
   - ./immich/ks.yaml
   - ./music-assistant/ks.yaml
