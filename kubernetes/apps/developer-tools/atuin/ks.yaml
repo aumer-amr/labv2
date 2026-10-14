@@ -7,7 +7,6 @@ metadata:
 spec:
   components:
     - ../../../../components/kopiur/backup
-    - ../../../../components/kopiur/secret
   dependsOn:
     - name: envoy-gateway
       namespace: network
