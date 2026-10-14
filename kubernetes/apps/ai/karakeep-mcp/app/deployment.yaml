@@ -1,0 +1,118 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karakeep-mcp
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: karakeep-mcp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: karakeep-mcp
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: gateway
+          image: docker.io/library/node:24.18.1-slim
+          command: [npm]
+          args:
+            [
+              install,
+              --prefix,
+              /gateway,
+              --omit=dev,
+              --ignore-scripts,
+              --no-audit,
+              --no-fund,
+              supergateway@4.1.0,
+            ]
+          env:
+            - name: npm_config_cache
+              value: /tmp/npm
+          securityContext: &security
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: gateway
+              mountPath: /gateway
+            - name: tmp
+              mountPath: /tmp
+      containers:
+        - name: mcp
+          image: ghcr.io/karakeep-app/karakeep-mcp:0.33.2@sha256:7b6e5b3d0613a3c23f107f828bd0b367876148c63291d7ff55e23082d193b58a
+          # The official server is stdio-only; bridge it for the in-cluster proxy.
+          command: [node, /gateway/node_modules/supergateway/dist/index.js]
+          args:
+            - --stdio
+            - node /app/apps/mcp/index.js
+            - --outputTransport
+            - streamableHttp
+            - --port
+            - "8080"
+            - --healthEndpoint
+            - /healthz
+            - --logLevel
+            - none
+          env:
+            - name: KARAKEEP_API_ADDR
+              value: http://karakeep.administration.svc.cluster.local:3000
+            - name: KARAKEEP_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: karakeep-mcp-secret
+                  key: KARAKEEP_API_KEY
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          resources:
+            requests:
+              cpu: 25m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          securityContext: *security
+          volumeMounts:
+            - name: gateway
+              mountPath: /gateway
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: gateway
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: karakeep-mcp
+spec:
+  selector:
+    app.kubernetes.io/name: karakeep-mcp
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

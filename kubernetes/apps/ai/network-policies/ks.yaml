@@ -17,6 +17,7 @@ spec:
     - name: searxng
     - name: whisper
     - name: piper
+    - name: karakeep-mcp
     - name: unifi-mcp
     - name: victoria-logs-mcp
       namespace: observability

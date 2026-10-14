@@ -24,5 +24,6 @@ resources:
   - ./truenas-mcp/ks.yaml
   - ./prometheus-mcp/ks.yaml
   - ./actual-mcp/ks.yaml
+  - ./karakeep-mcp/ks.yaml
   - ./grafana-mcp/ks.yaml
   - ./network-policies/ks.yaml

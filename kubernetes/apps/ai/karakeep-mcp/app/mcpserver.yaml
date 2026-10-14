@@ -1,0 +1,12 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMMCPServer
+metadata:
+  name: karakeep-mcp
+spec:
+  alias: karakeep
+  params:
+    allow_all_keys: false
+  proxyRef: litellm
+  transport: http
+  url: http://karakeep-mcp.ai.svc.cluster.local:8080/mcp
