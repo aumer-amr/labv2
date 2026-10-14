@@ -6,6 +6,7 @@ metadata:
   name: network-policies
 spec:
   dependsOn:
+    - name: karakeep
     - name: actual
     - name: paperless
     - name: kopiur
