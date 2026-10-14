@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { get } from "node:http";
+import { copyFile, mkdtemp, rmdir, symlink, unlink } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
@@ -153,7 +154,11 @@ await assert.rejects(
 assert.equal(closed, true);
 
 const token = "synthetic-token-for-offline-tests-only";
-const child = spawn(process.execPath, [fileURLToPath(new URL("./server.mjs", import.meta.url))], {
+const projection = await mkdtemp("/app/bridge/..projected-");
+const projectedEntry = "/app/bridge/projected-server.mjs";
+await copyFile(fileURLToPath(new URL("./server.mjs", import.meta.url)), projection + "/server.mjs");
+await symlink(projection.split("/").pop() + "/server.mjs", projectedEntry);
+const child = spawn(process.execPath, ["--preserve-symlinks-main", projectedEntry], {
   env: { ...process.env, ACTUAL_SESSION_TOKEN: "synthetic-session", ACTUAL_MCP_TOKEN: token },
   stdio: "ignore",
 });
@@ -196,7 +201,14 @@ try {
   assert.equal((await httpClient.listTools()).tools.length, 16);
 } finally {
   await httpClient.close();
-  child.kill("SIGTERM");
+  if (child.exitCode === null) {
+    const stopped = new Promise((resolve) => child.once("exit", resolve));
+    child.kill("SIGTERM");
+    await stopped;
+  }
+  await unlink(projectedEntry);
+  await unlink(projection + "/server.mjs");
+  await rmdir(projection);
 }
 console.log(
   "Actual MCP checks passed: read-only discovery, authorization, all-budget selection, concurrent isolation, and child cleanup.",

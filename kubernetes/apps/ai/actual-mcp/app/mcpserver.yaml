@@ -78,6 +78,8 @@ spec:
         memory: 1Gi
     command:
       - node
+      # Keep ESM imports relative to the ConfigMap mount, not its backing directory.
+      - --preserve-symlinks-main
       - /app/bridge/server.mjs
     volumes:
       - name: bridge
