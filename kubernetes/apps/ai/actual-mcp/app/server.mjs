@@ -29,8 +29,8 @@ export function remoteBudgets(files) {
   return [
     ...new Map(
       files
-        .filter((file) => file.cloudFileId && !file.deleted)
-        .map((file) => [file.cloudFileId, { budget_id: file.cloudFileId, name: file.name }]),
+        .filter((file) => file.cloudFileId && file.groupId && !file.deleted)
+        .map((file) => [file.groupId, { budget_id: file.groupId, name: file.name }]),
     ).values(),
   ];
 }

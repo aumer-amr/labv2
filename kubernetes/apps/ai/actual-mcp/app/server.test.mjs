@@ -28,9 +28,10 @@ for (const version of [undefined, "26.9.0", "26.11.0", "27.10.0"]) {
 assert.deepEqual(
   remoteBudgets([
     { id: "local-only", name: "Local" },
-    { cloudFileId: "one", name: "One" },
-    { cloudFileId: "one", name: "One" },
-    { cloudFileId: "deleted", name: "Deleted", deleted: true },
+    { cloudFileId: "file-one", groupId: "one", name: "One" },
+    { cloudFileId: "file-one", groupId: "one", name: "One" },
+    { cloudFileId: "missing-sync-id", name: "Incomplete" },
+    { cloudFileId: "file-deleted", groupId: "deleted", name: "Deleted", deleted: true },
   ]),
   [{ budget_id: "one", name: "One" }],
 );
