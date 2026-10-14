@@ -1,0 +1,59 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMMCPServer
+metadata:
+  name: truenas-mcp
+spec:
+  alias: truenas
+  params:
+    allow_all_keys: false
+    allowed_tools:
+      - truenas_query
+  proxyRef: litellm
+  transport: http
+  workload:
+    automountServiceAccountToken: false
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      readOnlyRootFilesystem: true
+    # Reuse the proxy image's installed MCP SDK; no runtime package downloads.
+    # renovate: datasource=docker depName=ghcr.io/berriai/litellm
+    image: ghcr.io/berriai/litellm:v1.104.2@sha256:3d88bd757134a00e8c00237b85a021ab1f6d54abb9c1df750f411dbe7256a500
+    command: ["python", "/app/truenas/server.py"]
+    port: 8080
+    env:
+      - name: PYTHONDONTWRITEBYTECODE
+        value: "1"
+      - name: TRUENAS_CA_FILE
+        value: /app/truenas/truenas-ca.pem
+      - name: TRUENAS_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: truenas-mcp-secret
+            key: TRUENAS_API_KEY
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 256Mi
+    volumes:
+      - name: adapter
+        configMap:
+          name: truenas-mcp
+      - name: tmp
+        emptyDir: {}
+    volumeMounts:
+      - name: adapter
+        mountPath: /app/truenas
+        readOnly: true
+      - name: tmp
+        mountPath: /tmp
