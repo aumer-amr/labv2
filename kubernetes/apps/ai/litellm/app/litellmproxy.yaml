@@ -49,6 +49,8 @@ spec:
     redis_port: os.environ/REDIS_PORT
     redis_password: os.environ/REDIS_PASSWORD
   litellmSettings:
+    mcp_tool_search:
+      embedding_model: qwen3-embedding
     cache: true
     cache_params:
       type: redis
