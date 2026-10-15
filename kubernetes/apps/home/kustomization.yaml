@@ -12,6 +12,7 @@ resources:
   - ./network-policies/kopiur-mover.yaml
   - ./home-assistant/ks.yaml
   - ./immich/ks.yaml
+  - ./minecraft/ks.yaml
   - ./music-assistant/ks.yaml
   - ./network-policies/ks.yaml
   - ./sendspin/ks.yaml
