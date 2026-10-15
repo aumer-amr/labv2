@@ -22,6 +22,17 @@ spec:
           protocol: TCP
   egress:
     - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: home
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: minecraft
+              app.kubernetes.io/name: minecraft
+      ports:
+        - port: 25565
+          protocol: TCP
+    - to:
         - ipBlock:
             cidr: 10.0.0.0/8
             except:
