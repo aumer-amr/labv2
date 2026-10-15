@@ -15,7 +15,58 @@ concurrency:
 permissions: {}
 
 jobs:
+  # Remove this build and the patch once upstream wires the evidence transport.
+  build-runtime:
+    if: ${{ !github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout trusted base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: Checkout pinned review runtime
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: misospace/pr-reviewer-action
+          ref: 768a1320d67f14b99737633a5f8ba58449c3caeb # v3.4.1
+          path: .github/actions/pr-reviewer-runtime
+          persist-credentials: false
+
+      - name: Install build Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+
+      - name: Build and verify evidence transport fix
+        shell: bash
+        working-directory: .github/actions/pr-reviewer-runtime
+        run: |
+          set -euo pipefail
+          git apply --check "$GITHUB_WORKSPACE/patches/pr-reviewer-evidence.patch"
+          git apply "$GITHUB_WORKSPACE/patches/pr-reviewer-evidence.patch"
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run build
+          ./node_modules/.bin/tsc -p tsconfig.test.json
+          node "$GITHUB_WORKSPACE/scripts/test-pr-review-evidence.cjs" "$PWD"
+
+      - name: Preserve patched runtime
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: pr-reviewer-runtime
+          path: |
+            .github/actions/pr-reviewer-runtime/action.yml
+            .github/actions/pr-reviewer-runtime/dist/index.js
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 1
+
   review:
+    needs: build-runtime
     # Untrusted forks must not run on a runner with internal service access.
     if: ${{ !github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: labv2-pr-reviewer
@@ -62,8 +113,14 @@ jobs:
           install_args: yq
           cache: false
 
+      - name: Fetch trusted patched runtime
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: pr-reviewer-runtime
+          path: .github/actions/pr-reviewer-runtime
+
       - name: Review PR
-        uses: misospace/pr-reviewer-action@768a1320d67f14b99737633a5f8ba58449c3caeb # v3.4.1
+        uses: ./.github/actions/pr-reviewer-runtime # zizmor: ignore[self-repository] Runtime is a same-run build artifact, not a tracked repository action.
         with:
           github-token: ${{ github.token }}
           ai-base-url: http://litellm.ai.svc.cluster.local:4000/v1
@@ -107,6 +164,8 @@ jobs:
           tool-allowed-gh-api-repos: aumer-amr/labv2
           tool-max-rounds: "4"
           tool-max-requests: "16"
+          tool-failure-enforcement: "true"
+          tool-min-successful-requests: "1"
           tool-loop-wall-clock-sec: "1200"
           tool-enable-for-forks: "false"
           evidence-enable-for-forks: "false"

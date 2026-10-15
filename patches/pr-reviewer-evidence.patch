@@ -1,0 +1,76 @@
+--- a/src/tools/harness.ts
++++ b/src/tools/harness.ts
+@@ -22,6 +22,7 @@
+  * cutover, handed in here as a seam).
+  */
+ import fs from "node:fs";
++import { requestText } from "../platform/http.js";
+ import path from "node:path";
+ import {
+   Conversation,
+@@ -1388,7 +1389,18 @@
+     requestTimeout: input.requestTimeout,
+     searchUrl,
+     maxSearchResults,
+-    deps: { env: env as NodeJS.ProcessEnv },
++    deps: {
++      env: env as NodeJS.ProcessEnv,
++      ghGet: async (url, headers, timeoutMs) => {
++        const response = await requestText(url, {
++          allowedOrigin: "https://api.github.com",
++          token: headers.Authorization,
++          accept: headers.Accept,
++          timeoutMs,
++        });
++        return { status: response.status, body: response.text };
++      },
++    },
+   };
+
+   const executeFn = async (toolName: string, args: Record<string, unknown>): Promise<Record<string, unknown>> => {
+@@ -1769,6 +1781,20 @@
+  * `write_outputs`): embeds the #702 telemetry object, redacts, and writes the
+  * tier-scoped artifacts 0600. */
+ export function writeOutputs(summary: HarnessResult, markdown: string, deps: HarnessDeps): void {
++  // Retain outcomes after ephemeral runner cleanup, without source bodies or arguments.
++  const calls = Array.isArray(summary.tool_results) ? summary.tool_results as Record<string, unknown>[] : [];
++  const secrets = [deps.env.GH_TOKEN, deps.env.GITHUB_TOKEN, deps.env.AI_API_KEY, deps.env.SMART_API_KEY, deps.env.TOOL_MCP_TOKEN];
++  deps.log?.(`  evidence outcomes: ${JSON.stringify({
++    issued: summary.planned_request_count,
++    succeeded: calls.filter((call) => call.status === "ok").length,
++    failed: calls.filter((call) => call.status !== "ok").length,
++    rounds: summary.rounds,
++    calls: calls.map((call) => ({
++      tool: maskDiagnostic(String(call.tool ?? "unknown"), secrets, 100),
++      status: call.status === "ok" ? "ok" : "error",
++      ...(call.status !== "ok" ? { error: maskDiagnostic(String((call.result as Record<string, unknown> | undefined)?.error ?? "unavailable"), secrets, 300) } : {}),
++    })),
++  })}`);
+   const telemetry = buildToolLoopTelemetry(summary);
+   if (telemetry !== null) summary.tool_loop_telemetry = telemetry;
+   const tier = deps.env.TOOL_HARNESS_TIER || "primary";
+--- a/src/tools/executors.ts
++++ b/src/tools/executors.ts
+@@ -22,6 +22,7 @@
+  * through the typed runtime seam (`runProcess`), never a shell.
+  */
+ import fs from "node:fs";
++import { PlatformRequestError } from "../platform/http.js";
+ import path from "node:path";
+ import { maskAndTruncate, maskAndTruncateSource, redactSourceText } from "../context/redact.js";
+ import { USER_AGENT } from "../platform/user-agent.js";
+@@ -407,10 +408,11 @@
+     let parentData: unknown;
+     try {
+       const res = await ghGet(ctx, contentsUrl(parentPath, ref_));
+-      if (res.status >= 400) throw new Error("preflight status");
++      if (res.status >= 400) return { error: `Repository contents file preflight failed: HTTP ${res.status}` };
+       parentData = JSON.parse(res.body);
+-    } catch {
+-      return { error: "Repository contents file preflight failed" };
++    } catch (error) {
++      const reason = error instanceof PlatformRequestError ? error.kind : "invalid-response-or-transport";
++      return { error: `Repository contents file preflight failed: ${reason}` };
+     }
+     if (!Array.isArray(parentData)) return { error: "Repository contents file preflight failed" };
+     const matches = parentData.filter(

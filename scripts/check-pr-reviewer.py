@@ -29,6 +29,21 @@ checkouts = [s for s in job["steps"] if s.get("uses", "").startswith("actions/ch
 assert len(checkouts) == 1
 assert checkouts[0]["with"]["ref"] == "${{ github.event.pull_request.base.sha }}"
 assert checkouts[0]["with"]["persist-credentials"] is False
+build_job = workflow["jobs"]["build-runtime"]
+assert build_job["permissions"] == {"contents": "read"}
+assert build_job["if"] == job["if"]
+assert job["needs"] == "build-runtime"
+build_checkouts = [s for s in build_job["steps"] if s.get("uses", "").startswith("actions/checkout@")]
+assert len(build_checkouts) == 2
+assert build_checkouts[0]["with"]["ref"] == "${{ github.event.pull_request.base.sha }}"
+assert build_checkouts[0]["with"]["persist-credentials"] is False
+assert build_checkouts[1]["with"] == {
+    "repository": "misospace/pr-reviewer-action",
+    "ref": "768a1320d67f14b99737633a5f8ba58449c3caeb",
+    "path": ".github/actions/pr-reviewer-runtime",
+    "persist-credentials": False,
+}
+assert job["steps"][-1]["uses"] == "./.github/actions/pr-reviewer-runtime"
 review = job["steps"][-1]["with"]
 assert review["publish-mode"] == "comment"
 assert review["verdict-policy"] == "model"
@@ -44,6 +59,8 @@ assert review["ai-request-timeout-sec"] == "1800"
 assert review["ai-stream"] == "false"
 assert review["tool-max-tokens-per-turn"] == "1024"
 assert review["tool-turn-timeout-sec"] == "600"
+assert review["tool-failure-enforcement"] == "true"
+assert review["tool-min-successful-requests"] == "1"
 assert review["skip-if-diff-unchanged"] == "false"
 assert review["allow-approve"] == "false"
 assert review["tool-enable-for-forks"] == "false"
