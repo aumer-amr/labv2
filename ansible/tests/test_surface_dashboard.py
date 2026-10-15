@@ -194,6 +194,48 @@ class DashboardTests(unittest.TestCase):
                 run.assert_called_once_with("systemctl", "--user", "--no-block", "restart",
                                             "surface-dashboard-camera.service")
 
+    def test_motion_capture_failures_restart_camera_even_when_parent_is_alive(self):
+        for message in ("Watchdog timeout. Trying to do a graceful restart",
+                        "Video device fatal error - Closing video device",
+                        "Failed to open video device", "Unable to open video device"):
+            with self.subTest(message=message), \
+                    patch.object(dashboard.subprocess, "Popen") as popen, \
+                    patch.object(dashboard, "run") as run:
+                process = popen.return_value.__enter__.return_value
+                process.stdout = iter([message + "\n"])
+                with self.assertRaisesRegex(RuntimeError, "Motion capture failed"):
+                    dashboard.supervise_motion(Path("motion.conf"))
+                process.kill.assert_called_once()
+                run.assert_called_once_with("systemctl", "--user", "restart",
+                                            "surface-dashboard-camera.service")
+
+    def test_quiet_detector_is_not_restarted_and_shutdown_reaps_child(self):
+        with patch.object(dashboard.subprocess, "Popen") as popen, \
+                patch.object(dashboard, "run") as run:
+            process = popen.return_value.__enter__.return_value
+            def quiet_capture():
+                run.assert_not_called()
+                raise SystemExit(0)
+                yield
+            process.stdout = quiet_capture()
+            process.poll.return_value = None
+            with self.assertRaises(SystemExit):
+                dashboard.supervise_motion(Path("motion.conf"))
+            process.kill.assert_called_once()
+            process.wait.assert_called_once()
+            run.assert_not_called()
+
+    def test_motion_exit_restarts_camera_before_systemd_restarts_detector(self):
+        with patch.object(dashboard.subprocess, "Popen") as popen, \
+                patch.object(dashboard, "run") as run:
+            process = popen.return_value.__enter__.return_value
+            process.stdout = iter([])
+            process.wait.return_value = 1
+            with self.assertRaisesRegex(RuntimeError, "Motion exited with status 1"):
+                dashboard.supervise_motion(Path("motion.conf"))
+            run.assert_called_once_with("systemctl", "--user", "restart",
+                                        "surface-dashboard-camera.service")
+
     def test_config_creation_is_private_and_preserves_existing_file(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "config.json"

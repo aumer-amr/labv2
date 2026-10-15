@@ -78,9 +78,34 @@ snapshot_interval 0
 stream_port 0
 webcontrol_port 0
 log_level 5
+log_file /dev/stderr
 on_motion_detected /usr/bin/touch {marker}
 on_camera_lost /usr/bin/systemctl --user --no-block restart surface-dashboard-camera.service
 """
+
+
+def supervise_motion(path):
+    # Motion's watchdog can leave the parent alive after its capture thread hangs.
+    with subprocess.Popen(["motion", "-n", "-c", str(path)], stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT, text=True,
+                          env={**os.environ, "LC_ALL": "C"}) as process:
+        try:
+            for line in process.stdout:
+                print(line, end="", flush=True)
+                if any(error in line for error in (
+                        "Watchdog timeout", "Video device fatal error",
+                        "Failed to open video device", "Unable to open video device")):
+                    raise RuntimeError("Motion capture failed; restarting camera and detector")
+            raise RuntimeError(f"Motion exited with status {process.wait()}")
+        except RuntimeError:
+            process.kill()
+            process.wait()
+            run("systemctl", "--user", "restart", "surface-dashboard-camera.service")
+            raise
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
 
 
 class Display:
@@ -243,7 +268,8 @@ def main():
             raise
         path = runtime_dir() / "motion.conf"
         path.write_text(motion_config(config, path.parent))
-        os.execvp("motion", ["motion", "-n", "-c", str(path)])
+        signal.signal(signal.SIGTERM, stop)
+        supervise_motion(path)
     elif args.action == "display":
         signal.signal(signal.SIGTERM, stop)
         display(config)
