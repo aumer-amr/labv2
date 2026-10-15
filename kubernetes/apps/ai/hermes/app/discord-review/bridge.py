@@ -1,6 +1,7 @@
 """Discord review cards and human-authorized, SHA-bound GitHub merges."""
 
 import asyncio
+from collections import Counter
 import json
 import logging
 import os
@@ -83,6 +84,29 @@ def review_metadata(comment):
     return data
 
 
+def latest_checks(api, checks):
+    counts = Counter((c["app"]["id"], c["name"]) for c in checks)
+    runs, latest = {}, {}
+    for index, check in enumerate(checks):
+        key = (check["app"]["id"], check["name"])
+        match = re.fullmatch(
+            rf"https://github\.com/{re.escape(REPO)}/actions/runs/(\d+)/job/\d+",
+            check.get("details_url", ""),
+        )
+        if key[0] != 15368 or counts[key] == 1 or not match:
+            latest[(key, "unmatched", index)] = ((0, 0), check)
+            continue
+        run_id = int(match[1])
+        if run_id not in runs:
+            runs[run_id] = api.request(f"actions/runs/{run_id}")
+        # filter=latest still includes superseded jobs from separate check suites.
+        key = (*key, runs[run_id]["workflow_id"])
+        order = (run_id, check["id"])
+        if key not in latest or order > latest[key][0]:
+            latest[key] = (order, check)
+    return [check for _, check in latest.values()]
+
+
 def snapshot(api, number, on_merge=None):
     pr = api.request(f"pulls/{number}")
     state = {
@@ -127,6 +151,7 @@ def snapshot(api, number, on_merge=None):
             )
         return state
     checks = api.pages(f"commits/{state['head']}/check-runs?filter=latest", "check_runs")
+    checks = latest_checks(api, checks)
     statuses = api.pages(f"commits/{state['head']}/statuses")
     latest_statuses = {}
     for status in statuses:  # GitHub returns newest first.

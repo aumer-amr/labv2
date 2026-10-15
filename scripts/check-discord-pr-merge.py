@@ -69,6 +69,26 @@ class API:
 
 
 class MergeBoundary(unittest.TestCase):
+    def test_superseded_jobs_do_not_block_but_independent_workflows_do(self):
+        for replacement in ("success", "failure", None):
+            for independent in (False, True):
+                with self.subTest(replacement=replacement, independent=independent):
+                    api = API()
+                    old = dict(api.checks[0], id=10, name="render", conclusion="cancelled",
+                               details_url=f"https://github.com/{bridge.REPO}/actions/runs/10/job/10")
+                    new = dict(old, id=20, conclusion=replacement,
+                               status="in_progress" if replacement is None else "completed",
+                               details_url=f"https://github.com/{bridge.REPO}/actions/runs/20/job/20")
+                    api.checks.extend([new, old])
+                    request = api.request
+                    def workflow(path, method="GET", data=None):
+                        if path in {"actions/runs/10", "actions/runs/20"}:
+                            return {"workflow_id": 10 if independent and path.endswith("/10") else 20}
+                        return request(path, method, data)
+                    with patch.object(api, "request", side_effect=workflow):
+                        self.assertEqual(bridge.snapshot(api, 1)["eligible"],
+                                         replacement == "success" and not independent)
+
     def test_behind_branch_updates_card_with_actionable_reason(self):
         api = API()
         ready = bridge.snapshot(api, 1)
