@@ -282,6 +282,13 @@ spec:
               kubernetes.io/metadata.name: home
           podSelector:
             matchLabels:
+              app.kubernetes.io/instance: minecraft
+              app.kubernetes.io/name: minecraft
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: home
+          podSelector:
+            matchLabels:
               app.kubernetes.io/managed-by: kopiur
         - namespaceSelector: {}
           podSelector:
