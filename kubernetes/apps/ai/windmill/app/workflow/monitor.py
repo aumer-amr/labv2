@@ -139,6 +139,7 @@ def observe(state, evidence, now):
 
 def investigate(item):
     now = int(time.time())
+    session_id = uuid.uuid4().hex
     prompt = (
         f"Current UTC Unix time is {now}; the last six hours are {now - 21600} through {now}. "
         "Investigate this persistent cluster observation. Before answering, call the supplied read-only "
@@ -159,7 +160,7 @@ def investigate(item):
     )
     result = http(HERMES + "/v1/chat/completions", {
         "model": "qwen3.5-9b", "messages": [{"role": "user", "content": prompt}], "stream": False,
-    }, os.environ["HERMES_API_KEY"], timeout=240)
+    }, os.environ["HERMES_API_KEY"], timeout=240, headers={"X-Hermes-Session-Id": session_id})
     text = result["choices"][0]["message"]["content"]
     if len(text) > 12000:
         raise ValueError("Investigation response exceeded limit")
@@ -174,6 +175,9 @@ def investigate(item):
         raise ValueError("Invalid investigation evidence entry")
     if assessment["verdict"] == "actionable" and not assessment["evidence"]:
         raise ValueError("Actionable findings require supporting evidence")
+    session = http(HERMES + "/api/sessions/" + session_id, token=os.environ["HERMES_API_KEY"]).get("session", {})
+    if not isinstance(session.get("tool_call_count"), int) or session["tool_call_count"] < 1:
+        raise ValueError("Investigation requires recorded MCP tool execution")
     return assessment
 
 
