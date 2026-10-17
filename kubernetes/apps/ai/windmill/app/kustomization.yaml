@@ -18,19 +18,9 @@ patches:
       metadata:
         name: ${APP}
       spec:
-        managed:
-          roles:
-            - name: windmill
-              ensure: present
-              login: true
-              inRoles:
-                - windmill_admin
-              passwordSecret:
-                name: windmill-postgres
         bootstrap:
           initdb:
             postInitApplicationSQL:
-            - GRANT windmill_admin TO windmill
             - GRANT USAGE ON SCHEMA public TO windmill_user, windmill_admin
             - ALTER DEFAULT PRIVILEGES FOR ROLE windmill IN SCHEMA public GRANT ALL ON TABLES
               TO windmill_user
@@ -40,6 +30,14 @@ patches:
             - CREATE ROLE windmill_user
             - CREATE ROLE windmill_admin WITH BYPASSRLS
             - GRANT windmill_user TO windmill_admin
+  - patch: |
+      apiVersion: postgresql.cnpg.io/v1
+      kind: DatabaseRole
+      metadata:
+        name: ${APP}
+      spec:
+        inRoles:
+          - windmill_admin
   - target:
       kind: NetworkPolicy
       name: \$\{APP\}-postgres
