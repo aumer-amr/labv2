@@ -5,6 +5,7 @@ metadata:
   name: langfuse
 spec:
   interval: 1h
+  timeout: 15m
   values:
     langfuse:
       salt:
@@ -151,6 +152,22 @@ spec:
         secretKeyRef:
           name: langfuse-secret
           key: S3_SECRET_ACCESS_KEY
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: Deployment
+              name: langfuse-web
+            patch: |
+              - op: add
+                path: /spec/template/spec/containers/0/startupProbe
+                value:
+                  httpGet:
+                    path: /api/public/health
+                    port: http
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 90
   chartRef:
     kind: OCIRepository
     name: langfuse
