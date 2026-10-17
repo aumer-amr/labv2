@@ -200,6 +200,18 @@ class MonitoringTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "verdict"):
                 monitor.investigate(self.evidence()[0])
 
+    def test_investigation_supplies_current_window_and_requires_tool_queries(self):
+        assessment = {"verdict": "expected", "summary": "Stable", "evidence": ["query: last six hours"], "next_step": "Observe"}
+        response = {"choices": [{"message": {"content": json.dumps(assessment)}}]}
+        with patch.object(monitor, "http", return_value=response) as http, \
+             patch.object(monitor.time, "time", return_value=50000), \
+             patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
+            self.assertEqual(monitor.investigate(self.evidence()[0]), assessment)
+        prompt = http.call_args.args[1]["messages"][0]["content"]
+        self.assertIn("28400 through 50000", prompt)
+        self.assertIn("mcp__prometheus__range_query", prompt)
+        self.assertIn("Evidence entries must be strings", prompt)
+
     def test_trace_contains_no_raw_assessment_or_credentials(self):
         with patch.dict(os.environ, {"LANGFUSE_PUBLIC_KEY": "public-test", "LANGFUSE_SECRET_KEY": "secret-test"}), \
              patch.object(monitor, "http", return_value={"errors": []}) as http:
