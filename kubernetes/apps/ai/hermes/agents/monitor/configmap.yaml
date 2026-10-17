@@ -32,6 +32,9 @@ data:
         url: http://prometheus-mcp.ai.svc.cluster.local:8080/mcp
       victorialogs:
         url: http://victorialogs-mcp.ai.svc.cluster.local:8081/mcp
+    tools:
+      tool_search:
+        enabled: off
     agent:
       max_turns: 12
       gateway_timeout: 240

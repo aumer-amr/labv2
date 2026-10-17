@@ -12,5 +12,5 @@ spec:
   secretName: hermes-monitor-litellm
   maxBudget: "2"
   budgetDuration: 1d
-  maxParallelRequests: 1
+  maxParallelRequests: 2
   rpmLimit: 20
