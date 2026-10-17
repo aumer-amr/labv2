@@ -1,0 +1,16 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMVirtualKey
+metadata:
+  name: hermes-monitor
+spec:
+  keyAlias: hermes-monitor
+  models:
+    - qwen3.5-9b
+  proxyRef: litellm
+  secretKey: key
+  secretName: hermes-monitor-litellm
+  maxBudget: "2"
+  budgetDuration: 1d
+  maxParallelRequests: 1
+  rpmLimit: 20

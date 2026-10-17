@@ -1,0 +1,59 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+components:
+  - ../../../../components/cnpg
+resources:
+  - ./externalsecret.yaml
+  - ./ocirepository.yaml
+  - ./helmrelease.yaml
+  - ./networkpolicy.yaml
+  - ./bootstrap.yaml
+  - ./httproute.yaml
+  - ./bootstrap-service.yaml
+patches:
+  - patch: |
+      apiVersion: postgresql.cnpg.io/v1
+      kind: Cluster
+      metadata:
+        name: ${APP}
+      spec:
+        bootstrap:
+          initdb:
+            postInitApplicationSQL:
+            - GRANT windmill_admin TO windmill
+            - GRANT USAGE ON SCHEMA public TO windmill_user, windmill_admin
+            - ALTER DEFAULT PRIVILEGES FOR ROLE windmill IN SCHEMA public GRANT ALL ON TABLES
+              TO windmill_user
+            - ALTER DEFAULT PRIVILEGES FOR ROLE windmill IN SCHEMA public GRANT ALL ON SEQUENCES
+              TO windmill_user
+            postInitSQL:
+            - CREATE ROLE windmill_user
+            - CREATE ROLE windmill_admin WITH BYPASSRLS
+            - GRANT windmill_user TO windmill_admin
+  - target:
+      kind: NetworkPolicy
+      name: \$\{APP\}-postgres
+    patch: |
+      - op: replace
+        path: /spec/ingress/0/from/0/podSelector/matchLabels
+        value:
+          release: windmill
+  - target:
+      kind: NetworkPolicy
+      name: \$\{APP\}-postgres-client
+    patch: |
+      - op: replace
+        path: /spec/podSelector/matchLabels
+        value:
+          release: windmill
+configMapGenerator:
+  - name: windmill-monitor
+    files:
+      - monitor.py=workflow/monitor.py
+      - bootstrap.py=workflow/bootstrap.py
+      - ready.py=workflow/ready.py
+generatorOptions:
+  disableNameSuffixHash: true
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled

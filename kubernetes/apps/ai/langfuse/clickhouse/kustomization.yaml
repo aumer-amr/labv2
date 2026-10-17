@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./helmrelease.yaml
+  - ./ocirepository.yaml
+  - ./externalsecret.yaml
+  - ./networkpolicy.yaml
+configMapGenerator:
+  - name: langfuse-clickhouse-backup
+    files:
+      - backup.xml=backup/backup.xml
+      - backup.sh=backup/backup.sh
+generatorOptions:
+  disableNameSuffixHash: true

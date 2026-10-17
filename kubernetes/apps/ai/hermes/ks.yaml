@@ -46,3 +46,33 @@ spec:
     name: flux-system
     namespace: flux-system
   targetNamespace: ai
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: hermes-monitor
+spec:
+  dependsOn:
+    - name: gvisor
+      namespace: kube-system
+    - name: litellm
+      namespace: ai
+    - name: prometheus-mcp
+      namespace: ai
+    - name: victoria-logs-mcp
+      namespace: observability
+    - name: onepassword-connect
+      namespace: external-secrets
+  interval: 1h
+  path: ./kubernetes/apps/ai/hermes/agents/monitor
+  postBuild:
+    substituteFrom:
+      - name: cluster-secrets
+        kind: Secret
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: ai
+  wait: true

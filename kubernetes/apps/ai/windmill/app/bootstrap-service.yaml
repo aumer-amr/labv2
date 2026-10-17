@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: windmill-bootstrap
+spec:
+  publishNotReadyAddresses: true
+  selector:
+    app: windmill-app
+    release: windmill
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000

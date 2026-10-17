@@ -1,0 +1,144 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: windmill-bootstrap
+spec:
+  schedule: "*/10 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 900
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: windmill-bootstrap
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: bootstrap
+              image: docker.io/python:3.13.7-slim@sha256:5f55cdf0c5d9dc1a415637a5ccc4a9e18663ad203673173b8cda8f8dcacef689
+              command:
+                - python
+                - -I
+                - /workflow/bootstrap.py
+              env:
+                - name: SUPERADMIN_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: windmill-secret
+                      key: SUPERADMIN_SECRET
+                - name: ADMIN_EMAIL
+                  valueFrom:
+                    secretKeyRef:
+                      name: windmill-secret
+                      key: ADMIN_EMAIL
+                - name: ADMIN_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: windmill-secret
+                      key: ADMIN_PASSWORD
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+              volumeMounts:
+                - name: workflow
+                  mountPath: /workflow
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: workflow
+              configMap:
+                name: windmill-monitor
+            - name: tmp
+              emptyDir: {}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: windmill-bootstrap-initial
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 900
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: windmill-bootstrap
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: bootstrap
+          image: docker.io/python:3.13.7-slim@sha256:5f55cdf0c5d9dc1a415637a5ccc4a9e18663ad203673173b8cda8f8dcacef689
+          command:
+            - python
+            - -I
+            - /workflow/bootstrap.py
+          env:
+            - name: SUPERADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: windmill-secret
+                  key: SUPERADMIN_SECRET
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: windmill-secret
+                  key: ADMIN_EMAIL
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: windmill-secret
+                  key: ADMIN_PASSWORD
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          volumeMounts:
+            - name: workflow
+              mountPath: /workflow
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: workflow
+          configMap:
+            name: windmill-monitor
+        - name: tmp
+          emptyDir: {}

@@ -1,0 +1,99 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: langfuse
+spec:
+  dependsOn:
+    - name: kube-prometheus-stack
+      namespace: observability
+    - name: cloudnative-pg
+      namespace: database
+    - name: barman-cloud
+      namespace: database
+    - name: postgresql-images
+      namespace: database
+    - name: onepassword-connect
+      namespace: external-secrets
+    - name: kanidm
+      namespace: security
+    - name: envoy-gateway
+      namespace: network
+    - name: rook-ceph-cluster
+      namespace: rook-ceph
+    - name: valkey
+      namespace: database
+    - name: langfuse-clickhouse
+      namespace: ai
+  interval: 1h
+  path: ./kubernetes/apps/ai/langfuse/app
+  postBuild:
+    substitute:
+      APP: langfuse
+      NAMESPACE: ai
+      PG_BACKUP_BUCKET: pg-langfuse
+      PG_MAJOR: "18"
+      PG_SSLMODE: require
+      VALKEY_MAXMEMORY_POLICY: noeviction
+    substituteFrom:
+      - name: cluster-secrets
+        kind: Secret
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: ai
+  wait: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: langfuse-clickhouse
+spec:
+  dependsOn:
+    - name: onepassword-connect
+      namespace: external-secrets
+    - name: rook-ceph-cluster
+      namespace: rook-ceph
+    - name: kopiur
+      namespace: kube-system
+  interval: 1h
+  path: ./kubernetes/apps/ai/langfuse/clickhouse
+  postBuild:
+    substituteFrom:
+      - name: cluster-secrets
+        kind: Secret
+    substitute:
+      APP: langfuse-clickhouse
+      NAMESPACE: ai
+      KOPIUR_CAPACITY: 20Gi
+      KOPIUR_PUID: "101"
+      KOPIUR_PGID: "101"
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: ai
+  wait: true
+  components:
+    - ../../../../components/kopiur/backup
+  patches:
+    - patch: |
+        apiVersion: kopiur.home-operations.com/v1alpha1
+        kind: SnapshotPolicy
+        metadata:
+          name: ${APP}
+        spec:
+          hooks:
+            beforeSnapshot:
+            - workloadExec:
+                podSelector:
+                  matchLabels:
+                    app.kubernetes.io/instance: langfuse-clickhouse
+                container: app
+                command:
+                - /bin/sh
+                - /opt/backup/backup.sh
+                timeout: 10m

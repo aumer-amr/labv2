@@ -1,0 +1,106 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: hermes-monitor
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: hermes-monitor
+  interval: 1h
+  values:
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: docker.io/nousresearch/hermes-agent
+              tag: v2026.9.24@sha256:fca358f12efd65bfaaca05884166f15c0e2788375ca30d77061ac1ebc96452b7
+            command:
+              - /opt/hermes/.venv/bin/hermes
+            args:
+              - gateway
+              - run
+            env:
+              HERMES_HOME: /data
+              HOME: /data
+              API_SERVER_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-monitor-secret
+                    key: API_SERVER_KEY
+              LITELLM_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: hermes-monitor-litellm
+                    key: key
+              TZ: Europe/Amsterdam
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8642
+                  initialDelaySeconds: 30
+                  periodSeconds: 15
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8642
+                  initialDelaySeconds: 30
+                  periodSeconds: 15
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      runtimeClassName: gvisor
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10000
+        runAsGroup: 10000
+        fsGroup: 10000
+        seccompProfile:
+          type: RuntimeDefault
+    service:
+      app:
+        controller: main
+        ports:
+          http:
+            port: 8642
+    persistence:
+      config:
+        type: configMap
+        name: hermes-monitor-config
+        globalMounts:
+          - path: /data/config.yaml
+            subPath: config.yaml
+            readOnly: true
+      data:
+        type: emptyDir
+        globalMounts:
+          - path: /data
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+      run:
+        type: emptyDir
+        globalMounts:
+          - path: /run

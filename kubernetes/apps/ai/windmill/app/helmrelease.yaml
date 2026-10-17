@@ -1,0 +1,141 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: windmill
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: windmill
+  interval: 1h
+  values:
+    postgresql:
+      enabled: false
+    ingress:
+      enabled: false
+    serviceAccount:
+      automountServiceAccountToken: false
+    windmill:
+      image: ghcr.io/windmill-labs/windmill
+      # renovate: datasource=docker depName=ghcr.io/windmill-labs/windmill
+      tag: 1.839.0@sha256:e7017a93cdbdb900bbce3d3d960f72c4b6b9020cd77c0dff8f5ba1613b411fe0
+      appReplicas: 1
+      extraReplicas: 0
+      multiplayerReplicas: 0
+      databaseUrlSecretName: windmill-secret
+      baseDomain: windmill.${SECRET_DOMAIN}
+      baseProtocol: https
+      app:
+        podSecurityContext: &id001
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroup: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          capabilities: &id002
+            drop:
+              - ALL
+          readOnlyRootFilesystem: true
+        labels:
+          network.home.arpa/from-envoy-internal: allow
+        extraEnv:
+          - name: SUPERADMIN_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: windmill-secret
+                key: SUPERADMIN_SECRET
+          - name: DATABASE_CONNECTIONS
+            value: "10"
+          - name: ADMIN_EMAIL
+            valueFrom:
+              secretKeyRef:
+                name: windmill-secret
+                key: ADMIN_EMAIL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            memory: 1Gi
+        volumes:
+          - name: tmp
+            emptyDir: {}
+          - name: bootstrap
+            configMap:
+              name: windmill-monitor
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+          - name: bootstrap
+            mountPath: /bootstrap
+            readOnly: true
+      workerGroups:
+        - name: default
+          replicas: 1
+          privileged: false
+          disableUnsharePid: true
+          podSecurityContext: *id001
+          containerSecurityContext:
+            allowPrivilegeEscalation: false
+            capabilities: *id002
+            readOnlyRootFilesystem: false
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          extraEnv:
+            - name: DATABASE_CONNECTIONS
+              value: "3"
+            - name: HERMES_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: windmill-secret
+                  key: HERMES_API_KEY
+            - name: LANGFUSE_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secret
+                  key: LANGFUSE_INIT_PROJECT_PUBLIC_KEY
+            - name: LANGFUSE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secret
+                  key: LANGFUSE_INIT_PROJECT_SECRET_KEY
+            - name: DISABLE_NSJAIL
+              value: "true"
+            - name: BASE_INTERNAL_URL
+              value: http://windmill-app.ai.svc.cluster.local:8000
+            - name: WHITELIST_ENVS
+              value: HERMES_API_KEY,LANGFUSE_PUBLIC_KEY,LANGFUSE_SECRET_KEY
+          deploymentAnnotations:
+            reloader.stakater.com/auto: "true"
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: Deployment
+              name: windmill-app
+            patch: |
+              - op: replace
+                path: /spec/template/spec/containers/0/readinessProbe
+                value:
+                  exec:
+                    command: [python3, -I, /bootstrap/ready.py]
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 1
+          - patch: |
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: windmill-app
+                annotations:
+                  reloader.stakater.com/auto: "true"
+            target:
+              kind: Deployment
+              name: windmill-app

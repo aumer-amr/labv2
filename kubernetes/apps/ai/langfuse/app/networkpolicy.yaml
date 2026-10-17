@@ -1,0 +1,116 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: langfuse
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: langfuse
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-internal
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+        - podSelector:
+            matchLabels:
+              release: windmill
+              app: windmill-workers
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: windmill-bootstrap
+      ports:
+        - port: 3000
+          protocol: TCP
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-external
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+      ports:
+        - port: 10443
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: langfuse-clickhouse
+      ports:
+        - port: 8123
+          protocol: TCP
+        - port: 9000
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: langfuse-r2
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: langfuse
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+    - toFQDNs:
+        - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: langfuse-oidc
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: langfuse
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchName: idm.${SECRET_DOMAIN}
+    - toFQDNs:
+        - matchName: idm.${SECRET_DOMAIN}
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
