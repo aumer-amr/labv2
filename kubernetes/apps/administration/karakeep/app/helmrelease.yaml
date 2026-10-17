@@ -116,6 +116,7 @@ spec:
             env:
               MEILI_NO_ANALYTICS: "true"
               MEILI_ENV: production
+              MEILI_UPGRADE_DB: "true"
               MEILI_DB_PATH: /data/meilisearch
               MEILI_DUMP_DIR: /data/meilisearch-dumps
               MEILI_SNAPSHOT_DIR: /data/meilisearch-snapshots
