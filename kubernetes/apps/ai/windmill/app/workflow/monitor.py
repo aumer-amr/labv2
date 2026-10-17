@@ -18,7 +18,7 @@ from urllib.request import Request, urlopen
 PROMETHEUS = "http://kube-prometheus-stack-prometheus.observability.svc.cluster.local:9090"
 HERMES = "http://hermes-monitor.ai.svc.cluster.local:8642"
 LANGFUSE = "http://langfuse-web.ai.svc.cluster.local:3000"
-STATE_PATH = "f/cluster/observations"
+STATE_PATH = "f/cluster/monitor-state"
 MAX_SIGNALS = 500
 QUERIES = {
     "restarts": 'sum by (namespace,pod,container) (increase(kube_pod_container_status_restarts_total{container!=""}[1h])) >= 3',
@@ -78,7 +78,7 @@ def wm(path, body=None, method=None):
 
 
 def save(state):
-    wm("/variables/update/" + STATE_PATH, {"value": json.dumps(state)}, "POST")
+    wm("/resources/update_value/" + STATE_PATH, {"value": state}, "POST")
 
 
 def query(expression, now):
@@ -203,7 +203,7 @@ def trace(run_id, item, assessment, start, end, error=None):
 
 def main():
     now = time.time()
-    state = json.loads(wm("/variables/get_value/" + STATE_PATH))
+    state = wm("/resources/get_value/" + STATE_PATH)
     if state.get("version") != 1:
         raise ValueError("Unknown observation state version")
     day = datetime.fromtimestamp(now, timezone.utc).date().isoformat()

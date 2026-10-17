@@ -35,6 +35,14 @@ class MonitoringTests(unittest.TestCase):
                 monitor.wm("/variables/update/state", {"value": "{}"}, "POST")
         self.assertNotIn("session-token", str(caught.exception))
 
+    def test_large_state_stays_structured_in_resource(self):
+        state = {"version": 1, "observations": {str(i): {"summary": "x" * 100} for i in range(200)}}
+        self.assertGreater(len(json.dumps(state)), 10000)
+        with patch.object(monitor, "wm") as wm:
+            monitor.save(state)
+        wm.assert_called_once_with("/resources/update_value/" + monitor.STATE_PATH, {"value": state}, "POST")
+        self.assertIsInstance(wm.call_args.args[1]["value"], dict)
+
     def test_persistence_and_cooldown(self):
         state = {"version": 1}
         self.assertEqual(monitor.observe(state, self.evidence(), 10000), [])
@@ -108,7 +116,7 @@ class MonitoringTests(unittest.TestCase):
     def test_failed_collection_preserves_observations(self):
         state = {"version": 1}
         monitor.observe(state, self.evidence(), 10000)
-        with patch.object(monitor, "wm", return_value=json.dumps(state)), \
+        with patch.object(monitor, "wm", return_value=copy.deepcopy(state)), \
              patch.object(monitor, "collect", side_effect=ValueError("missing")), \
              patch.object(monitor, "save") as save:
             with self.assertRaisesRegex(RuntimeError, "coverage incomplete"):
@@ -122,7 +130,7 @@ class MonitoringTests(unittest.TestCase):
         for now in (10000, 10900):
             monitor.observe(state, self.evidence(), now)
         persisted = []
-        with patch.object(monitor, "wm", return_value=json.dumps(state)), \
+        with patch.object(monitor, "wm", return_value=copy.deepcopy(state)), \
              patch.object(monitor.time, "time", return_value=11800), \
              patch.object(monitor, "collect", return_value=self.evidence()), \
              patch.object(monitor, "save", side_effect=lambda s: persisted.append(copy.deepcopy(s))), \
@@ -138,7 +146,7 @@ class MonitoringTests(unittest.TestCase):
         state = {"version": 1, "budget": {"day": "1970-01-01", "investigations": 8}}
         for now in (10000, 10900):
             monitor.observe(state, self.evidence(), now)
-        with patch.object(monitor, "wm", return_value=json.dumps(state)), \
+        with patch.object(monitor, "wm", return_value=copy.deepcopy(state)), \
              patch.object(monitor.time, "time", return_value=11800), \
              patch.object(monitor, "collect", return_value=self.evidence()), \
              patch.object(monitor, "save"), patch.object(monitor, "investigate") as investigate:
@@ -151,7 +159,7 @@ class MonitoringTests(unittest.TestCase):
         for now in (10000, 10900):
             monitor.observe(state, self.evidence(), now)
         investigated = []
-        with patch.object(monitor, "wm", return_value=json.dumps(state)), \
+        with patch.object(monitor, "wm", return_value=copy.deepcopy(state)), \
              patch.object(monitor.time, "time", return_value=11800), \
              patch.object(monitor, "collect", return_value=self.evidence()), \
              patch.object(monitor, "save"), patch.object(monitor, "trace", return_value="trace"), \
@@ -163,7 +171,7 @@ class MonitoringTests(unittest.TestCase):
         state = {"version": 1, "log_review": {"id": "scheduled-log-review", "check": "scheduled_log_review",
                  "labels": {}, "value": 0, "query": "logs", "first_seen": 10000,
                  "last_investigated": 28000, "last_review_end": 28000}}
-        with patch.object(monitor, "wm", return_value=json.dumps(state)), \
+        with patch.object(monitor, "wm", return_value=copy.deepcopy(state)), \
              patch.object(monitor.time, "time", return_value=50000), \
              patch.object(monitor, "collect", return_value=[]), \
              patch.object(monitor, "save"), patch.object(monitor, "trace", return_value="trace"), \
@@ -177,7 +185,7 @@ class MonitoringTests(unittest.TestCase):
     def test_uncertain_log_review_does_not_advance_coverage(self):
         state = {"version": 1}
         saved = []
-        with patch.object(monitor, "wm", side_effect=lambda path: json.dumps(state)), \
+        with patch.object(monitor, "wm", side_effect=lambda path: copy.deepcopy(state)), \
              patch.object(monitor.time, "time", return_value=50000), \
              patch.object(monitor, "collect", return_value=[]), \
              patch.object(monitor, "save", side_effect=lambda value: saved.append(copy.deepcopy(value))), \
@@ -235,6 +243,8 @@ class BootstrapTests(unittest.TestCase):
                 return []
             if path.endswith("/folders/get/cluster"):
                 return {"owners": ["u/superadmin_secret"], "extra_perms": {"u/superadmin_secret": True}}
+            if path.endswith("/variables/get_value/f/cluster/observations"):
+                return json.dumps({"version": 1, "budget": {"investigations": 3}, "observations": {"preserved": True}})
             if path.endswith("/schedules/create"):
                 self.assertEqual(bootstrap.API_TOKEN, "session-token")
             if path == "/workspaces/create" or path.endswith("/workspaces/add_user"):
@@ -249,6 +259,10 @@ class BootstrapTests(unittest.TestCase):
         folder = next(data for path, data in calls if path.endswith("/folders/update/cluster"))
         self.assertEqual(folder["owners"], ["u/owner", "u/superadmin_secret"])
         self.assertEqual(folder["extra_perms"], {"u/owner": True, "u/superadmin_secret": True})
+        state = next(data for path, data in calls if path.endswith("/resources/create"))
+        self.assertEqual(state["resource_type"], "state")
+        self.assertEqual(state["value"]["budget"]["investigations"], 3)
+        self.assertEqual(state["value"]["observations"], {"preserved": True})
 
     def test_existing_schedule_and_state_are_preserved(self):
         calls = []

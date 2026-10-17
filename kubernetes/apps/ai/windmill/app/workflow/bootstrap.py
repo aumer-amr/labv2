@@ -72,9 +72,13 @@ def main():
     elif owner not in folder.get("owners", []) or not folder.get("extra_perms", {}).get(owner):
         api(prefix + "/folders/update/cluster", {"owners": sorted(set(folder.get("owners", [])) | {owner}),
                                                  "extra_perms": {**folder.get("extra_perms", {}), owner: True}})
-    if api(prefix + "/variables/get/f/cluster/observations", missing=True) is None:
-        api(prefix + "/variables/create", {"path": "f/cluster/observations", "value": json.dumps({"version": 1}),
-                                          "is_secret": False, "description": "Persistent shadow observations and investigation budget"})
+    if api(prefix + "/resources/get_value/f/cluster/monitor-state", missing=True) is None:
+        legacy = api(prefix + "/variables/get_value/f/cluster/observations", missing=True)
+        state = json.loads(legacy) if legacy is not None else {"version": 1}
+        if not isinstance(state, dict) or state.get("version") != 1:
+            raise ValueError("Cannot migrate unknown observation state")
+        api(prefix + "/resources/create", {"path": "f/cluster/monitor-state", "resource_type": "state", "value": state,
+                                          "description": "Persistent shadow observations and investigation budget"})
     source = Path(__file__).with_name("monitor.py").read_text()
     digest = hashlib.sha256(source.encode()).hexdigest()
     current = api(prefix + "/scripts/get/p/" + PATH, missing=True)
@@ -86,7 +90,7 @@ def main():
             payload["parent_hash"] = current["hash"]
         api(prefix + "/scripts/create", payload)
     flow = {"path": PATH, "summary": "Collect, investigate and trace without external writes",
-            "description": "Shadow only. Persistent state is f/cluster/observations.",
+            "description": "Shadow only. Persistent state is f/cluster/monitor-state.",
             "value": {"modules": [{"id": "monitor", "value": {"type": "script", "path": PATH,
                                                                              "input_transforms": {}}}]},
             "schema": {"type": "object", "properties": {}}}
