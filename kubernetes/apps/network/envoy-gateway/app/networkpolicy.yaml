@@ -410,6 +410,22 @@ specs:
     egress:
       - toServices:
           - k8sService:
+              serviceName: langfuse-web
+              namespace: ai
+        toPorts:
+          - ports:
+              - port: "3000"
+                protocol: TCP
+      - toServices:
+          - k8sService:
+              serviceName: windmill-app
+              namespace: ai
+        toPorts:
+          - ports:
+              - port: "8000"
+                protocol: TCP
+      - toServices:
+          - k8sService:
               serviceName: karakeep
               namespace: administration
         toPorts:
