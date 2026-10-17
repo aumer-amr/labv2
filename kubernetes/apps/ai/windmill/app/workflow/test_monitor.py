@@ -197,10 +197,14 @@ class BootstrapTests(unittest.TestCase):
 
         def api(path, data=None, method=None, missing=False):
             calls.append((path, data))
+            if path == "/auth/login":
+                return "session-token"
             if path.startswith("/users/exists/"):
                 return not path.endswith("admin%40windmill.dev")
             if path.endswith("/users/list"):
                 return []
+            if path.endswith("/schedules/create"):
+                self.assertEqual(bootstrap.API_TOKEN, "session-token")
             if path == "/workspaces/create" or path.endswith("/workspaces/add_user"):
                 self.assertNotIn("username", data)
             return None
@@ -217,6 +221,8 @@ class BootstrapTests(unittest.TestCase):
 
         def api(path, data=None, method=None, missing=False):
             calls.append((path, data, method))
+            if path == "/auth/login":
+                return "session-token"
             if path.startswith("/users/exists/"):
                 return not path.endswith("admin%40windmill.dev")
             if path == "/workspaces/exists":

@@ -13,11 +13,12 @@ from urllib.request import Request, urlopen
 BASE = "http://windmill-bootstrap.ai.svc.cluster.local:8000/api"
 WORKSPACE = "cluster"
 PATH = "f/cluster/monitor"
+API_TOKEN = None
 
 
 def api(path, data=None, method=None, missing=False):
     request = Request(BASE + path, data=json.dumps(data).encode() if data is not None else None,
-                      headers={"Authorization": "Bearer " + os.environ["SUPERADMIN_SECRET"],
+                      headers={"Authorization": "Bearer " + (API_TOKEN or os.environ["SUPERADMIN_SECRET"]),
                                "Content-Type": "application/json"}, method=method)
     try:
         with urlopen(request, timeout=20) as response:
@@ -33,6 +34,8 @@ def api(path, data=None, method=None, missing=False):
 
 
 def main():
+    global API_TOKEN
+    API_TOKEN = None
     email = os.environ["ADMIN_EMAIL"]
     if not email or email == "admin@windmill.dev" or len(os.environ["ADMIN_PASSWORD"]) < 20:
         raise ValueError("Configure a dedicated administrator with a strong password")
@@ -51,6 +54,10 @@ def main():
     # Disable the documented demo account before the app is made available to users.
     if api("/users/exists/admin%40windmill.dev"):
         api("/users/update/admin%40windmill.dev", {"disabled": True}, "POST")
+    # Schedules must run as a real user, not the reserved internal superadmin identity.
+    API_TOKEN = api("/auth/login", {"email": email, "password": os.environ["ADMIN_PASSWORD"]})
+    if not isinstance(API_TOKEN, str) or not API_TOKEN:
+        raise ValueError("Administrator login did not return a session token")
     prefix = "/w/" + WORKSPACE
     if not api("/workspaces/exists", {"id": WORKSPACE}):
         api("/workspaces/create", {"id": WORKSPACE, "name": "Cluster monitoring"})
