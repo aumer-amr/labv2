@@ -53,10 +53,12 @@ spec:
               protocol: ANY
           rules:
             dns:
+              - matchName: windmill-labs.github.io
               - matchName: kubernetes-sigs.github.io
               - matchName: github.com
               - matchName: release-assets.githubusercontent.com
     - toFQDNs:
+        - matchName: windmill-labs.github.io
         - matchName: kubernetes-sigs.github.io
         - matchName: github.com
         - matchName: release-assets.githubusercontent.com
