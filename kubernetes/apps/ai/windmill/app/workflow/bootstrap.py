@@ -53,10 +53,10 @@ def main():
         api("/users/update/admin%40windmill.dev", {"disabled": True}, "POST")
     prefix = "/w/" + WORKSPACE
     if not api("/workspaces/exists", {"id": WORKSPACE}):
-        api("/workspaces/create", {"id": WORKSPACE, "name": "Cluster monitoring", "username": "cluster"})
+        api("/workspaces/create", {"id": WORKSPACE, "name": "Cluster monitoring"})
     users = api(prefix + "/users/list")
     if not any(user["email"] == email for user in users):
-        api(prefix + "/workspaces/add_user", {"email": email, "username": "admin", "is_admin": True, "operator": False})
+        api(prefix + "/workspaces/add_user", {"email": email, "is_admin": True, "operator": False})
     if api(prefix + "/folders/get/cluster", missing=True) is None:
         api(prefix + "/folders/create", {"name": "cluster", "summary": "Repository-owned shadow monitoring"})
     if api(prefix + "/variables/get/f/cluster/observations", missing=True) is None:

@@ -192,6 +192,25 @@ class BootstrapTests(unittest.TestCase):
         self.assertFalse(readiness.ready([owner, {"email": "admin@windmill.dev", "disabled": False}], owner["email"]))
         self.assertTrue(readiness.ready([owner, {"email": "admin@windmill.dev", "disabled": True}], owner["email"]))
 
+    def test_new_workspace_uses_automated_usernames(self):
+        calls = []
+
+        def api(path, data=None, method=None, missing=False):
+            calls.append((path, data))
+            if path.startswith("/users/exists/"):
+                return not path.endswith("admin%40windmill.dev")
+            if path.endswith("/users/list"):
+                return []
+            if path == "/workspaces/create" or path.endswith("/workspaces/add_user"):
+                self.assertNotIn("username", data)
+            return None
+
+        with patch.dict(os.environ, {"ADMIN_EMAIL": "owner@example.invalid", "ADMIN_PASSWORD": "x" * 32}), \
+             patch.object(bootstrap, "api", side_effect=api):
+            bootstrap.main()
+        self.assertTrue(any(path == "/workspaces/create" for path, _ in calls))
+        self.assertTrue(any(path.endswith("/workspaces/add_user") for path, _ in calls))
+
     def test_existing_schedule_and_state_are_preserved(self):
         calls = []
         source = Path(__file__).with_name("monitor.py").read_text()
