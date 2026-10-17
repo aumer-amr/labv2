@@ -18,6 +18,15 @@ patches:
       metadata:
         name: ${APP}
       spec:
+        managed:
+          roles:
+            - name: windmill
+              ensure: present
+              login: true
+              inRoles:
+                - windmill_admin
+              passwordSecret:
+                name: windmill-postgres
         bootstrap:
           initdb:
             postInitApplicationSQL:
