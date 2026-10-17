@@ -77,23 +77,3 @@ spec:
     namespace: flux-system
   targetNamespace: ai
   wait: true
-  components:
-    - ../../../../components/kopiur/backup
-  patches:
-    - patch: |
-        apiVersion: kopiur.home-operations.com/v1alpha1
-        kind: SnapshotPolicy
-        metadata:
-          name: ${APP}
-        spec:
-          hooks:
-            beforeSnapshot:
-            - workloadExec:
-                podSelector:
-                  matchLabels:
-                    app.kubernetes.io/instance: langfuse-clickhouse
-                container: app
-                command:
-                - /bin/sh
-                - /opt/backup/backup.sh
-                timeout: 10m
