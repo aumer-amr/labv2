@@ -16,6 +16,10 @@ spec:
         app.kubernetes.io/name: karakeep-mcp
     spec:
       automountServiceAccountToken: false
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
