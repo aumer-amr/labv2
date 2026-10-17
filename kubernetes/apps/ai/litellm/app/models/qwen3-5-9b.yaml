@@ -13,16 +13,16 @@ spec:
     additional:
       timeout: 1800
       stream_timeout: 1800
-      max_tokens: 4096
+      max_tokens: 8192
       temperature: 0.7
       top_p: 0.8
       additional_drop_params:
         - reasoning_effort
   info:
     mode: chat
-    maxTokens: 32768
-    maxInputTokens: 32768
-    maxOutputTokens: 4096
+    maxTokens: 65536
+    maxInputTokens: 57344
+    maxOutputTokens: 8192
     supportsFunctionCalling: true
     supportsVision: false
     extra:

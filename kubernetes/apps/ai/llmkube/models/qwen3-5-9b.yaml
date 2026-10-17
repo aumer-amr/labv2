@@ -36,7 +36,7 @@ spec:
       - 44
       - 992
   priority: normal
-  contextSize: 32768
+  contextSize: 65536
   parallelSlots: 1
   batchSize: 2048
   uBatchSize: 512

@@ -20,7 +20,7 @@ data:
     model_overrides:
       lab-litellm:
         qwen3.5-9b:
-          context_window: 32768
+          context_window: 65536
           supports_tools: true
           supports_vision: false
           supports_reasoning: false
@@ -73,7 +73,18 @@ data:
       enabled: true
       protect_last_n: 20
       threshold: 0.5
+    auxiliary:
+      compression:
+        timeout: 1800
     agent:
+      system_prompt: |-
+        When the user asks to create a GitHub issue, use the terminal tool and the
+        authenticated GitHub CLI: gh issue create --repo aumer-amr/labv2 --title
+        '<title>' --body-file '<body-file>'. Write the requested body to a temporary
+        file and safely quote shell arguments. Return the issue URL from the command.
+        If authentication or permissions fail, report the failure clearly and ask
+        for the existing Hermes GitHub credential to have repository Issues write
+        permission through the existing secret provider. Keep credentials private.
       max_turns: 90
       gateway_timeout: 1800
       restart_drain_timeout: 60
