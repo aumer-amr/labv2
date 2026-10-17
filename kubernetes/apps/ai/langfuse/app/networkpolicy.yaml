@@ -83,6 +83,9 @@ spec:
               - matchPattern: "*"
     - toFQDNs:
         - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+        - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com.ai.svc.cluster.local
+        - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com.svc.cluster.local
+        - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com.cluster.local
       toPorts:
         - ports:
             - port: "443"
