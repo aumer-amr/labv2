@@ -14,6 +14,7 @@ spec:
     ingress:
       enabled: false
     serviceAccount:
+      name: windmill-app
       automountServiceAccountToken: false
     windmill:
       image: ghcr.io/windmill-labs/windmill
