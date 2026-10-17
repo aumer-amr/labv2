@@ -53,6 +53,8 @@ spec:
           value: "Kanidm"
         - name: AUTH_CUSTOM_ALLOW_ACCOUNT_LINKING
           value: "true"
+        - name: AUTH_IGNORE_ACCOUNT_FIELDS
+          value: "issued_token_type"
         - name: AUTH_CUSTOM_ISSUER
           value: "https://idm.${SECRET_DOMAIN}/oauth2/openid/langfuse"
         - name: AUTH_CUSTOM_SCOPE
