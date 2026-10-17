@@ -217,10 +217,14 @@ class BootstrapTests(unittest.TestCase):
             calls.append((path, data))
             if path == "/auth/login":
                 return "session-token"
+            if path.endswith("/users/whoami"):
+                return {"username": "owner"}
             if path.startswith("/users/exists/"):
                 return not path.endswith("admin%40windmill.dev")
             if path.endswith("/users/list"):
                 return []
+            if path.endswith("/folders/get/cluster"):
+                return {"owners": ["u/superadmin_secret"], "extra_perms": {"u/superadmin_secret": True}}
             if path.endswith("/schedules/create"):
                 self.assertEqual(bootstrap.API_TOKEN, "session-token")
             if path == "/workspaces/create" or path.endswith("/workspaces/add_user"):
@@ -232,6 +236,9 @@ class BootstrapTests(unittest.TestCase):
             bootstrap.main()
         self.assertTrue(any(path == "/workspaces/create" for path, _ in calls))
         self.assertTrue(any(path.endswith("/workspaces/add_user") for path, _ in calls))
+        folder = next(data for path, data in calls if path.endswith("/folders/update/cluster"))
+        self.assertEqual(folder["owners"], ["u/owner", "u/superadmin_secret"])
+        self.assertEqual(folder["extra_perms"], {"u/owner": True, "u/superadmin_secret": True})
 
     def test_existing_schedule_and_state_are_preserved(self):
         calls = []
@@ -241,12 +248,16 @@ class BootstrapTests(unittest.TestCase):
             calls.append((path, data, method))
             if path == "/auth/login":
                 return "session-token"
+            if path.endswith("/users/whoami"):
+                return {"username": "owner"}
             if path.startswith("/users/exists/"):
                 return not path.endswith("admin%40windmill.dev")
             if path == "/workspaces/exists":
                 return True
             if path.endswith("/users/list"):
                 return [{"email": "owner@example.invalid"}]
+            if path.endswith("/folders/get/cluster"):
+                return {"owners": ["u/owner"], "extra_perms": {"u/owner": True}}
             if "/scripts/get/p/" in path:
                 return {"content": source, "hash": "abc"}
             if "/flows/get/" in path:

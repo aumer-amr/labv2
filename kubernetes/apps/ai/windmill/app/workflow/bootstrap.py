@@ -64,8 +64,14 @@ def main():
     users = api(prefix + "/users/list")
     if not any(user["email"] == email for user in users):
         api(prefix + "/workspaces/add_user", {"email": email, "is_admin": True, "operator": False})
-    if api(prefix + "/folders/get/cluster", missing=True) is None:
-        api(prefix + "/folders/create", {"name": "cluster", "summary": "Repository-owned shadow monitoring"})
+    owner = "u/" + api(prefix + "/users/whoami")["username"]
+    folder = api(prefix + "/folders/get/cluster", missing=True)
+    if folder is None:
+        api(prefix + "/folders/create", {"name": "cluster", "summary": "Repository-owned shadow monitoring",
+                                         "owners": [owner], "extra_perms": {owner: True}})
+    elif owner not in folder.get("owners", []) or not folder.get("extra_perms", {}).get(owner):
+        api(prefix + "/folders/update/cluster", {"owners": sorted(set(folder.get("owners", [])) | {owner}),
+                                                 "extra_perms": {**folder.get("extra_perms", {}), owner: True}})
     if api(prefix + "/variables/get/f/cluster/observations", missing=True) is None:
         api(prefix + "/variables/create", {"path": "f/cluster/observations", "value": json.dumps({"version": 1}),
                                           "is_secret": False, "description": "Persistent shadow observations and investigation budget"})
