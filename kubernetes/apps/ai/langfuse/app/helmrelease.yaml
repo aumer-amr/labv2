@@ -25,6 +25,7 @@ spec:
         telemetryEnabled: false
         signUpDisabled: false
       serviceAccount:
+        name: langfuse-app
         automountServiceAccountToken: false
       podSecurityContext:
         runAsNonRoot: true
@@ -150,20 +151,6 @@ spec:
         secretKeyRef:
           name: langfuse-secret
           key: S3_SECRET_ACCESS_KEY
-  postRenderers:
-    - kustomize:
-        patches:
-          - target:
-              kind: ServiceAccount
-              name: langfuse
-            patch: |
-              - op: replace
-                path: /automountServiceAccountToken
-                value: true
-              - op: add
-                path: /metadata/annotations
-                value:
-                  helm.sh/resource-policy: keep
   chartRef:
     kind: OCIRepository
     name: langfuse
