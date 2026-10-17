@@ -10,6 +10,7 @@ import os
 import time
 import uuid
 from datetime import datetime, timezone
+from urllib.error import HTTPError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -62,10 +63,18 @@ def http(url, body=None, token=None, method=None, timeout=30, headers=None):
 
 
 def wm(path, body=None, method=None):
-    return http(
-        os.environ["BASE_INTERNAL_URL"].rstrip("/") + "/api/w/" + os.environ["WM_WORKSPACE"] + path,
-        body, os.environ["WM_TOKEN"], method,
-    )
+    try:
+        return http(
+            os.environ["BASE_INTERNAL_URL"].rstrip("/") + "/api/w/" + os.environ["WM_WORKSPACE"] + path,
+            body, os.environ["WM_TOKEN"], method,
+        )
+    except HTTPError as exc:
+        with exc:
+            detail = exc.read(512).decode(errors="replace")
+        for name in ("WM_TOKEN", "HERMES_API_KEY", "LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY"):
+            if os.environ.get(name):
+                detail = detail.replace(os.environ[name], "[redacted]")
+        raise RuntimeError("Windmill state API HTTP " + str(exc.code) + ": " + detail) from None
 
 
 def save(state):

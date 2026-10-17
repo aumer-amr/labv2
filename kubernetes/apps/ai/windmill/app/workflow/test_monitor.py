@@ -1,3 +1,5 @@
+from io import BytesIO
+from urllib.error import HTTPError
 import copy
 import importlib.util
 import json
@@ -24,6 +26,14 @@ class MonitoringTests(unittest.TestCase):
     def evidence(self, value=0.9):
         return [{"id": "stable", "check": "memory_pressure", "labels": {"namespace": "ai"},
                  "value": value, "query": "test", "timestamp": 10000}]
+
+    def test_state_api_error_reports_reason_without_token(self):
+        error = HTTPError("http://windmill/api", 400, "Bad Request", {}, BytesIO(b"Rejected session-token"))
+        with patch.dict(os.environ, {"WM_TOKEN": "session-token", "BASE_INTERNAL_URL": "http://windmill", "WM_WORKSPACE": "cluster"}), \
+             patch.object(monitor, "http", side_effect=error):
+            with self.assertRaisesRegex(RuntimeError, "HTTP 400: Rejected") as caught:
+                monitor.wm("/variables/update/state", {"value": "{}"}, "POST")
+        self.assertNotIn("session-token", str(caught.exception))
 
     def test_persistence_and_cooldown(self):
         state = {"version": 1}
