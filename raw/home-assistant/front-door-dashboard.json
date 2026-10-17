@@ -1,0 +1,260 @@
+{
+  "views": [
+    {
+      "title": "Front Door",
+      "path": "home",
+      "type": "panel",
+      "background": "radial-gradient(ellipse at top left, rgba(76, 163, 145, 0.22), transparent 60%), radial-gradient(ellipse at bottom right, rgba(113, 134, 194, 0.22), transparent 65%), var(--primary-background-color)",
+      "cards": [
+        {
+          "type": "custom:front-door-layout",
+          "cards": [
+            {
+              "type": "horizontal-stack",
+              "cards": [
+                {
+                  "type": "markdown",
+                  "text_only": true,
+                  "content": "# Welcome home\n{{ now().strftime('%A, %d %B') }}"
+                },
+                {
+                  "type": "clock",
+                  "clock_size": "large",
+                  "time_format": "24",
+                  "time_zone": "Europe/Amsterdam",
+                  "no_background": true
+                }
+              ]
+            },
+            {
+              "type": "tile",
+              "entity": "person.sem",
+              "name": "Who is home",
+              "show_entity_picture": true
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "vertical-stack",
+                  "cards": [
+                    {
+                      "type": "heading",
+                      "heading": "Calendar",
+                      "icon": "mdi:calendar",
+                      "heading_style": "title"
+                    },
+                    {
+                      "type": "calendar",
+                      "initial_view": "listWeek",
+                      "entities": [
+                        "calendar.sem_semevers_com",
+                        "calendar.birthdays",
+                        "calendar.holidays_in_netherlands"
+                      ]
+                    },
+                    {
+                      "type": "heading",
+                      "heading": "Bins",
+                      "icon": "mdi:trash-can-outline",
+                      "heading_style": "title"
+                    },
+                    {
+                      "type": "custom:waste-bin-card",
+                      "streams": [
+                        {
+                          "entity": "sensor.afvalbeheer_circulus_circulus_gft",
+                          "name": "GFT",
+                          "icon": "mdi:leaf",
+                          "color": "#22c55e"
+                        },
+                        {
+                          "entity": "sensor.afvalbeheer_circulus_circulus_papier",
+                          "name": "Paper",
+                          "icon": "mdi:newspaper-variant-outline",
+                          "color": "#f59e0b"
+                        },
+                        {
+                          "entity": "sensor.afvalbeheer_circulus_circulus_pmd",
+                          "name": "PMD",
+                          "icon": "mdi:recycle",
+                          "color": "#3b82f6"
+                        },
+                        {
+                          "entity": "sensor.afvalbeheer_circulus_circulus_restafval",
+                          "name": "Residual",
+                          "icon": "mdi:trash-can",
+                          "color": "#9e9e9e"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "vertical-stack",
+                  "cards": [
+                    {
+                      "type": "heading",
+                      "heading": "Weather",
+                      "icon": "mdi:weather-partly-cloudy",
+                      "heading_style": "title"
+                    },
+                    {
+                      "type": "weather-forecast",
+                      "entity": "weather.buienradar",
+                      "show_current": true,
+                      "show_forecast": true,
+                      "forecast_type": "daily"
+                    },
+                    {
+                      "type": "heading",
+                      "heading": "Room temperatures",
+                      "heading_style": "title",
+                      "icon": "mdi:home-thermometer"
+                    },
+                    {
+                      "type": "grid",
+                      "columns": 3,
+                      "square": false,
+                      "cards": [
+                        {
+                          "type": "tile",
+                          "entity": "sensor.sonoff_temp_woonkamer_temperature",
+                          "name": "Living room · temperature",
+                          "icon": "mdi:thermometer",
+                          "tap_action": {
+                            "action": "more-info"
+                          }
+                        },
+                        {
+                          "type": "tile",
+                          "entity": "sensor.sonoff_temp_office_temperature",
+                          "name": "Office · temperature",
+                          "icon": "mdi:thermometer",
+                          "tap_action": {
+                            "action": "more-info"
+                          }
+                        },
+                        {
+                          "type": "tile",
+                          "entity": "sensor.sonoff_temp_slaapkamer_temperature",
+                          "name": "Bedroom · temperature",
+                          "icon": "mdi:thermometer",
+                          "tap_action": {
+                            "action": "more-info"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "heading",
+                      "heading": "Now playing",
+                      "icon": "mdi:music",
+                      "heading_style": "title"
+                    },
+                    {
+                      "type": "media-control",
+                      "entity": "media_player.living_room"
+                    },
+                    {
+                      "type": "heading",
+                      "heading": "Audi",
+                      "icon": "mdi:car-electric",
+                      "heading_style": "title"
+                    },
+                    {
+                      "type": "grid",
+                      "columns": 3,
+                      "square": false,
+                      "cards": [
+                        {
+                          "type": "tile",
+                          "entity": "sensor.garage_audi_battery_level",
+                          "name": "Battery",
+                          "icon": "mdi:battery"
+                        },
+                        {
+                          "type": "tile",
+                          "entity": "sensor.garage_audi_charging_status",
+                          "name": "Charging",
+                          "icon": "mdi:ev-station"
+                        },
+                        {
+                          "type": "tile",
+                          "entity": "sensor.garage_audi_range",
+                          "name": "Remaining range",
+                          "icon": "mdi:map-marker-distance"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "custom:front-door-lights",
+                      "cards": [
+                        {
+                          "type": "grid",
+                          "columns": 2,
+                          "square": false,
+                          "cards": [
+                            {
+                              "type": "tile",
+                              "entity": "light.grote_lamp",
+                              "name": "Grote lamp",
+                              "features": [
+                                {
+                                  "type": "light-brightness"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "tile",
+                              "entity": "light.office_zijlamp",
+                              "name": "Zijlamp",
+                              "features": [
+                                {
+                                  "type": "light-brightness"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "tile",
+                              "entity": "light.sfeer_lamp_kantoor",
+                              "name": "Sfeer lamp kantoor",
+                              "features": [
+                                {
+                                  "type": "light-brightness"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "tile",
+                              "entity": "light.dimmer_woonkamer",
+                              "name": "Living room",
+                              "features": [
+                                {
+                                  "type": "light-brightness"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "custom:theme-toggle-badge"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "kiosk_mode": {
+    "hide_sidebar": true,
+    "hide_header": true
+  }
+}
