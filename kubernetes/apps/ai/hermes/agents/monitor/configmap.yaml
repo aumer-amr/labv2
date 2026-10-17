@@ -10,13 +10,7 @@ data:
     model:
       default: qwen3.5-9b
       provider: lab-litellm
-    model_overrides:
-      lab-litellm:
-        qwen3.5-9b:
-          context_window: 65536
-          supports_tools: true
-          supports_vision: false
-          supports_reasoning: false
+      context_length: 65536
     providers:
       lab-litellm:
         api: http://litellm.ai.svc.cluster.local:4000/v1
