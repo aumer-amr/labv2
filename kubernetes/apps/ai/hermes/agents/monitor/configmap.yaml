@@ -10,6 +10,13 @@ data:
     model:
       default: qwen3.5-9b
       provider: lab-litellm
+    model_overrides:
+      lab-litellm:
+        qwen3.5-9b:
+          context_window: 65536
+          supports_tools: true
+          supports_vision: false
+          supports_reasoning: false
     providers:
       lab-litellm:
         api: http://litellm.ai.svc.cluster.local:4000/v1
@@ -36,6 +43,8 @@ data:
       gateway_timeout: 240
       api_max_retries: 1
       reasoning_effort: low
+      reasoning_overrides:
+        qwen3.5-9b: false
       disabled_toolsets:
       - terminal
       - file

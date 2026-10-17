@@ -42,18 +42,6 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              k8s-app: kube-dns
-          namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-      ports:
-        - port: 53
-          protocol: UDP
-        - port: 53
-          protocol: TCP
-    - to:
-        - podSelector:
-            matchLabels:
               app.kubernetes.io/instance: langfuse-clickhouse
       ports:
         - port: 8123
@@ -70,6 +58,7 @@ spec:
     matchLabels:
       app.kubernetes.io/name: langfuse
   egress:
+    # Proxy DNS so Cilium learns R2 IPs; an unconditional L4 allowance bypasses this cache.
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -77,10 +66,21 @@ spec:
       toPorts:
         - ports:
             - port: "53"
-              protocol: ANY
+              protocol: UDP
           rules:
             dns:
-              - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+              - matchPattern: "*"
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
     - toFQDNs:
         - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
       toPorts:
@@ -97,17 +97,6 @@ spec:
     matchLabels:
       app.kubernetes.io/name: langfuse
   egress:
-    - toEndpoints:
-        - matchLabels:
-            k8s:io.kubernetes.pod.namespace: kube-system
-            k8s:k8s-app: kube-dns
-      toPorts:
-        - ports:
-            - port: "53"
-              protocol: ANY
-          rules:
-            dns:
-              - matchName: idm.${SECRET_DOMAIN}
     - toFQDNs:
         - matchName: idm.${SECRET_DOMAIN}
       toPorts:

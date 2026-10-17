@@ -35,6 +35,13 @@ class MonitoringTests(unittest.TestCase):
         ready[0]["last_investigated"] = 11800
         self.assertEqual(monitor.observe(state, self.evidence(), 12700), [])
 
+    def test_failed_investigation_retries_on_next_poll(self):
+        state = {"version": 1}
+        for now in (10000, 10900, 11800):
+            candidates = monitor.observe(state, self.evidence(), now)
+        candidates[0].update(last_investigated=11800, investigation_error="HTTPError")
+        self.assertEqual(len(monitor.observe(state, self.evidence(), 12700)), 1)
+
     def test_gap_and_reappearance_reset_persistence(self):
         state = {"version": 1}
         monitor.observe(state, self.evidence(), 10000)
@@ -182,7 +189,18 @@ class MonitoringTests(unittest.TestCase):
         serialized = json.dumps(http.call_args.args[1])
         self.assertNotIn("private-content", serialized)
         self.assertNotIn("secret-test", serialized)
-        self.assertEqual(http.call_args.args[1]["batch"][0]["body"]["sessionId"], "stable")
+        self.assertTrue(http.call_args.args[0].endswith("/api/public/otel/v1/traces"))
+        span = http.call_args.args[1]["resourceSpans"][0]["scopeSpans"][0]["spans"][0]
+        attributes = {item["key"]: item["value"] for item in span["attributes"]}
+        self.assertEqual(attributes["langfuse.session.id"]["stringValue"], "stable")
+        self.assertEqual(span["startTimeUnixNano"], "1000000000")
+        self.assertEqual(http.call_args.kwargs["headers"]["x-langfuse-ingestion-version"], "4")
+
+    def test_partial_trace_rejection_fails_export(self):
+        with patch.dict(os.environ, {"LANGFUSE_PUBLIC_KEY": "public-test", "LANGFUSE_SECRET_KEY": "secret-test"}), \
+             patch.object(monitor, "http", return_value={"partialSuccess": {"rejectedSpans": "1"}}):
+            with self.assertRaisesRegex(ValueError, "rejected"):
+                monitor.trace("job", self.evidence()[0], {"verdict": "uncertain"}, 1, 2)
 
 
 class BootstrapTests(unittest.TestCase):

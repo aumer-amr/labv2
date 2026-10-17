@@ -61,6 +61,8 @@ spec:
           value: "true"
         - name: AUTH_CUSTOM_CHECKS
           value: "pkce,state"
+        - name: AUTH_CUSTOM_ID_TOKEN_SIGNED_RESPONSE_ALG
+          value: "ES256"
         - name: AUTH_CUSTOM_CLIENT_AUTH_METHOD
           value: "client_secret_basic"
         - name: AUTH_DISABLE_USERNAME_PASSWORD

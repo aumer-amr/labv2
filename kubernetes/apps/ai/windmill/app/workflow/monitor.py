@@ -124,7 +124,7 @@ def observe(state, evidence, now):
     return sorted((item for item in state["observations"].values()
                    if item["status"] == "observing" and item["consecutive"] >= 3
                    and now - item["first_seen"] >= 1800
-                   and (not item.get("last_investigated") or now - item["last_investigated"] >= 6 * 3600)),
+                   and (item.get("investigation_error") or not item.get("last_investigated") or now - item["last_investigated"] >= 6 * 3600)),
                   key=lambda item: (item.get("last_investigated", 0), item["first_seen"]))
 
 
@@ -164,28 +164,30 @@ def investigate(item):
 
 
 def trace(run_id, item, assessment, start, end, error=None):
-    def stamp(value):
-        return datetime.fromtimestamp(value, timezone.utc).isoformat()
-    public = os.environ["LANGFUSE_PUBLIC_KEY"]
-    secret = os.environ["LANGFUSE_SECRET_KEY"]
-    auth = base64.b64encode((public + ":" + secret).encode()).decode()
+    auth = base64.b64encode((os.environ["LANGFUSE_PUBLIC_KEY"] + ":" + os.environ["LANGFUSE_SECRET_KEY"]).encode()).decode()
     trace_id = uuid.uuid4().hex
-    batch = [
-        {"id": str(uuid.uuid4()), "timestamp": stamp(end), "type": "trace-create", "body": {
-            "id": trace_id, "name": "cluster-investigation", "timestamp": stamp(start),
-            "sessionId": item["id"], "tags": ["shadow", item["check"]],
-            "metadata": {"windmill_job_id": run_id, "observation_id": item["id"]},
-            "output": {"verdict": assessment.get("verdict", "failed")},
-        }},
-        {"id": str(uuid.uuid4()), "timestamp": stamp(end), "type": "span-create", "body": {
-            "id": uuid.uuid4().hex[:16], "traceId": trace_id, "name": "hermes-investigation",
-            "startTime": stamp(start), "endTime": stamp(end),
-            "level": "ERROR" if error else "DEFAULT", "statusMessage": error,
-            "metadata": {"check": item["check"], "model": "qwen3.5-9b"},
-        }},
-    ]
-    result = http(LANGFUSE + "/api/public/ingestion", {"batch": batch}, headers={"Authorization": "Basic " + auth})
-    if result.get("errors"):
+    attributes = {
+        "langfuse.trace.name": "cluster-investigation",
+        "langfuse.session.id": item["id"],
+        "langfuse.trace.metadata.windmill_job_id": run_id,
+        "langfuse.trace.metadata.observation_id": item["id"],
+        "langfuse.observation.metadata.model": "qwen3.5-9b",
+        "langfuse.observation.output": json.dumps({"verdict": assessment.get("verdict", "failed")}),
+    }
+    span = {
+        "traceId": trace_id, "spanId": uuid.uuid4().hex[:16], "name": "hermes-investigation", "kind": 1,
+        "startTimeUnixNano": str(int(start * 1_000_000_000)), "endTimeUnixNano": str(int(end * 1_000_000_000)),
+        "attributes": [{"key": key, "value": {"stringValue": value}} for key, value in attributes.items()] + [
+            {"key": "langfuse.trace.tags", "value": {"arrayValue": {"values": [
+                {"stringValue": "shadow"}, {"stringValue": item["check"]},
+            ]}}},
+        ],
+        "status": {"code": 2, "message": error} if error else {"code": 1},
+    }
+    result = http(LANGFUSE + "/api/public/otel/v1/traces", {"resourceSpans": [{"scopeSpans": [{"spans": [span]}]}]},
+                  headers={"Authorization": "Basic " + auth, "x-langfuse-ingestion-version": "4"})
+    partial = (result or {}).get("partialSuccess", {})
+    if int(partial.get("rejectedSpans", 0)) or partial.get("errorMessage"):
         raise ValueError("Langfuse rejected investigation trace")
     return trace_id
 
@@ -211,7 +213,7 @@ def main():
                                             "labels": {}, "value": 0, "query": "Compare recent error aggregates",
                                             "first_seen": now})
     review["timestamp"] = now
-    if not review.get("last_investigated") or now - review["last_investigated"] >= 6 * 3600:
+    if review.get("investigation_error") or not review.get("last_investigated") or now - review["last_investigated"] >= 6 * 3600:
         previous_end = review.setdefault("last_review_end", now - 6 * 3600)
         review["review_start"] = max(previous_end, now - 24 * 3600)
         review["review_end"] = now
