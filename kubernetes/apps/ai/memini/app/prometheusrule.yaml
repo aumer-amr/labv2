@@ -1,0 +1,37 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: memini
+spec:
+  groups:
+    - name: memini.rules
+      rules:
+        - alert: MeminiRecallErrors
+          expr: |-
+            sum by (namespace) (increase(memini_recall_results_total{namespace="ai", result="error"}[15m])) > 3
+          for: 5m
+          annotations:
+            summary: Memini recall is repeatedly failing
+            description: Check Memini logs and its embedding and reranking backends.
+          labels:
+            severity: warning
+        - alert: MeminiRerankErrors
+          expr: |-
+            sum by (namespace) (increase(memini_rerank_results_total{namespace="ai", result="error"}[15m])) > 3
+          for: 5m
+          annotations:
+            summary: Memini reranking is repeatedly failing
+            description: Check reranker availability and inference capacity; recall quality may be degraded.
+          labels:
+            severity: warning
+        - alert: MeminiConsolidateErrors
+          expr: |-
+            sum by (namespace) (increase(memini_consolidate_results_total{namespace="ai", result="error"}[1h])) > 3
+          for: 15m
+          annotations:
+            summary: Memini consolidation is repeatedly failing
+            description: Check Memini logs and its LiteLLM model; memory maintenance is failing.
+          labels:
+            severity: warning

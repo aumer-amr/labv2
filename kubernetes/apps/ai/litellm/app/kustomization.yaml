@@ -6,6 +6,7 @@ components:
   - ../../../../components/cnpg
   - ../../../../components/valkey
 resources:
+  - ./prometheusrule.yaml
   - ./codex-virtualkey.yaml
   - ./grafanadashboard.yaml
   - ./externalsecret.yaml
