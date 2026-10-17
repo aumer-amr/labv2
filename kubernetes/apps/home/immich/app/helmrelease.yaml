@@ -117,8 +117,7 @@ spec:
     route:
       app:
         annotations:
-          gatus.home-operations.com/endpoint: |-
-            guarded: true
+          gatus.home-operations.com/enabled: "false"
         hostnames:
           - immich.${SECRET_DOMAIN}
         parentRefs:
