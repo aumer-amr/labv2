@@ -1,0 +1,88 @@
+--- a/custom_components/localthings/config_flow.py
++++ b/custom_components/localthings/config_flow.py
+@@ -14,6 +14,7 @@
+ import ssl
+ import time
+ from collections.abc import Callable, Mapping
++from pathlib import Path
+ from typing import Any
+
+ import voluptuous as vol
+@@ -100,6 +101,7 @@
+     CallbackPortUnavailable,
+     obtain_device_token,
+ )
++from .legacy_http_tls import client_context
+ from .registry.capabilities.laundry import cycle_options, personal_course_labels
+ from .registry.subdevices import MAIN
+ from .session import psk_provider
+@@ -427,6 +429,33 @@
+         serialization.NoEncryption(),
+     ).decode()
+     return fullchain_pem, leaf_key_pem
++
++
++def _legacy_credentials(
++    ca_cert_pem: str, ca_key_pem: str, existing_leaf: tuple[str, str] | None
++) -> tuple[str, str]:
++    # shortcut: opt-in application bundle for WW80K6404QW; remove after upstream supports importing it.
++    path = Path("/config/localthings-legacy.pem")
++    if not path.exists():
++        return existing_leaf or _mint_preferred(ca_cert_pem, ca_key_pem)
++    try:
++        with path.open() as file:
++            bundle = file.read(65537)
++        keys = re.findall(
++            r"-----BEGIN (?:RSA )?PRIVATE KEY-----.*?-----END (?:RSA )?PRIVATE KEY-----",
++            bundle,
++            re.DOTALL,
++        )
++        certificates = re.findall(
++            r"-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----", bundle, re.DOTALL
++        )
++        if len(bundle) > 65536 or len(keys) != 1 or not certificates:
++            raise ValueError
++        cert, key = "\n".join(certificates) + "\n", keys[0] + "\n"
++        client_context(cert, key)
++        return cert, key
++    except (OSError, UnicodeError, ValueError):
++        raise InvalidCA("Invalid legacy application certificate bundle") from None
+
+
+ def _probe_legacy(host: str, cert_pem: str, key_pem: str, token: str) -> dict:
+@@ -1167,13 +1196,10 @@
+                     self._setup_source_port(self._host),
+                 )
+             except LegacyHttpFamily:
+-                # The washer authenticates nothing about the certificate (a
+-                # TP6X_WW6500 answers any leaf 200), so the token step comes
+-                # first; fallback_ca is offered only if the token callback
+-                # refuses the leaf, as the TP6X_RAC appears to (#524).
++                # Some legacy washers require the original application certificate.
+                 try:
+-                    self._legacy_leaf = existing_leaf or await self.hass.async_add_executor_job(
+-                        _mint_preferred, self._ca_cert_pem, self._ca_key_pem
++                    self._legacy_leaf = await self.hass.async_add_executor_job(
++                        _legacy_credentials, self._ca_cert_pem, self._ca_key_pem, existing_leaf
+                     )
+                 except (CannotConnect, InvalidCA) as exc:
+                     _LOGGER.warning(
+--- a/custom_components/localthings/legacy_http_token.py
++++ b/custom_components/localthings/legacy_http_token.py
+@@ -15,7 +15,6 @@
+
+ from __future__ import annotations
+
+-import json
+ import logging
+ import re
+ import socket
+@@ -194,7 +193,7 @@
+     """Ask the appliance to issue a token. Returns the HTTP status."""
+     connection = HTTPSConnection(host, port, context=context, timeout=15)
+     try:
+-        body = json.dumps({}).encode()
++        body = b""
+         connection.putrequest(
+             "POST", "/devicetoken/request", skip_host=True, skip_accept_encoding=True
+         )
