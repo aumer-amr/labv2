@@ -43,6 +43,12 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/instance: langfuse-clickhouse
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: database
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: clickhouse
       ports:
         - port: 8123
           protocol: TCP
