@@ -16,15 +16,6 @@ configMapGenerator:
 generatorOptions:
   disableNameSuffixHash: true
 patches:
-  - target:
-      kind: Restore
-    patch: |-
-      - op: replace
-        path: /spec/source
-        value:
-          snapshotRef:
-            name: langfuse-clickhouse-migration-1282-final
-            namespace: ai
   - patch: |
       apiVersion: kopiur.home-operations.com/v1alpha1
       kind: Restore

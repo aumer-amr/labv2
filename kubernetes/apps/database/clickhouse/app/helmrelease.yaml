@@ -8,6 +8,7 @@ spec:
     kind: OCIRepository
     name: clickhouse
   interval: 1h
+  timeout: 10m
   values:
     controllers:
       clickhouse:

@@ -14,6 +14,7 @@ spec:
     - name: kopiur
       namespace: kube-system
   interval: 1h
+  timeout: 10m
   path: ./kubernetes/apps/database/clickhouse/app
   postBuild:
     substituteFrom:
