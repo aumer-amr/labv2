@@ -15,6 +15,7 @@ resources:
   - ./llmkube/ks.yaml
   - ./pr-reviewer/ks.yaml
   - ./hermes/ks.yaml
+  - ./paseo/ks.yaml
   - ./langfuse/ks.yaml
   - ./windmill/ks.yaml
   - ./memini/ks.yaml

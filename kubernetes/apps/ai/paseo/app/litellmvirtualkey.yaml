@@ -1,0 +1,15 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/litellm.home-operations.com/litellmvirtualkey_v1alpha1.json
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMVirtualKey
+metadata:
+  name: paseo
+spec:
+  keyAlias: paseo
+  mcpToolsets:
+    - 6b9621e4-cc01-4f86-a470-b0f1d1fb84e8
+  models:
+    - no-model-access
+  proxyRef: litellm
+  secretKey: key
+  secretName: paseo-litellm

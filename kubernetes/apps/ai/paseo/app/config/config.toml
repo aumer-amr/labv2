@@ -1,0 +1,21 @@
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
+sandbox_mode = "workspace-write"
+cli_auth_credentials_store = "file"
+
+[features]
+multi_agent_v2 = false
+
+[sandbox_workspace_write]
+network_access = false
+
+[mcp_servers.litellm]
+url = "http://litellm.ai.svc.cluster.local:4000/mcp/"
+env_http_headers = { "x-litellm-api-key" = "LITELLM_API_KEY" }
+
+[mcp_servers.memini]
+url = "http://memini.ai.svc.cluster.local:8080/mcp"
+bearer_token_env_var = "MEMINI_API_KEY"
+
+[mcp_servers.memini.http_headers]
+X-Memini-Namespace = "codex"

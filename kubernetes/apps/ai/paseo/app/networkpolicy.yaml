@@ -1,0 +1,161 @@
+# Flows are derived from configuration; audit and enforcement tests remain rollout gates.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: paseo
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: paseo
+      app.kubernetes.io/name: paseo
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-internal
+      ports:
+        - port: 6767
+          protocol: TCP
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: litellm
+      ports:
+        - port: 4000
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: memini
+              app.kubernetes.io/name: memini
+      ports:
+        - port: 8080
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: paseo-to-litellm
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: litellm
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: paseo
+              app.kubernetes.io/name: paseo
+      ports:
+        - port: 4000
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: paseo-to-memini
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: memini
+      app.kubernetes.io/name: memini
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: paseo
+              app.kubernetes.io/name: paseo
+      ports:
+        - port: 8080
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: paseo-external
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: paseo
+      app.kubernetes.io/name: paseo
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: api.openai.com
+              - matchName: auth.openai.com
+              - matchName: chatgpt.com
+              - matchName: ab.chatgpt.com
+              - matchName: developers.openai.com
+              - matchName: learn.chatgpt.com
+              - matchName: github.com
+              - matchName: api.github.com
+              - matchName: raw.githubusercontent.com
+              - matchName: objects.githubusercontent.com
+              - matchName: release-assets.githubusercontent.com
+              - matchName: registry.npmjs.org
+              - matchName: mise.jdx.dev
+              - matchName: litellm.ai.svc.cluster.local
+              - matchName: memini.ai.svc.cluster.local
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: api.openai.com
+              - matchName: auth.openai.com
+              - matchName: chatgpt.com
+              - matchName: ab.chatgpt.com
+              - matchName: developers.openai.com
+              - matchName: learn.chatgpt.com
+              - matchName: github.com
+              - matchName: api.github.com
+              - matchName: raw.githubusercontent.com
+              - matchName: objects.githubusercontent.com
+              - matchName: release-assets.githubusercontent.com
+              - matchName: registry.npmjs.org
+              - matchName: mise.jdx.dev
+              - matchName: litellm.ai.svc.cluster.local
+              - matchName: memini.ai.svc.cluster.local
+    - toFQDNs:
+        - matchName: api.openai.com
+        - matchName: auth.openai.com
+        - matchName: chatgpt.com
+        - matchName: ab.chatgpt.com
+        - matchName: developers.openai.com
+        - matchName: learn.chatgpt.com
+        - matchName: github.com
+        - matchName: api.github.com
+        - matchName: raw.githubusercontent.com
+        - matchName: objects.githubusercontent.com
+        - matchName: release-assets.githubusercontent.com
+        - matchName: registry.npmjs.org
+        - matchName: mise.jdx.dev
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
