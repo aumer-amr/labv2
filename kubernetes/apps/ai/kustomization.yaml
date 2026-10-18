@@ -9,7 +9,7 @@ components:
 
 resources:
   - ./namespace.yaml
-  - ./network-policies/kopiur-mover.yaml
+  - ./network-policies/networkpolicy.yaml
   - ./litellm-operator/ks.yaml
   - ./litellm/ks.yaml
   - ./llmkube/ks.yaml

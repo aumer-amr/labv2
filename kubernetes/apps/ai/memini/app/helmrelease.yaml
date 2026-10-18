@@ -56,3 +56,15 @@ spec:
     serviceMonitor:
       main:
         enabled: true
+    route:
+      ui:
+        enabled: true
+        hostnames:
+          - memini.${SECRET_DOMAIN}
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+        rules:
+          - backendRefs:
+              - identifier: main
+                port: ui

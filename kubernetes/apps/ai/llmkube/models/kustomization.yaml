@@ -3,9 +3,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  - ./networkpolicy.yaml
   - ./qwen3-5-9b.yaml
   - ./qwen3-5-9b-fallback.yaml
-  - ./qwen3-5-9b-fallback-networkpolicy.yaml
-  - ./qwen3-5-9b-networkpolicy.yaml
   - ./qwen3-embedding-0.6b.yaml
   - ./qwen3-reranker-0.6b.yaml
