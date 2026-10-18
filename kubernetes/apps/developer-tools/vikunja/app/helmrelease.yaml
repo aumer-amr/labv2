@@ -124,3 +124,18 @@ spec:
         type: emptyDir
         globalMounts:
           - path: /tmp
+    route:
+      app:
+        annotations:
+          gatus.home-operations.com/endpoint: |-
+            path: /api/v2/health
+            conditions: ["[STATUS] == 200", "[BODY].status == OK"]
+        hostnames:
+          - vikunja.${SECRET_DOMAIN}
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+        rules:
+          - backendRefs:
+              - name: vikunja
+                port: 3456
