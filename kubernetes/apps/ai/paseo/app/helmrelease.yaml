@@ -18,6 +18,7 @@ spec:
           reloader.stakater.com/auto: "true"
         pod:
           automountServiceAccountToken: false
+          runtimeClassName: gvisor
           dnsConfig:
             options:
               - name: ndots

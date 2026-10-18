@@ -11,6 +11,8 @@ spec:
       namespace: external-secrets
     - name: envoy-gateway
       namespace: network
+    - name: gvisor
+      namespace: kube-system
     - name: kopiur
       namespace: kube-system
     - name: rook-ceph-cluster
