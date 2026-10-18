@@ -18,7 +18,8 @@ spec:
       drop: ["ALL"]
   podSecurityContext:
     # The operator overrides UID only for its cache-permission init container.
-    runAsUser: 1000
+    # Existing shared cache directories belong to the downloader UID.
+    runAsUser: 101
     runAsGroup: 102
     fsGroup: 102
     seccompProfile:
