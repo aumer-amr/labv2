@@ -5,12 +5,13 @@ metadata:
   name: hermes-monitor
 spec:
   keyAlias: hermes-monitor
+  mcpToolsets:
+    - d381681c-49aa-4560-afee-2d2c8c074872
+  # shortcut: operator lacks mcp_tool_search_enabled; enable through /key/update until supported.
   models:
     - qwen3.5-9b
   proxyRef: litellm
   secretKey: key
   secretName: hermes-monitor-litellm
-  maxBudget: "2"
-  budgetDuration: 1d
-  maxParallelRequests: 2
+  # Windmill serializes investigations. LiteLLM MCP proxy hooks currently leak concurrency slots.
   rpmLimit: 20

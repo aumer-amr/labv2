@@ -39,17 +39,3 @@ spec:
       ports:
         - port: 4000
           protocol: TCP
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: prometheus-mcp
-      ports:
-        - port: 8080
-          protocol: TCP
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: victorialogs-mcp
-      ports:
-        - port: 8081
-          protocol: TCP
