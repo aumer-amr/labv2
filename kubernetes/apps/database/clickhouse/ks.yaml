@@ -4,8 +4,6 @@ kind: Kustomization
 metadata:
   name: clickhouse
 spec:
-  # Resume only after the restore rehearsal and migration approval.
-  suspend: true
   dependsOn:
     - name: network-policies
       namespace: database
