@@ -1,0 +1,10 @@
+---
+- sensor:
+    name: Samsung TV current app
+    unique_id: samsung_q7_current_app
+    command: python /config/scripts/samsung_tv_app.py
+    scan_interval: 30
+    command_timeout: 15
+    value_template: "{{ value_json.app }}"
+    availability: "{{ value_json.available }}"
+    icon: mdi:television
