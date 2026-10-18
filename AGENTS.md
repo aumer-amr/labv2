@@ -18,6 +18,10 @@
 
 - Track all issues for this repository in the **LabV2** project in [Vikunja](https://vikunja.aumer.dev), instead of GitHub Issues.
 - Use the Vikunja MCP tools through LiteLLM to search, create, update, and close issues. Resolve the project named `LabV2` before creating tasks; use that project rather than Inbox.
+- When starting work on an issue or task, move it from **To-Do** to **Doing**. When the work and required verification are complete, move it to **Done** and mark it complete; keep its board column and completion state consistent.
+- Mark subtasks and checklist items done as soon as their work is complete, rather than waiting for the parent task to finish.
+- Keep the task current with comments about substantial progress, decisions and their rationale, blockers, and verification results.
+- Remember durable task context, decisions, and the Vikunja task link in memini under relevant topic tags so future work can recover the connection. Keep current status and checklists in Vikunja.
 
 ## Desired State and Namespace Safety
 
