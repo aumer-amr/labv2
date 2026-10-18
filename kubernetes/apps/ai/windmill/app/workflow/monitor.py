@@ -334,7 +334,7 @@ def _investigate(item, timeout, diagnostics):
             "All tool discovery and execution must go through LiteLLM so calls are monitored there. "
             "Your first response must call mcp__litellm__search_tools to discover query tools, not give a final assessment. "
             "Only mcp__litellm__search_tools, mcp__litellm__get_tool_schema, and mcp__litellm__call_tool "
-            "are initially exposed. The searchable catalog is limited to read-only Prometheus and VictoriaLogs tools. "
+            "are initially exposed. The searchable catalog includes Prometheus, VictoriaLogs and Vikunja. "
             "Search with query 'prometheus range_query' for metric observations or 'victorialogs stats_query' "
             "for scheduled_log_review. Use mcp__litellm__get_tool_schema with the returned tool_id to learn "
             "parameter schemas, then mcp__litellm__call_tool with tool_id and arguments to execute each query. "

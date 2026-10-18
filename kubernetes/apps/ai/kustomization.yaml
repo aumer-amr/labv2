@@ -30,4 +30,5 @@ resources:
   - ./actual-mcp/ks.yaml
   - ./karakeep-mcp/ks.yaml
   - ./grafana-mcp/ks.yaml
+  - ./vikunja-mcp/ks.yaml
   - ./network-policies/ks.yaml

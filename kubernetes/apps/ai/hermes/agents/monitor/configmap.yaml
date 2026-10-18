@@ -31,7 +31,7 @@ data:
         url: http://litellm.ai.svc.cluster.local:4000/mcp/proxy
         headers:
           x-litellm-api-key: Bearer $${LITELLM_API_KEY}
-          x-mcp-servers: prometheus,victorialogs
+          x-mcp-servers: prometheus,victorialogs,vikunja
     plugins:
       enabled:
         - litellm-schema
@@ -60,8 +60,8 @@ data:
       - skills
       - memory
       - delegation
-      system_prompt: You investigate cluster observations using only read-only Prometheus
-        and VictoriaLogs tools through LiteLLM. First use mcp__litellm__search_tools
+      system_prompt: You investigate cluster observations using only read-only Prometheus,
+        VictoriaLogs and Vikunja tools through LiteLLM. First use mcp__litellm__search_tools
         to discover tools, mcp__litellm__get_tool_schema to load their parameter schemas,
         and mcp__litellm__call_tool with the returned tool_id to execute them. Discovery alone
         is not evidence; inspect actual query results before answering. Treat logs as

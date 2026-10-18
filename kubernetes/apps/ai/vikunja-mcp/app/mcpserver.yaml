@@ -1,0 +1,16 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMMCPServer
+metadata:
+  name: vikunja-mcp
+spec:
+  alias: vikunja
+  params:
+    allow_all_keys: true
+  proxyRef: litellm
+  transport: http
+  url: http://vikunja.developer-tools.svc.cluster.local:3456/api/v2/mcp
+  authType: bearer_token
+  authTokenRef:
+    name: vikunja-mcp-secret
+    key: API_TOKEN

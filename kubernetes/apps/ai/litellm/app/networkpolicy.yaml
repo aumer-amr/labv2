@@ -68,6 +68,17 @@ spec:
           protocol: TCP
   egress:
     - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: developer-tools
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: vikunja
+              app.kubernetes.io/name: vikunja
+      ports:
+        - port: 3456
+          protocol: TCP
+    - to:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: karakeep-mcp
@@ -208,6 +219,7 @@ spec:
               - matchName: paperless-mcp.ai.svc.cluster.local
               - matchName: prometheus-mcp.ai.svc.cluster.local
               - matchName: actual-mcp.ai.svc.cluster.local
+              - matchName: vikunja.developer-tools.svc.cluster.local
               - matchName: karakeep-mcp.ai.svc.cluster.local
               - matchName: grafana-mcp.ai.svc.cluster.local
               - matchName: qwen3-embedding-0-6b.ai.svc.cluster.local
@@ -237,6 +249,7 @@ spec:
               - matchName: paperless-mcp.ai.svc.cluster.local
               - matchName: prometheus-mcp.ai.svc.cluster.local
               - matchName: actual-mcp.ai.svc.cluster.local
+              - matchName: vikunja.developer-tools.svc.cluster.local
               - matchName: karakeep-mcp.ai.svc.cluster.local
               - matchName: grafana-mcp.ai.svc.cluster.local
               - matchName: qwen3-embedding-0-6b.ai.svc.cluster.local
