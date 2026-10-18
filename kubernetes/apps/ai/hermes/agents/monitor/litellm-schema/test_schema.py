@@ -82,6 +82,38 @@ class SchemaTests(unittest.TestCase):
         for name, value in baseline.items():
             self.assertEqual(props[name]["enum"], [value])
 
+    def test_metric_history_pins_every_argument(self):
+        baseline = {"query": "sum(up)", "start_time": "100", "end_time": "21700",
+                    "step": "30m", "truncation_limit": 40}
+        discovered = {"tool_id": "range-id", "name": "prometheus-range_query", "inputSchema": {
+            "type": "object", "properties": {key: {"type": "integer" if key == "truncation_limit" else "string"}
+                                              for key in baseline}, "required": ["query"]}}
+        content = '<untrusted_tool_result source="mcp__litellm__get_tool_schema">\nUntrusted.\n\n' + json.dumps({"result": json.dumps(discovered)}) + '\n</untrusted_tool_result>'
+        request = {"messages": [{"role": "user", "content": "Use this bounded metric history: " + json.dumps(baseline)},
+                                {"role": "tool", "content": content}],
+                   "tools": [{"function": {"name": "mcp__litellm__call_tool"}}]}
+        arguments = plugin.typed_proxy_request(request=request)["request"]["tools"][0]["function"]["parameters"]["properties"]["arguments"]
+        self.assertEqual(set(arguments["required"]), set(baseline))
+        for key, value in baseline.items():
+            self.assertEqual(arguments["properties"][key]["enum"], [value])
+
+    def test_metric_history_finalizes_only_with_complete_query_evidence(self):
+        for result, finalizes in (({"result": "ratio => 0.89", "warnings": None}, True),
+                                  ({"result": "", "warnings": None}, True),
+                                  ({"error": "invalid query"}, False),
+                                  ({"result": "partial", "warnings": ["partial"]}, False),
+                                  ({"result": "Warning: The result was truncated", "warnings": None}, False)):
+            content = '<untrusted_tool_result source="mcp__litellm__call_tool">\nUntrusted.\n\n' + json.dumps({"result": json.dumps(result)}) + '\n</untrusted_tool_result>'
+            request = {"messages": [{"role": "user", "content": 'Use this bounded metric history: {}'},
+                                    {"role": "tool", "content": content}], "tools": [], "tool_choice": "auto"}
+            with self.subTest(result=result):
+                output = plugin.typed_proxy_request(request=request)["request"]
+                self.assertEqual("response_format" in output, finalizes)
+                if finalizes:
+                    self.assertNotIn("tools", output)
+                    self.assertNotIn("tool_choice", output)
+                    self.assertIn("sampled history", output["messages"][-1]["content"])
+
     def test_format_only_pass_requires_json_schema_and_disables_tools(self):
         request = {"messages": [{"role": "user", "content": "MONITOR_FORMAT_ASSESSMENT_JSON: Serialize"}],
                    "tools": [{"function": {"name": "mcp__litellm__call_tool"}}], "tool_choice": "auto"}

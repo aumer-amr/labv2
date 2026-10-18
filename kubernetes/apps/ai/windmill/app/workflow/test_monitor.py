@@ -65,7 +65,7 @@ class HermesRunTests(unittest.TestCase):
 
 class MonitoringTests(unittest.TestCase):
     def evidence(self, value=0.9):
-        return [{"id": "stable", "check": "memory_pressure", "labels": {"namespace": "ai"},
+        return [{"id": "stable", "check": "memory_pressure", "labels": {"namespace": "ai", "pod": "test", "container": "app"},
                  "value": value, "query": "test", "timestamp": 10000}]
 
     def test_state_api_error_reports_reason_without_token(self):
@@ -300,6 +300,23 @@ class MonitoringTests(unittest.TestCase):
         self.assertIn("prometheus range_query", prompt)
         self.assertTrue(http.call_args.args[0].endswith("/messages"))
         self.assertIn("Evidence entries must be strings", prompt)
+
+    def test_memory_history_is_scoped_and_bounded_without_threshold_filter(self):
+        item = {"check": "memory_pressure", "query": monitor.QUERIES["memory_pressure"],
+                "labels": {"namespace": "rook-ceph", "pod": "mgr-pod", "container": "mgr"}}
+        assessment = {"verdict": "uncertain", "summary": "Review", "evidence": [], "next_step": "Observe"}
+        with patch.object(monitor, "hermes_run", return_value={"choices": [{"message": {"content": json.dumps(assessment)}}]}) as run, \
+             patch.object(monitor, "http", return_value={"data": [{"role": "tool", "tool_name": "mcp__litellm__call_tool", "content": '{"result":"counts"}'}]}), \
+             patch.object(monitor.time, "time", return_value=50000), \
+             patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
+            monitor.investigate(item)
+        prompt = run.call_args.args[0]["messages"][1]["content"]
+        arguments, _ = json.JSONDecoder().raw_decode(prompt.split("Use this bounded metric history: ", 1)[1])
+        self.assertEqual({key: value for key, value in arguments.items() if key != "query"},
+                         {"start_time": "28400", "end_time": "50000", "step": "30m", "truncation_limit": 40})
+        self.assertTrue(arguments["query"].startswith("sum("))
+        self.assertNotIn("> 0.85", arguments["query"])
+        self.assertEqual(arguments["query"].count('namespace="rook-ceph",pod="mgr-pod",container="mgr"'), 2)
 
     def test_log_review_supplies_validated_logsql_and_required_time(self):
         item = {"check": "scheduled_log_review", "review_start": 40000, "review_end": 50000}

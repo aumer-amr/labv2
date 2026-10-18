@@ -242,6 +242,22 @@ def investigate(item, timeout=360):
     deadline = time.monotonic() + timeout
     session_id = uuid.uuid4().hex
     log_guidance = ""
+    metric_guidance = ""
+    if item["check"] != "scheduled_log_review":
+        expression = item["query"]
+        if item["check"] == "memory_pressure":
+            selectors = ",".join(key + "=" + json.dumps(item["labels"][key])
+                                 for key in ("namespace", "pod", "container"))
+            expression = expression.removesuffix(" > 0.85").replace("{", "{" + selectors + ",")
+        baseline = {"query": "sum(" + expression + ")", "start_time": str(now - 21600),
+                    "end_time": str(now), "step": "30m", "truncation_limit": 40}
+        metric_guidance = (
+            "Use this bounded metric history: " + json.dumps(baseline)
+            + ". The sum yields one series; memory_pressure is scoped to the observed container and "
+            "includes values below the alert threshold. Other checks summarize matching signals across "
+            "the cluster, not just the observed workload. Do not infer individual workload history from "
+            "cluster totals. After this query, assess the available evidence without more tool calls. "
+        )
     if item["check"] == "scheduled_log_review":
         start, end = item["review_start"], item["review_end"]
         previous = start - (end - start)
@@ -285,7 +301,7 @@ def investigate(item, timeout=360):
         + ("Start by searching only VictoriaLogs stats_query for this log review. "
            if item["check"] == "scheduled_log_review" else
            "Start by searching only Prometheus range_query for this metric observation. Inspect logs only if needed. ")
-        + log_guidance + "Make no changes and send no messages. Observation: " + json.dumps(item)
+        + log_guidance + metric_guidance + "Make no changes and send no messages. Observation: " + json.dumps(item)
     )
     # Hermes's API takes its extra system instructions from the request, not agent.system_prompt.
     result = hermes_run({

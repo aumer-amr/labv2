@@ -7,7 +7,9 @@ def typed_proxy_request(*, request, **_):
     users = [m.get("content", "") for m in request.get("messages", []) if m.get("role") == "user"]
     log_review = bool(users and '"check": "scheduled_log_review"' in users[-1])
     log_evidence = False
-    if log_review:
+    metric_evidence = False
+    metric_review = bool(users and "Use this bounded metric history: " in users[-1])
+    if log_review or metric_review:
         for message in request.get("messages", []):
             content = message.get("content", "")
             if message.get("role") != "tool" or not isinstance(content, str):
@@ -17,7 +19,11 @@ def typed_proxy_request(*, request, **_):
             try:
                 payload = content.split("\n\n", 1)[1].rsplit("\n</untrusted_tool_result>", 1)[0]
                 result = json.loads(json.loads(payload)["result"])
-                log_evidence |= result.get("status") == "success" and result.get("data", {}).get("resultType") == "vector"
+                if any(result.get(key) for key in ("error", "warnings", "infos")):
+                    continue
+                log_evidence |= log_review and result.get("status") == "success" and result.get("data", {}).get("resultType") == "vector"
+                metric_evidence |= (metric_review and result.get("result") is not None
+                                    and "warning: the result was truncated" not in str(result).lower())
             except (ValueError, KeyError, IndexError, TypeError, AttributeError):
                 continue
     if log_evidence:
@@ -26,7 +32,13 @@ def typed_proxy_request(*, request, **_):
             "This covers sampled error-count aggregates, not raw log contents or every severity. "
             "Do not invent root causes or claim exhaustive coverage. Use uncertain and a concrete "
             "next_step when these counts cannot establish whether a pattern needs action."})
-    if log_evidence or (users and "MONITOR_FORMAT_ASSESSMENT_JSON" in users[-1]):
+    if metric_evidence:
+        request["messages"].append({"role": "user", "content":
+            "The bounded metric history query has completed. Return its JSON assessment now. "
+            "Use uncertain with a concrete next_step if the sampled history cannot establish actionability. "
+            "Do not infer root causes, continuous threshold breaches, or individual workload history "
+            "from cluster aggregates."})
+    if log_evidence or metric_evidence or (users and "MONITOR_FORMAT_ASSESSMENT_JSON" in users[-1]):
         request.pop("tools", None)
         request.pop("tool_choice", None)
         request["response_format"] = {"type": "json_schema", "json_schema": {
@@ -62,13 +74,15 @@ def typed_proxy_request(*, request, **_):
         required = set.intersection(*(set(s.get("required", [])) for s in schemas.values()))
         for schema in schemas.values():
             properties.update(schema.get("properties", {}))
-        if log_review:
+        if log_review or metric_review:
             try:
-                supplied = users[-1].split("validated bounded per-stream comparison: ", 1)[1]
+                marker = "validated bounded per-stream comparison: " if log_review else "Use this bounded metric history: "
+                supplied = users[-1].split(marker, 1)[1]
                 baseline, _ = json.JSONDecoder().raw_decode(supplied)
-                for name in ("query", "time"):
+                for name in baseline:
                     if name in properties:
                         properties[name] = {**properties[name], "enum": [baseline[name]]}
+                        required.add(name)
             except (IndexError, ValueError, KeyError, TypeError):
                 pass
         for tool in request.get("tools", []):
