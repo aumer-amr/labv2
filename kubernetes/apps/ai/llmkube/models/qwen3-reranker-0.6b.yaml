@@ -9,14 +9,7 @@ spec:
   format: gguf
   quantization: Q4_K_M
   hardware:
-    accelerator: intel
-    gpu:
-      enabled: true
-      vendor: intel
-      layers: 99
-      resourceClaims:
-        - name: gpu
-          resourceClaimTemplateName: llmkube-models-gpu
+    accelerator: cpu
 ---
 apiVersion: inference.llmkube.dev/v1alpha1
 kind: InferenceService
@@ -29,24 +22,18 @@ spec:
   # renovate: datasource=docker depName=ghcr.io/ggml-org/llama.cpp
   image: ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:df5209b227af28d491dc26de7c3a5b894060047d0963640e6aeb360f80651412
   replicas: 1
+  nodeSelector:
+    kubernetes.io/hostname: deathscythe
   podSecurityContext:
     fsGroup: 102
-    supplementalGroups:
-      - 44
-      - 992
   priority: normal
   contextSize: 8192
   parallelSlots: 2
   batchSize: 2048
   uBatchSize: 1024
-  env:
-    - name: ZES_ENABLE_SYSMAN
-      value: "1"
-    - name: ONEAPI_DEVICE_SELECTOR
-      value: level_zero:gpu
-    - name: UR_L0_ENABLE_RELAXED_ALLOCATION_LIMITS
-      value: "1"
   extraArgs:
+    - --n-gpu-layers
+    - "0"
     - --alias
     - qwen3-reranker-0.6b
     - --cache-ram

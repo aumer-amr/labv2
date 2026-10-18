@@ -1,0 +1,76 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: InferenceService
+metadata:
+  name: qwen3-5-9b-fallback
+spec:
+  modelRef: qwen3.5-9b
+  runtime: llamacpp
+  # renovate: datasource=docker depName=ghcr.io/ggml-org/llama.cpp
+  image: ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:df5209b227af28d491dc26de7c3a5b894060047d0963640e6aeb360f80651412
+  replicas: 1
+  nodeSelector:
+    kubernetes.io/hostname: deathscythe
+  securityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+  podSecurityContext:
+    # The operator overrides UID only for its cache-permission init container.
+    runAsUser: 1000
+    runAsGroup: 102
+    fsGroup: 102
+    seccompProfile:
+      type: RuntimeDefault
+    supplementalGroups:
+      - 44
+      - 992
+  priority: normal
+  contextSize: 65536
+  parallelSlots: 1
+  batchSize: 2048
+  uBatchSize: 512
+  jinja: true
+  extraArgs:
+    - --alias
+    - qwen3.5-9b-fallback
+    - --reasoning
+    - "off"
+    - --cache-ram
+    - "0"
+    - --threads
+    - "6"
+    - --threads-batch
+    - "12"
+    - --load-mode
+    - mmap
+    - --metrics
+  endpoint:
+    port: 8080
+    type: ClusterIP
+  resources:
+    cpu: 500m
+    memory: 12Gi
+    memoryLimit: 24Gi
+  probeOverrides:
+    startup:
+      httpGet:
+        path: /health
+        port: 8080
+      periodSeconds: 10
+      failureThreshold: 360
+    liveness:
+      httpGet:
+        path: /health
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      failureThreshold: 6
+    readiness:
+      httpGet:
+        path: /health
+        port: 8080
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 6
