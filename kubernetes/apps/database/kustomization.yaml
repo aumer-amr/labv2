@@ -6,10 +6,12 @@ namespace: database
 
 components:
   - ../../components/sops
+  - ../../components/kopiur/secret
 
 resources:
   - ./namespace.yaml
   - ./valkey/ks.yaml
+  - ./clickhouse/ks.yaml
   - ./cloudnative-pg/ks.yaml
   - ./postgresql-images/ks.yaml
   - ./barman-cloud/ks.yaml

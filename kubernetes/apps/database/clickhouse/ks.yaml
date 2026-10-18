@@ -1,0 +1,36 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: clickhouse
+spec:
+  # Resume only after the restore rehearsal and migration approval.
+  suspend: true
+  dependsOn:
+    - name: network-policies
+      namespace: database
+    - name: onepassword-connect
+      namespace: external-secrets
+    - name: rook-ceph-cluster
+      namespace: rook-ceph
+    - name: kopiur
+      namespace: kube-system
+  interval: 1h
+  path: ./kubernetes/apps/database/clickhouse/app
+  postBuild:
+    substituteFrom:
+      - name: cluster-secrets
+        kind: Secret
+    substitute:
+      APP: clickhouse
+      NAMESPACE: database
+      KOPIUR_CAPACITY: 20Gi
+      KOPIUR_PUID: "101"
+      KOPIUR_PGID: "101"
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: database
+  wait: true

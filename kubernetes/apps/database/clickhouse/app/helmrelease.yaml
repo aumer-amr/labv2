@@ -1,0 +1,111 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: clickhouse
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: clickhouse
+  interval: 1h
+  values:
+    controllers:
+      clickhouse:
+        type: statefulset
+        containers:
+          app:
+            image:
+              repository: docker.io/clickhouse/clickhouse-server
+              tag: 26.4@sha256:c7796a1335d14385c052f10061cf719f4a368a908432ec25980860b1333e9ccd
+            env:
+              CLICKHOUSE_USER: admin
+              CLICKHOUSE_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: clickhouse-admin
+                    key: CLICKHOUSE_ADMIN_PASSWORD
+              CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+              CLICKHOUSE_SKIP_USER_SETUP: "0"
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: false
+            resources:
+              requests:
+                cpu: 250m
+                memory: 1Gi
+              limits:
+                memory: 4Gi
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /ping
+                    port: 8123
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /ping
+                    port: 8123
+        pod:
+          labels:
+            app.kubernetes.io/name: clickhouse
+        annotations:
+          reloader.stakater.com/auto: "true"
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+    service:
+      app:
+        controller: clickhouse
+        ports:
+          http:
+            port: 8123
+          native:
+            port: 9000
+    persistence:
+      data:
+        existingClaim: clickhouse
+        globalMounts:
+          - path: /var/lib/clickhouse
+      logs:
+        type: emptyDir
+        globalMounts:
+          - path: /var/log/clickhouse-server
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+      run:
+        type: emptyDir
+        globalMounts:
+          - path: /var/run/clickhouse-server
+      backup-config:
+        type: configMap
+        name: clickhouse-backup
+        globalMounts:
+          - path: /etc/clickhouse-server/config.d/backup.xml
+            subPath: backup.xml
+            readOnly: true
+          - path: /opt/backup/backup.sh
+            subPath: backup.sh
+            readOnly: true
+      users:
+        type: secret
+        name: clickhouse-users
+        globalMounts:
+          - path: /etc/clickhouse-server/users.d/langfuse.xml
+            subPath: langfuse.xml
+            readOnly: true
