@@ -57,6 +57,18 @@ class SchemaTests(unittest.TestCase):
         result = plugin.typed_proxy_request(request=request)["request"]
         self.assertEqual(result["tools"][0]["function"]["parameters"]["properties"]["arguments"]["required"], ["query", "time"])
 
+    def test_log_review_finalizes_after_successful_aggregate_not_after_error(self):
+        for result, finalizes in (({"status": "success", "data": {"resultType": "vector", "result": []}}, True),
+                                  ({"status": "error", "error": "bad syntax"}, False)):
+            content = '<untrusted_tool_result source="mcp__litellm__call_tool">\nUntrusted.\n\n' + json.dumps({"result": json.dumps(result)}) + '\n</untrusted_tool_result>'
+            request = {"messages": [{"role": "user", "content": 'Observation: {"check": "scheduled_log_review"}'},
+                                    {"role": "tool", "content": content}], "tools": []}
+            output = plugin.typed_proxy_request(request=request)["request"]
+            self.assertEqual("response_format" in output, finalizes)
+            if finalizes:
+                self.assertNotIn("tools", output)
+                self.assertIn("not raw log contents", output["messages"][-1]["content"])
+
     def test_format_only_pass_requires_json_schema_and_disables_tools(self):
         request = {"messages": [{"role": "user", "content": "MONITOR_FORMAT_ASSESSMENT_JSON: Serialize"}],
                    "tools": [{"function": {"name": "mcp__litellm__call_tool"}}], "tool_choice": "auto"}

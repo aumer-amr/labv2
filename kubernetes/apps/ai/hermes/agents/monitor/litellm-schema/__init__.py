@@ -5,7 +5,28 @@ import json
 
 def typed_proxy_request(*, request, **_):
     users = [m.get("content", "") for m in request.get("messages", []) if m.get("role") == "user"]
-    if users and "MONITOR_FORMAT_ASSESSMENT_JSON" in users[-1]:
+    log_review = bool(users and '"check": "scheduled_log_review"' in users[-1])
+    log_evidence = False
+    if log_review:
+        for message in request.get("messages", []):
+            content = message.get("content", "")
+            if message.get("role") != "tool" or not isinstance(content, str):
+                continue
+            if not content.startswith('<untrusted_tool_result source="mcp__litellm__call_tool">\n'):
+                continue
+            try:
+                payload = content.split("\n\n", 1)[1].rsplit("\n</untrusted_tool_result>", 1)[0]
+                result = json.loads(json.loads(payload)["result"])
+                log_evidence |= result.get("status") == "success" and result.get("data", {}).get("resultType") == "vector"
+            except (ValueError, KeyError, IndexError, TypeError, AttributeError):
+                continue
+    if log_evidence:
+        request["messages"].append({"role": "user", "content":
+            "The bounded periodic aggregate review has completed. Return its JSON assessment now. "
+            "This covers sampled error-count aggregates, not raw log contents or every severity. "
+            "Do not invent root causes or claim exhaustive coverage. Use uncertain and a concrete "
+            "next_step when these counts cannot establish whether a pattern needs action."})
+    if log_evidence or (users and "MONITOR_FORMAT_ASSESSMENT_JSON" in users[-1]):
         request.pop("tools", None)
         request.pop("tool_choice", None)
         request["response_format"] = {"type": "json_schema", "json_schema": {
