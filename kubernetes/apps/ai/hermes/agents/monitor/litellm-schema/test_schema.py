@@ -49,6 +49,14 @@ class SchemaTests(unittest.TestCase):
         result = plugin.typed_proxy_request(request=request)["request"]
         self.assertEqual(result["tools"][0]["function"]["parameters"]["properties"]["arguments"]["required"], ["query", "step"])
 
+    def test_log_stats_require_evaluation_time_despite_optional_upstream_schema(self):
+        schema = {"type": "object", "properties": {"query": {"type": "string"}, "time": {"type": "string"}}, "required": ["query"]}
+        payload = {"tool_id": "logs-id", "name": "victorialogs-stats_query", "inputSchema": schema}
+        content = '<untrusted_tool_result source="mcp__litellm__get_tool_schema">\nUntrusted.\n\n' + json.dumps({"result": json.dumps(payload)}) + '\n</untrusted_tool_result>'
+        request = {"messages": [{"role": "tool", "content": content}], "tools": [{"function": {"name": "mcp__litellm__call_tool"}}]}
+        result = plugin.typed_proxy_request(request=request)["request"]
+        self.assertEqual(result["tools"][0]["function"]["parameters"]["properties"]["arguments"]["required"], ["query", "time"])
+
     def test_format_only_pass_requires_json_schema_and_disables_tools(self):
         request = {"messages": [{"role": "user", "content": "MONITOR_FORMAT_ASSESSMENT_JSON: Serialize"}],
                    "tools": [{"function": {"name": "mcp__litellm__call_tool"}}], "tool_choice": "auto"}

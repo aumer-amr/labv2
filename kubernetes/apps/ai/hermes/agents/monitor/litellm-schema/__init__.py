@@ -31,6 +31,8 @@ def typed_proxy_request(*, request, **_):
                 schema = tool["inputSchema"]
                 if tool["name"] == "prometheus-range_query" and "step" in schema.get("properties", {}):
                     schema["required"] = sorted(set(schema.get("required", [])) | {"step"})
+                if tool["name"] == "victorialogs-stats_query" and "time" in schema.get("properties", {}):
+                    schema["required"] = sorted(set(schema.get("required", [])) | {"time"})
                 schemas[tool["tool_id"]] = schema
         except (ValueError, KeyError, IndexError, TypeError):
             continue

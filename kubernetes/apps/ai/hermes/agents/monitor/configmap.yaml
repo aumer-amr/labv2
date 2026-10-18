@@ -77,6 +77,8 @@ data:
       enabled: true
       threshold: 0.5
     gateway:
+      api_server:
+        max_concurrent_runs: 1
       max_concurrent_sessions: 1
       multiplex_profiles: false
     model_catalog:

@@ -3,6 +3,7 @@ from urllib.error import HTTPError
 import copy
 import importlib.util
 import json
+import itertools
 import os
 import subprocess
 import unittest
@@ -20,6 +21,46 @@ def load(name):
 monitor = load("monitor")
 bootstrap = load("bootstrap")
 readiness = load("ready")
+
+
+class HermesRunTests(unittest.TestCase):
+    body = {"model": "qwen3.5-9b", "messages": [
+        {"role": "system", "content": "Read-only"}, {"role": "user", "content": "Investigate"}]}
+
+    def test_completed_run_preserves_prompt_session_and_output(self):
+        with patch.object(monitor, "http", side_effect=[{"run_id": "run_test"}, {"status": "completed", "output": "done"}]) as http, \
+             patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
+            result = monitor.hermes_run(self.body, "session", 240)
+        self.assertEqual(result["choices"][0]["message"]["content"], "done")
+        self.assertEqual(http.call_args_list[0].args[1], {
+            "model": "qwen3.5-9b", "session_id": "session", "input": "Investigate", "instructions": "Read-only"})
+        self.assertTrue(http.call_args_list[1].args[0].endswith("/v1/runs/run_test"))
+
+    def test_deadline_explicitly_stops_and_waits_for_cancelled(self):
+        with patch.object(monitor.time, "monotonic", side_effect=itertools.count()), \
+             patch.object(monitor.time, "sleep"), \
+             patch.object(monitor, "http", side_effect=[{"run_id": "run_test"}, {"status": "stopping"}, {"status": "cancelled"}]) as http, \
+             patch.dict(os.environ, {"HERMES_API_KEY": "test"}), self.assertRaises(TimeoutError):
+            monitor.hermes_run(self.body, "session", 1)
+        self.assertEqual([c.args[0].split("/v1/")[1] for c in http.call_args_list], ["runs", "runs/run_test/stop", "runs/run_test"])
+
+    def test_poll_failure_also_cancels_run(self):
+        with patch.object(monitor, "http", side_effect=[{"run_id": "run_test"}, TimeoutError(), {"status": "stopping"}, {"status": "cancelled"}]) as http, \
+             patch.dict(os.environ, {"HERMES_API_KEY": "test"}), self.assertRaises(TimeoutError):
+            monitor.hermes_run(self.body, "session", 240)
+        self.assertTrue(http.call_args_list[2].args[0].endswith("/stop"))
+
+    def test_unconfirmed_stop_is_fatal(self):
+        with patch.object(monitor.time, "monotonic", side_effect=itertools.count()), \
+             patch.object(monitor, "http", side_effect=[{"run_id": "run_test"}, OSError("unreachable")]), \
+             patch.dict(os.environ, {"HERMES_API_KEY": "test"}), self.assertRaises(monitor.HermesRunNotStopped):
+            monitor.hermes_run(self.body, "session", 1)
+
+    def test_lost_admission_reuses_idempotency_key(self):
+        with patch.object(monitor, "http", side_effect=[TimeoutError(), {"run_id": "run_test"}, {"status": "completed", "output": "done"}]) as http, \
+             patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
+            monitor.hermes_run(self.body, "session", 240)
+        self.assertEqual(http.call_args_list[0].kwargs["headers"], http.call_args_list[1].kwargs["headers"])
 
 
 class MonitoringTests(unittest.TestCase):
@@ -156,6 +197,19 @@ class MonitoringTests(unittest.TestCase):
         self.assertEqual(result["daily_investigations"], 10)
         self.assertEqual(result["issues_created"], 0)
 
+    def test_unconfirmed_cancellation_prevents_second_investigation(self):
+        state = {"version": 1}
+        for now in (10000, 10900):
+            monitor.observe(state, self.evidence(), now)
+        with patch.object(monitor, "wm", return_value=state), \
+             patch.object(monitor.time, "time", return_value=11800), \
+             patch.object(monitor, "collect", return_value=self.evidence()), \
+             patch.object(monitor, "save"), patch.object(monitor, "trace", return_value="trace"), \
+             patch.object(monitor, "investigate", side_effect=monitor.HermesRunNotStopped) as investigate, \
+             self.assertRaisesRegex(RuntimeError, "Investigation or trace"):
+            monitor.main()
+        self.assertEqual(investigate.call_count, 1)
+
     def test_due_log_review_precedes_metric_backlog(self):
         state = {"version": 1}
         for now in (10000, 10900):
@@ -198,19 +252,20 @@ class MonitoringTests(unittest.TestCase):
 
     def test_untrusted_agent_output_rejected(self):
         response = {"choices": [{"message": {"content": '{"verdict":"delete-cluster"}'}}]}
-        with patch.object(monitor, "http", return_value=response), patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
+        with patch.object(monitor, "hermes_run", return_value=response), patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
             with self.assertRaisesRegex(ValueError, "verdict"):
                 monitor.investigate(self.evidence()[0])
 
     def test_investigation_supplies_current_window_and_requires_tool_queries(self):
         assessment = {"verdict": "expected", "summary": "Stable", "evidence": ["query: last six hours"], "next_step": "Observe"}
         response = {"choices": [{"message": {"content": json.dumps(assessment)}}]}
-        with patch.object(monitor, "http", side_effect=[response, {"data": [
-                 {"role": "tool", "tool_name": "mcp__litellm__call_tool", "content": '{"result":"value=1","warnings":null}'}]}]) as http, \
+        with patch.object(monitor, "hermes_run", return_value=response) as run, \
+             patch.object(monitor, "http", return_value={"data": [
+                 {"role": "tool", "tool_name": "mcp__litellm__call_tool", "content": '{"result":"value=1","warnings":null}'}]}) as http, \
              patch.object(monitor.time, "time", return_value=50000), \
              patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
             self.assertEqual(monitor.investigate(self.evidence()[0]), assessment)
-        messages = http.call_args_list[0].args[1]["messages"]
+        messages = run.call_args.args[0]["messages"]
         self.assertEqual([message["role"] for message in messages], ["system", "user"])
         self.assertIn("first response must call mcp__litellm__search_tools", messages[0]["content"])
         self.assertIn("mcp__litellm__get_tool_schema", messages[0]["content"])
@@ -220,13 +275,39 @@ class MonitoringTests(unittest.TestCase):
         prompt = messages[1]["content"]
         self.assertIn("28400 through 50000", prompt)
         self.assertIn("prometheus range_query", prompt)
-        self.assertTrue(http.call_args_list[1].args[0].endswith("/messages"))
+        self.assertTrue(http.call_args.args[0].endswith("/messages"))
         self.assertIn("Evidence entries must be strings", prompt)
+
+    def test_log_review_supplies_validated_logsql_and_required_time(self):
+        item = {"check": "scheduled_log_review", "review_start": 40000, "review_end": 50000}
+        assessment = {"verdict": "uncertain", "summary": "Review", "evidence": [], "next_step": "Observe"}
+        with patch.object(monitor, "hermes_run", return_value={"choices": [{"message": {"content": json.dumps(assessment)}}]}) as run, \
+             patch.object(monitor, "http", return_value={"data": [{"role": "tool", "tool_name": "mcp__litellm__call_tool", "content": '{"result":"counts"}'}]}), \
+             patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
+            monitor.investigate(item)
+        prompt = run.call_args.args[0]["messages"][1]["content"]
+        arguments, _ = json.JSONDecoder().raw_decode(prompt.split("per-stream comparison: ", 1)[1])
+        self.assertEqual(arguments["time"], "50000")
+        self.assertIn("_time:[1970-01-01T08:20:00Z,1970-01-01T13:53:20Z)", arguments["query"])
+        self.assertIn("| stats by (_stream) count() if", arguments["query"])
+        self.assertTrue(arguments["query"].endswith("| limit 5"))
+
+    def test_formatting_shares_the_investigation_deadline(self):
+        assessment = {"verdict": "expected", "summary": "Stable", "evidence": [], "next_step": "Observe"}
+        responses = [{"choices": [{"message": {"content": "Plain text"}}]},
+                     {"choices": [{"message": {"content": json.dumps(assessment)}}]}]
+        with patch.object(monitor.time, "monotonic", side_effect=[0, 1, 239]), \
+             patch.object(monitor, "hermes_run", side_effect=responses) as run, \
+             patch.object(monitor, "http", return_value={"data": [{"role": "tool", "tool_name": "mcp__litellm__call_tool", "content": '{"result":"counts"}'}]}), \
+             patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
+            monitor.investigate(self.evidence()[0])
+        self.assertEqual([call.kwargs["timeout"] for call in run.call_args_list], [239, 1])
 
     def test_assessment_without_actual_tool_execution_rejected(self):
         assessment = {"verdict": "actionable", "summary": "Claim", "evidence": ["Unverified query"], "next_step": "Check"}
         response = {"choices": [{"message": {"content": json.dumps(assessment)}}]}
-        with patch.object(monitor, "http", side_effect=[response, {"data": []}]), \
+        with patch.object(monitor, "hermes_run", return_value=response), \
+             patch.object(monitor, "http", return_value={"data": []}), \
              patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
             with self.assertRaisesRegex(ValueError, "recorded MCP"):
                 monitor.investigate(self.evidence()[0])
@@ -237,7 +318,8 @@ class MonitoringTests(unittest.TestCase):
         for name in ("mcp__litellm__search_tools", "mcp__litellm__get_tool_schema", "tool_call",
                      "mcp__unifi__query", "mcp__prometheus__range_query"):
             with self.subTest(tool=name), \
-                 patch.object(monitor, "http", side_effect=[response, {"data": [{"role": "tool", "tool_name": name}]}]), \
+                 patch.object(monitor, "hermes_run", return_value=response), \
+                 patch.object(monitor, "http", return_value={"data": [{"role": "tool", "tool_name": name}]}), \
                  patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
                 with self.assertRaisesRegex(ValueError, "recorded MCP"):
                     monitor.investigate(self.evidence()[0])
@@ -257,17 +339,18 @@ class MonitoringTests(unittest.TestCase):
         formatted = {"choices": [{"message": {"content": json.dumps(assessment)}}]}
         for content, success in (('{"result":"110"}', True), ('{"error":"query failed"}', False)):
             with self.subTest(content=content), \
-                 patch.object(monitor, "http", side_effect=[plain, formatted, {"data": [{
-                     "role": "tool", "tool_name": "mcp__litellm__call_tool", "content": content}]}]) as http, \
+                 patch.object(monitor, "hermes_run", side_effect=[plain, formatted]) as run, \
+                 patch.object(monitor, "http", return_value={"data": [{
+                     "role": "tool", "tool_name": "mcp__litellm__call_tool", "content": content}]}), \
                  patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
                 if success:
                     self.assertEqual(monitor.investigate(self.evidence()[0]), assessment)
                 else:
                     with self.assertRaisesRegex(ValueError, "query success"):
                         monitor.investigate(self.evidence()[0])
-                self.assertEqual(http.call_args_list[0].kwargs["headers"], http.call_args_list[1].kwargs["headers"])
-                self.assertIn("MONITOR_FORMAT_ASSESSMENT_JSON", http.call_args_list[1].args[1]["messages"][0]["content"])
-                self.assertEqual(http.call_count, 3)
+                self.assertEqual(run.call_args_list[0].args[1], run.call_args_list[1].args[1])
+                self.assertIn("MONITOR_FORMAT_ASSESSMENT_JSON", run.call_args_list[1].args[0]["messages"][0]["content"])
+                self.assertEqual(run.call_count, 2)
 
     def test_failed_queries_cannot_validate_a_claimed_success(self):
         assessment = {"verdict": "expected", "summary": "Passed", "evidence": ["Claim"], "next_step": "Observe"}
@@ -280,7 +363,8 @@ class MonitoringTests(unittest.TestCase):
                         '{}', 'not json'):
             message = {"role": "tool", "tool_name": "mcp__litellm__call_tool", "content": content}
             with self.subTest(content=content), \
-                 patch.object(monitor, "http", side_effect=[response, {"data": [message, message]}]), \
+                 patch.object(monitor, "hermes_run", return_value=response), \
+                 patch.object(monitor, "http", return_value={"data": [message, message]}), \
                  patch.dict(os.environ, {"HERMES_API_KEY": "test"}), \
                  self.assertRaisesRegex(ValueError, "query success"):
                 monitor.investigate(self.evidence()[0])
