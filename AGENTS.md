@@ -14,6 +14,11 @@
 - Never delete or recreate a resource without explicit permission and a verified recovery path.
 - Always prefer non-root containers. If root is the only viable option for a new application, warn the user and explain why before applying or committing it.
 
+## Issue Tracking
+
+- Track all issues for this repository in the **LabV2** project in [Vikunja](https://vikunja.aumer.dev), instead of GitHub Issues.
+- Use the Vikunja MCP tools through LiteLLM to search, create, update, and close issues. Resolve the project named `LabV2` before creating tasks; use that project rather than Inbox.
+
 ## Desired State and Namespace Safety
 
 - Git is desired state; make the smallest repository change first. Treat live patches as temporary tests.
