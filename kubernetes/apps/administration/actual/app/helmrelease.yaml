@@ -112,3 +112,16 @@ spec:
           actual:
             app:
               - path: /tmp
+    route:
+      app:
+        annotations:
+          gatus.home-operations.com/endpoint: 'conditions: ["[STATUS] == 200"]'
+        hostnames:
+          - actual.${SECRET_DOMAIN}
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+        rules:
+          - backendRefs:
+              - name: actual
+                port: 5006

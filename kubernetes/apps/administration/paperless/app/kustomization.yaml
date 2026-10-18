@@ -8,7 +8,6 @@ components:
 resources:
   - ./externalsecret.yaml
   - ./helmrelease.yaml
-  - ./httproute.yaml
   - ./networkpolicy.yaml
   - ./ocirepository.yaml
 patches:

@@ -140,3 +140,16 @@ spec:
           paperless:
             app:
               - path: /tmp
+    route:
+      app:
+        annotations:
+          gatus.home-operations.com/endpoint: 'conditions: ["[STATUS] == 200"]'
+        hostnames:
+          - paperless.${SECRET_DOMAIN}
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+        rules:
+          - backendRefs:
+              - name: paperless
+                port: 8000
