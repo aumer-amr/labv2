@@ -65,8 +65,8 @@ spec:
               OIDC_CLIENT_ID: mealie
               OIDC_CONFIGURATION_URL: https://idm.${SECRET_DOMAIN}/oauth2/openid/mealie/.well-known/openid-configuration
               OIDC_PROVIDER_NAME: Kanidm
-              OIDC_USER_GROUP: amr
-              OIDC_ADMIN_GROUP: mealie-admins
+              OIDC_USER_GROUP: amr@idm.${SECRET_DOMAIN}
+              OIDC_ADMIN_GROUP: mealie-admins@idm.${SECRET_DOMAIN}
               OIDC_SCOPES_OVERRIDE: openid profile email groups
             envFrom:
               - secretRef:
