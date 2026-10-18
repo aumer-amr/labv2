@@ -62,6 +62,12 @@ spec:
               app.kubernetes.io/instance: langfuse-clickhouse
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: database
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: clickhouse
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
@@ -254,6 +260,12 @@ spec:
             matchLabels:
               app.kubernetes.io/instance: cloudnative-pg
               app.kubernetes.io/name: cloudnative-pg
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: database
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: kopiur
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: external-secrets
