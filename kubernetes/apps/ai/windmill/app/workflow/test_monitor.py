@@ -319,12 +319,12 @@ class MonitoringTests(unittest.TestCase):
         assessment = {"verdict": "expected", "summary": "Stable", "evidence": [], "next_step": "Observe"}
         responses = [{"choices": [{"message": {"content": "Plain text"}}]},
                      {"choices": [{"message": {"content": json.dumps(assessment)}}]}]
-        with patch.object(monitor.time, "monotonic", side_effect=[0, 1, 239]), \
+        with patch.object(monitor.time, "monotonic", side_effect=[0, 1, 359]), \
              patch.object(monitor, "hermes_run", side_effect=responses) as run, \
              patch.object(monitor, "http", return_value={"data": [{"role": "tool", "tool_name": "mcp__litellm__call_tool", "content": '{"result":"counts"}'}]}), \
              patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
             monitor.investigate(self.evidence()[0])
-        self.assertEqual([call.kwargs["timeout"] for call in run.call_args_list], [239, 1])
+        self.assertEqual([call.kwargs["timeout"] for call in run.call_args_list], [359, 1])
 
     def test_assessment_without_actual_tool_execution_rejected(self):
         assessment = {"verdict": "actionable", "summary": "Claim", "evidence": ["Unverified query"], "next_step": "Check"}

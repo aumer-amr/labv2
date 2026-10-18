@@ -237,7 +237,7 @@ def successful_query(message):
     return payload is not None and "warning: the result was truncated" not in str(payload).lower()
 
 
-def investigate(item, timeout=240):
+def investigate(item, timeout=360):
     now = int(time.time())
     deadline = time.monotonic() + timeout
     session_id = uuid.uuid4().hex
@@ -406,7 +406,7 @@ def main():
     for item in candidates[:2]:
         # Leave time to confirm cancellation and persist/export the result before Windmill's 600s limit.
         remaining = run_deadline - time.monotonic() - 30
-        timeout = 360 if item["check"] == "scheduled_log_review" else 240
+        timeout = 360
         if remaining < timeout:
             break
         # Count attempts for observability; there is no daily investigation cap.
