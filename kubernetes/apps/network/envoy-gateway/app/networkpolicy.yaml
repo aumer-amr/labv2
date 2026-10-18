@@ -498,6 +498,14 @@ specs:
                 protocol: TCP
       - toServices:
           - k8sService:
+              serviceName: vikunja
+              namespace: developer-tools
+        toPorts:
+          - ports:
+              - port: "3456"
+                protocol: TCP
+      - toServices:
+          - k8sService:
               serviceName: konflate
               namespace: flux-system
         toPorts:
