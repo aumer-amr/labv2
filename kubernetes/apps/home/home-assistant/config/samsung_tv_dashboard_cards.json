@@ -1,0 +1,43 @@
+[
+  {
+    "type": "tile",
+    "entity": "sensor.samsung_tv_current_app",
+    "name": "Current app",
+    "icon": "mdi:television-play",
+    "grid_options": {
+      "columns": "full",
+      "rows": "auto"
+    },
+    "tap_action": {
+      "action": "more-info"
+    },
+    "visibility": [
+      {
+        "condition": "state",
+        "entity": "media_player.samsung_q7_series_55_qe55q7fam",
+        "state_not": "off"
+      }
+    ]
+  },
+  {
+    "type": "tile",
+    "entity": "media_player.samsung_q7_series_55_qe55q7fam",
+    "name": "TV off",
+    "icon": "mdi:television-off",
+    "hide_state": true,
+    "grid_options": {
+      "columns": "full",
+      "rows": "auto"
+    },
+    "tap_action": {
+      "action": "more-info"
+    },
+    "visibility": [
+      {
+        "condition": "state",
+        "entity": "media_player.samsung_q7_series_55_qe55q7fam",
+        "state": "off"
+      }
+    ]
+  }
+]
