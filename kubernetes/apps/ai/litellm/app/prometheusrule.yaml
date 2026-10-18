@@ -22,8 +22,9 @@ spec:
     - name: llamacpp.rules
       rules:
         - alert: LlamaCppRequestsDeferred
+          # The single-slot Qwen chat model is expected to queue under continuous use.
           expr: |-
-            max by (namespace, service) (llamacpp:requests_deferred{namespace="ai"}) > 0
+            max by (namespace, service) (llamacpp:requests_deferred{namespace="ai", service!="qwen3.5-9b"}) > 0
           for: 10m
           annotations:
             summary: Inference requests are queuing on {{ $labels.service }}
