@@ -76,3 +76,33 @@ spec:
         - ports:
             - port: "9000"
               protocol: TCP
+---
+# CoreDNS ingress is opt-in; complement the application's DNS egress.
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: mealie-dns
+spec:
+  endpointSelector:
+    matchLabels:
+      k8s:io.kubernetes.pod.namespace: kube-system
+      k8s-app: kube-dns
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: home
+            app.kubernetes.io/instance: mealie
+            app.kubernetes.io/name: mealie
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: home
+            app.kubernetes.io/instance: mealie
+            app.kubernetes.io/name: mealie
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
