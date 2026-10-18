@@ -342,6 +342,11 @@ def investigate(item, timeout=360):
     messages = http(HERMES + "/api/sessions/" + session_id + "/messages", token=os.environ["HERMES_API_KEY"]).get("data", [])
     if not any(successful_query(message) for message in messages):
         raise ValueError("Investigation requires recorded MCP query success")
+    assessment["hermes_session_id"] = session_id
+    assessment["tool_activity"] = [
+        {"name": message.get("tool_name", "tool"), "query_success": successful_query(message)}
+        for message in messages if message.get("role") == "tool"
+    ]
     return assessment
 
 
@@ -354,7 +359,13 @@ def trace(run_id, item, assessment, start, end, error=None):
         "langfuse.trace.metadata.windmill_job_id": run_id,
         "langfuse.trace.metadata.observation_id": item["id"],
         "langfuse.observation.metadata.model": "qwen3.5-9b",
-        "langfuse.observation.output": json.dumps({"verdict": assessment.get("verdict", "failed")}),
+        "langfuse.observation.output": json.dumps({
+            "verdict": assessment.get("verdict", "failed"),
+            **{key: assessment[key] for key in ("summary", "evidence", "next_step") if key in assessment},
+        }),
+        "langfuse.observation.input": json.dumps({key: item[key] for key in
+            ("check", "query", "review_start", "review_end", "coverage_gap_seconds") if key in item}),
+        "langfuse.trace.metadata.hermes_session_id": assessment.get("hermes_session_id", ""),
     }
     span = {
         "traceId": trace_id, "spanId": uuid.uuid4().hex[:16], "name": "hermes-investigation", "kind": 1,
@@ -366,7 +377,22 @@ def trace(run_id, item, assessment, start, end, error=None):
         ],
         "status": {"code": 2, "message": error} if error else {"code": 1},
     }
-    result = http(LANGFUSE + "/api/public/otel/v1/traces", {"resourceSpans": [{"scopeSpans": [{"spans": [span]}]}]},
+    spans = [span]
+    # Tool history has no execution durations; export completion events, not timed tool spans.
+    for index, activity in enumerate(assessment.get("tool_activity", [])):
+        spans.append({
+            "traceId": trace_id, "spanId": uuid.uuid4().hex[:16], "parentSpanId": span["spanId"],
+            "name": activity["name"], "kind": 1,
+            "startTimeUnixNano": span["endTimeUnixNano"], "endTimeUnixNano": span["endTimeUnixNano"],
+            "attributes": [{"key": key, "value": {"stringValue": value}} for key, value in {
+                "langfuse.observation.type": "event",
+                "langfuse.observation.output": json.dumps(activity),
+                "langfuse.observation.metadata.sequence": str(index + 1),
+                "langfuse.observation.metadata.timing": "reconstructed; execution duration unavailable",
+            }.items()],
+            "status": {"code": 1},
+        })
+    result = http(LANGFUSE + "/api/public/otel/v1/traces", {"resourceSpans": [{"scopeSpans": [{"spans": spans}]}]},
                   headers={"Authorization": "Basic " + auth, "x-langfuse-ingestion-version": "4"})
     partial = (result or {}).get("partialSuccess", {})
     if int(partial.get("rejectedSpans", 0)) or partial.get("errorMessage"):

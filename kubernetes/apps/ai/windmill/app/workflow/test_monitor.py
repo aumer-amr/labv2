@@ -287,7 +287,7 @@ class MonitoringTests(unittest.TestCase):
                  {"role": "tool", "tool_name": "mcp__litellm__call_tool", "content": '{"result":"value=1","warnings":null}'}]}) as http, \
              patch.object(monitor.time, "time", return_value=50000), \
              patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
-            self.assertEqual(monitor.investigate(self.evidence()[0]), assessment)
+            self.assertEqual({k: v for k, v in monitor.investigate(self.evidence()[0]).items() if k in assessment}, assessment)
         messages = run.call_args.args[0]["messages"]
         self.assertEqual([message["role"] for message in messages], ["system", "user"])
         self.assertIn("first response must call mcp__litellm__search_tools", messages[0]["content"])
@@ -367,7 +367,7 @@ class MonitoringTests(unittest.TestCase):
                      "role": "tool", "tool_name": "mcp__litellm__call_tool", "content": content}]}), \
                  patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
                 if success:
-                    self.assertEqual(monitor.investigate(self.evidence()[0]), assessment)
+                    self.assertEqual({k: v for k, v in monitor.investigate(self.evidence()[0]).items() if k in assessment}, assessment)
                 else:
                     with self.assertRaisesRegex(ValueError, "query success"):
                         monitor.investigate(self.evidence()[0])
@@ -403,12 +403,19 @@ class MonitoringTests(unittest.TestCase):
             with self.subTest(payload=payload):
                 self.assertEqual(monitor.successful_query(message), expected)
 
-    def test_trace_contains_no_raw_assessment_or_credentials(self):
+    def test_trace_exports_assessment_and_tool_events_without_credentials(self):
         with patch.dict(os.environ, {"LANGFUSE_PUBLIC_KEY": "public-test", "LANGFUSE_SECRET_KEY": "secret-test"}), \
              patch.object(monitor, "http", return_value={"errors": []}) as http:
-            monitor.trace("job", self.evidence()[0], {"verdict": "actionable", "summary": "private-content"}, 1, 2)
+            monitor.trace("job", self.evidence()[0], {"verdict": "actionable", "summary": "Investigate errors", "evidence": ["5 errors"], "next_step": "Inspect workload", "hermes_session_id": "hermes-session", "tool_activity": [{"name": "mcp__litellm__call_tool", "query_success": True}]}, 1, 2)
         serialized = json.dumps(http.call_args.args[1])
-        self.assertNotIn("private-content", serialized)
+        self.assertIn("Investigate errors", serialized)
+        self.assertIn("Inspect workload", serialized)
+        spans = http.call_args.args[1]["resourceSpans"][0]["scopeSpans"][0]["spans"]
+        self.assertEqual(len(spans), 2)
+        self.assertEqual(spans[1]["parentSpanId"], spans[0]["spanId"])
+        self.assertEqual(spans[1]["traceId"], spans[0]["traceId"])
+        self.assertEqual(spans[1]["startTimeUnixNano"], spans[1]["endTimeUnixNano"])
+        self.assertIn("hermes-session", serialized)
         self.assertNotIn("secret-test", serialized)
         self.assertTrue(http.call_args.args[0].endswith("/api/public/otel/v1/traces"))
         span = http.call_args.args[1]["resourceSpans"][0]["scopeSpans"][0]["spans"][0]
