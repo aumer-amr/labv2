@@ -12,4 +12,5 @@ resources:
   - ./namespace.yaml
   - ./network-policies/kopiur-mover.yaml
   - ./atuin/ks.yaml
+  - ./vikunja/ks.yaml
   - ./network-policies/ks.yaml

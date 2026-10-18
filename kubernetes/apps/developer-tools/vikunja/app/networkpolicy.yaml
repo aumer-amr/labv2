@@ -1,0 +1,75 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: vikunja
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: vikunja
+      app.kubernetes.io/name: vikunja
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-internal
+      ports:
+        - port: 3456
+          protocol: TCP
+  egress:
+    # OIDC discovery/token exchange follows the existing Kanidm gateway path.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-external
+      ports:
+        - port: 10443
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: vikunja-oidc
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: vikunja
+      app.kubernetes.io/name: vikunja
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: idm.${SECRET_DOMAIN}
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: idm.${SECRET_DOMAIN}
+    - toFQDNs:
+        - matchName: idm.${SECRET_DOMAIN}
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

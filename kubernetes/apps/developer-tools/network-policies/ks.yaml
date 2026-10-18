@@ -7,6 +7,7 @@ metadata:
 spec:
   dependsOn:
     - name: atuin
+    - name: vikunja
     - name: kopiur
       namespace: kube-system
     - name: coredns
