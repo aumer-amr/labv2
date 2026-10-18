@@ -6,6 +6,7 @@ components:
   - ../../../../components/valkey
 resources:
   - ./externalsecret.yaml
+  - ./clickhouse-externalsecret.yaml
   - ./helmrelease.yaml
   - ./ocirepository.yaml
   - ./httproute.yaml

@@ -23,8 +23,8 @@ spec:
       namespace: rook-ceph
     - name: valkey
       namespace: database
-    - name: langfuse-clickhouse
-      namespace: ai
+    - name: clickhouse
+      namespace: database
   interval: 1h
   path: ./kubernetes/apps/ai/langfuse/app
   postBuild:

@@ -136,13 +136,13 @@ spec:
         existingSecretPasswordKey: VALKEY_PASSWORD
     clickhouse:
       deploy: false
-      host: langfuse-clickhouse
+      host: clickhouse.database.svc.cluster.local
       database: default
       cluster:
         enabled: false
       auth:
         username: langfuse
-        existingSecret: langfuse-clickhouse-secret
+        existingSecret: langfuse-clickhouse-client
         existingSecretKey: CLICKHOUSE_PASSWORD
     s3:
       deploy: false
