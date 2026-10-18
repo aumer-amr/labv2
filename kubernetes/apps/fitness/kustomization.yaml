@@ -9,6 +9,6 @@ components:
 
 resources:
   - ./namespace.yaml
-  - ./network-policies/kopiur-mover.yaml
+  - ./network-policies/networkpolicy.yaml
   - ./sparkyfitness/ks.yaml
   - ./network-policies/ks.yaml
