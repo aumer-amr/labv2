@@ -180,7 +180,7 @@ class MonitoringTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "Investigation or trace"):
                 monitor.main()
         self.assertEqual(persisted[1]["budget"]["investigations"], 1)
-        self.assertNotIn("assessment", persisted[-1]["observations"]["stable"])
+        self.assertEqual(persisted[-1]["observations"]["stable"]["assessment"], {"exception_class": "TimeoutError"})
         self.assertEqual(persisted[-1]["observations"]["stable"]["investigation_error"], "TimeoutError")
 
     def test_investigations_continue_after_eight_daily_attempts(self):
@@ -440,6 +440,51 @@ class MonitoringTests(unittest.TestCase):
         self.assertEqual(attributes["langfuse.session.id"]["stringValue"], "stable")
         self.assertEqual(span["startTimeUnixNano"], "1000000000")
         self.assertEqual(http.call_args.kwargs["headers"]["x-langfuse-ingestion-version"], "4")
+
+    def test_failed_investigation_retains_diagnostics_and_tool_events(self):
+        messages = [{"role": "tool", "tool_name": "mcp__litellm__call_tool", "content": '{"result":"counts"}'}]
+        failures = [TimeoutError("private-secret"), monitor.HermesRunNotStopped("private-secret")]
+        for failure in failures:
+            with self.subTest(error=type(failure).__name__), \
+                 patch.object(monitor, "hermes_run", side_effect=failure), \
+                 patch.object(monitor, "http", return_value={"data": messages}), \
+                 patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
+                with self.assertRaises(type(failure)) as caught:
+                    monitor.investigate(self.evidence()[0])
+            diagnostics = caught.exception.investigation
+            self.assertEqual(diagnostics["failure_stage"], "hermes_run")
+            self.assertEqual(diagnostics["exception_class"], type(failure).__name__)
+            self.assertEqual(len(diagnostics["hermes_session_id"]), 32)
+            self.assertTrue(diagnostics["tool_activity"][0]["query_success"])
+            self.assertNotIn("private-secret", json.dumps(diagnostics))
+            with patch.dict(os.environ, {"LANGFUSE_PUBLIC_KEY": "public", "LANGFUSE_SECRET_KEY": "secret"}), \
+                 patch.object(monitor, "http", return_value={}) as http:
+                monitor.trace("job", self.evidence()[0], diagnostics, 1, 2, type(failure).__name__)
+            spans = http.call_args.args[1]["resourceSpans"][0]["scopeSpans"][0]["spans"]
+            self.assertEqual(len(spans), 2)
+            self.assertEqual(spans[0]["status"]["code"], 2)
+            attributes = {item["key"]: item["value"]["stringValue"] for item in spans[0]["attributes"] if "stringValue" in item["value"]}
+            self.assertEqual(attributes["langfuse.trace.metadata.failure_stage"], "hermes_run")
+            self.assertEqual(attributes["langfuse.trace.metadata.exception_class"], type(failure).__name__)
+
+    def test_history_failure_does_not_replace_original_failure(self):
+        with patch.object(monitor, "hermes_run", side_effect=TimeoutError), \
+             patch.object(monitor, "http", side_effect=OSError), \
+             patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
+            with self.assertRaises(TimeoutError) as caught:
+                monitor.investigate(self.evidence()[0])
+        self.assertEqual(caught.exception.investigation["tool_history_error"], "OSError")
+        self.assertEqual(caught.exception.investigation["tool_activity"], [])
+
+    def test_invalid_format_retains_completed_tools_and_failure_stage(self):
+        response = {"choices": [{"message": {"content": "invalid JSON"}}]}
+        with patch.object(monitor, "hermes_run", return_value=response), \
+             patch.object(monitor, "http", return_value={"data": [{"role": "tool", "tool_name": "mcp__litellm__search_tools"}]}), \
+             patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
+            with self.assertRaises(ValueError) as caught:
+                monitor.investigate(self.evidence()[0])
+        self.assertEqual(caught.exception.investigation["failure_stage"], "response_validation")
+        self.assertEqual(len(caught.exception.investigation["tool_activity"]), 1)
 
     def test_partial_trace_rejection_fails_export(self):
         with patch.dict(os.environ, {"LANGFUSE_PUBLIC_KEY": "public-test", "LANGFUSE_SECRET_KEY": "secret-test"}), \

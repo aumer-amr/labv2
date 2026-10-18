@@ -6,7 +6,7 @@ metadata:
 spec:
   keyAlias: pr-reviewer
   models:
-    - qwen3.5-9b
+    - qwen3.5-9b-fallback
     - gpt-5.6-terra
     - gpt-6.1-sol
     - gpt-6-astra

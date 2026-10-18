@@ -39,6 +39,9 @@ data:
       tool_search:
         # LiteLLM owns discovery; do not wrap its search tools in another search layer.
         enabled: "off"
+    auxiliary:
+      title_generation:
+        model_upgrade_enabled: false
     agent:
       max_turns: 12
       gateway_timeout: 240

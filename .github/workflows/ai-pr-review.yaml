@@ -124,7 +124,7 @@ jobs:
         with:
           github-token: ${{ github.token }}
           ai-base-url: http://litellm.ai.svc.cluster.local:4000/v1
-          ai-model: qwen3.5-9b
+          ai-model: qwen3.5-9b-fallback
           ai-api-key: ${{ steps.model-key.outputs.key }}
           ai-temperature: "0.7"
           ai-tokens-param: max_tokens

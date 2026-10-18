@@ -237,10 +237,33 @@ def successful_query(message):
     return payload is not None and "warning: the result was truncated" not in str(payload).lower()
 
 
+def investigation_tools(session_id):
+    messages = http(HERMES + "/api/sessions/" + session_id + "/messages",
+                    token=os.environ["HERMES_API_KEY"], timeout=10).get("data", [])
+    return [{"name": message.get("tool_name", "tool"), "query_success": successful_query(message)}
+            for message in messages if message.get("role") == "tool"]
+
+
 def investigate(item, timeout=360):
+    diagnostics = {"hermes_session_id": uuid.uuid4().hex, "failure_stage": "prepare", "tool_activity": []}
+    try:
+        return _investigate(item, timeout, diagnostics)
+    except Exception as exc:
+        diagnostics["exception_class"] = type(exc).__name__
+        if diagnostics["failure_stage"] != "evidence_validation":
+            try:
+                diagnostics["tool_activity"] = investigation_tools(diagnostics["hermes_session_id"])
+            except Exception as history_error:
+                diagnostics["tool_history_error"] = type(history_error).__name__
+        # Preserve the original exception type, including the unconfirmed-stop safety gate.
+        exc.investigation = diagnostics
+        raise
+
+
+def _investigate(item, timeout, diagnostics):
     now = int(time.time())
     deadline = time.monotonic() + timeout
-    session_id = uuid.uuid4().hex
+    session_id = diagnostics["hermes_session_id"]
     log_guidance = ""
     metric_guidance = ""
     if item["check"] != "scheduled_log_review":
@@ -304,6 +327,7 @@ def investigate(item, timeout=360):
         + log_guidance + metric_guidance + "Make no changes and send no messages. Observation: " + json.dumps(item)
     )
     # Hermes's API takes its extra system instructions from the request, not agent.system_prompt.
+    diagnostics["failure_stage"] = "hermes_run"
     result = hermes_run({
         "model": "qwen3.5-9b", "messages": [{"role": "system", "content": (
             "You investigate cluster observations using only the supplied read-only Prometheus and VictoriaLogs tools. "
@@ -327,6 +351,7 @@ def investigate(item, timeout=360):
             "send messages, or create issues. Return the requested JSON only after inspecting actual tool results."
         )}, {"role": "user", "content": prompt}], "stream": False,
     }, session_id, timeout=deadline - time.monotonic())
+    diagnostics["failure_stage"] = "response_validation"
     text = result["choices"][0]["message"]["content"]
     if len(text) > 12000:
         raise ValueError("Investigation response exceeded limit")
@@ -334,6 +359,7 @@ def investigate(item, timeout=360):
         assessment = assessment_json(text)
     except ValueError:
         # One format-only pass uses the existing evidence; the monitor plugin enforces JSON Schema.
+        diagnostics["failure_stage"] = "format_run"
         formatted = hermes_run({
             "model": "qwen3.5-9b", "stream": False, "messages": [{"role": "user", "content":
                 "MONITOR_FORMAT_ASSESSMENT_JSON: Serialize your previous assessment as JSON with verdict, "
@@ -341,6 +367,7 @@ def investigate(item, timeout=360):
                 "Do not invent evidence or run additional tools. If the evidence is insufficient, use uncertain. "
                 "Keep it concise."}],
         }, session_id, timeout=min(180, deadline - time.monotonic()))
+        diagnostics["failure_stage"] = "response_validation"
         text = formatted["choices"][0]["message"]["content"]
         if len(text) > 12000:
             raise ValueError("Investigation response exceeded limit")
@@ -355,14 +382,13 @@ def investigate(item, timeout=360):
         raise ValueError("Invalid investigation evidence entry")
     if assessment["verdict"] == "actionable" and not assessment["evidence"]:
         raise ValueError("Actionable findings require supporting evidence")
-    messages = http(HERMES + "/api/sessions/" + session_id + "/messages", token=os.environ["HERMES_API_KEY"]).get("data", [])
-    if not any(successful_query(message) for message in messages):
+    diagnostics["failure_stage"] = "evidence_fetch"
+    diagnostics["tool_activity"] = investigation_tools(session_id)
+    diagnostics["failure_stage"] = "evidence_validation"
+    if not any(activity["query_success"] for activity in diagnostics["tool_activity"]):
         raise ValueError("Investigation requires recorded MCP query success")
     assessment["hermes_session_id"] = session_id
-    assessment["tool_activity"] = [
-        {"name": message.get("tool_name", "tool"), "query_success": successful_query(message)}
-        for message in messages if message.get("role") == "tool"
-    ]
+    assessment["tool_activity"] = diagnostics["tool_activity"]
     return assessment
 
 
@@ -383,6 +409,9 @@ def trace(run_id, item, assessment, start, end, error=None):
             ("check", "query", "review_start", "review_end", "coverage_gap_seconds") if key in item}),
         "langfuse.trace.metadata.hermes_session_id": assessment.get("hermes_session_id", ""),
     }
+    for key in ("failure_stage", "exception_class", "tool_history_error"):
+        if key in assessment:
+            attributes["langfuse.trace.metadata." + key] = assessment[key]
     span = {
         "traceId": trace_id, "spanId": uuid.uuid4().hex[:16], "name": "hermes-investigation", "kind": 1,
         "startTimeUnixNano": str(int(start * 1_000_000_000)), "endTimeUnixNano": str(int(end * 1_000_000_000)),
@@ -470,7 +499,8 @@ def main():
         except Exception as exc:
             error = type(exc).__name__
             item["investigation_error"] = error
-            item.pop("assessment", None)
+            assessment = getattr(exc, "investigation", {"exception_class": error})
+            item["assessment"] = assessment
             if isinstance(exc, HermesRunNotStopped):
                 stop_unconfirmed = True
         save(state)

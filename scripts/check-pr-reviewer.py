@@ -51,7 +51,7 @@ assert review["deep-review"] == "false"
 assert review["inline-findings"] == "false"
 assert review["on-model-failure"] == "fail"
 assert job["timeout-minutes"] == 60
-assert review["ai-model"] == "qwen3.5-9b"
+assert review["ai-model"] == "qwen3.5-9b-fallback"
 assert review["ai-tokens-param"] == "max_tokens"
 assert review["ai-max-tokens"] == "4096"
 assert review["model-context-tokens"] == "32768"
