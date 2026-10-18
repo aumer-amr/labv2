@@ -1,0 +1,17 @@
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: mealie
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: mealie
+  authorization:
+    # ALLOW_PASSWORD_LOGIN only hides the form; keep password recovery cluster-local.
+    defaultAction: Deny
+    rules:
+      - name: oidc-and-application
+        action: Allow
+        cel: "!request.url_path.startsWith('/api/auth/token')"

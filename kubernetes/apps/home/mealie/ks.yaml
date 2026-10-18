@@ -1,0 +1,47 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: mealie
+spec:
+  components:
+    - ../../../../components/cnpg
+    - ../../../../components/kopiur/backup
+  dependsOn:
+    - name: barman-cloud
+      namespace: database
+    - name: cloudnative-pg
+      namespace: database
+    - name: kanidm
+      namespace: security
+    - name: envoy-gateway
+      namespace: network
+    - name: kube-prometheus-stack
+      namespace: observability
+    - name: onepassword-connect
+      namespace: external-secrets
+    - name: postgresql-images
+      namespace: database
+    - name: kopiur
+      namespace: kube-system
+    - name: rook-ceph-cluster
+      namespace: rook-ceph
+  interval: 1h
+  path: ./kubernetes/apps/home/mealie/app
+  postBuild:
+    substitute:
+      APP: mealie
+      NAMESPACE: home
+      KOPIUR_CAPACITY: 5Gi
+      PG_BACKUP_BUCKET: pg-mealie
+      PG_MAJOR: "18"
+      PG_SSLMODE: require
+    substituteFrom:
+      - name: cluster-secrets
+        kind: Secret
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: home

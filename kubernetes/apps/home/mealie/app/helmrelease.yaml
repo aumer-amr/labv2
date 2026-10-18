@@ -1,0 +1,145 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: mealie
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: mealie
+  interval: 1h
+  values:
+    global:
+      createDefaultServiceAccount: false
+    controllers:
+      mealie:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        replicas: 1
+        strategy: Recreate
+        containers:
+          app:
+            image:
+              repository: ghcr.io/mealie-recipes/mealie
+              tag: v3.29.0@sha256:78eb28b8776d0bad40c5e605c72b3f4f5976793e491558c7dcbdfc04c835d4bc
+            env:
+              TZ: Europe/Amsterdam
+              PUID: "1000"
+              PGID: "1000"
+              BASE_URL: https://mealie.${SECRET_DOMAIN}
+              ALLOW_SIGNUP: "false"
+              # This hides the form; the gateway also blocks the password-token API.
+              ALLOW_PASSWORD_LOGIN: "false"
+              API_DOCS: "false"
+              DB_ENGINE: postgres
+              PGSSLMODE: require
+              POSTGRES_SERVER:
+                valueFrom:
+                  secretKeyRef:
+                    name: mealie-postgres
+                    key: host
+              POSTGRES_PORT:
+                valueFrom:
+                  secretKeyRef:
+                    name: mealie-postgres
+                    key: port
+              POSTGRES_DB:
+                valueFrom:
+                  secretKeyRef:
+                    name: mealie-postgres
+                    key: dbname
+              POSTGRES_USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: mealie-postgres
+                    key: username
+              POSTGRES_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: mealie-postgres
+                    key: password
+              OIDC_AUTH_ENABLED: "true"
+              OIDC_SIGNUP_ENABLED: "true"
+              OIDC_REQUIRES_EMAIL_VERIFICATION: "true"
+              OIDC_CLIENT_ID: mealie
+              OIDC_CONFIGURATION_URL: https://idm.${SECRET_DOMAIN}/oauth2/openid/mealie/.well-known/openid-configuration
+              OIDC_PROVIDER_NAME: Kanidm
+              OIDC_USER_GROUP: amr
+              OIDC_ADMIN_GROUP: mealie-admins
+              OIDC_SCOPES_OVERRIDE: openid profile email groups
+            envFrom:
+              - secretRef:
+                  name: mealie-secret
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/app/about
+                    port: &port 9000
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/app/about
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/app/about
+                    port: *port
+                  failureThreshold: 30
+                  periodSeconds: 10
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                cpu: "2"
+                memory: 2Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+      labels:
+        network.home.arpa/to-envoy-external: allow
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+    service:
+      app:
+        controller: mealie
+        ports:
+          http:
+            port: *port
+    persistence:
+      data:
+        existingClaim: mealie
+        globalMounts:
+          - path: /app/data
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
