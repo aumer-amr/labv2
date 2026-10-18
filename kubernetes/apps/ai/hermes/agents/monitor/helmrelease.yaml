@@ -85,6 +85,12 @@ spec:
           http:
             port: 8642
     persistence:
+      litellm-schema:
+        type: configMap
+        name: hermes-monitor-litellm-schema
+        globalMounts:
+          - path: /data/plugins/litellm-schema
+            readOnly: true
       config:
         type: configMap
         name: hermes-monitor-config

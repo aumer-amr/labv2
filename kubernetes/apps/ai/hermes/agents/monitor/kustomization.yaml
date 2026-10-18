@@ -8,3 +8,10 @@ resources:
   - ./litellmvirtualkey.yaml
   - ./networkpolicy.yaml
   - ./ocirepository.yaml
+configMapGenerator:
+  - name: hermes-monitor-litellm-schema
+    files:
+      - ./litellm-schema/__init__.py
+      - ./litellm-schema/plugin.yaml
+generatorOptions:
+  disableNameSuffixHash: true

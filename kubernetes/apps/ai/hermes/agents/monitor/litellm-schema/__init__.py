@@ -1,0 +1,55 @@
+"""Give constrained decoders the parameter schemas discovered through LiteLLM."""
+
+import json
+
+
+def typed_proxy_request(*, request, **_):
+    users = [m.get("content", "") for m in request.get("messages", []) if m.get("role") == "user"]
+    if users and "MONITOR_FORMAT_ASSESSMENT_JSON" in users[-1]:
+        request.pop("tools", None)
+        request.pop("tool_choice", None)
+        request["response_format"] = {"type": "json_schema", "json_schema": {
+            "name": "monitor_assessment", "strict": True, "schema": {
+                "type": "object", "properties": {
+                    "verdict": {"type": "string", "enum": ["actionable", "expected", "uncertain"]},
+                    "summary": {"type": "string"},
+                    "evidence": {"type": "array", "items": {"type": "string"}, "maxItems": 5},
+                    "next_step": {"type": "string"}},
+                "required": ["verdict", "summary", "evidence", "next_step"], "additionalProperties": False}}}
+        return {"request": request}
+    schemas = {}
+    for message in request.get("messages", []):
+        content = message.get("content", "")
+        if message.get("role") != "tool" or not isinstance(content, str):
+            continue
+        if not content.startswith('<untrusted_tool_result source="mcp__litellm__get_tool_schema">\n'):
+            continue
+        try:
+            payload = content.split("\n\n", 1)[1].rsplit("\n</untrusted_tool_result>", 1)[0]
+            tool = json.loads(json.loads(payload)["result"])
+            if tool["name"].startswith(("prometheus-", "victorialogs-")):
+                schema = tool["inputSchema"]
+                if tool["name"] == "prometheus-range_query" and "step" in schema.get("properties", {}):
+                    schema["required"] = sorted(set(schema.get("required", [])) | {"step"})
+                schemas[tool["tool_id"]] = schema
+        except (ValueError, KeyError, IndexError, TypeError):
+            continue
+    if schemas:
+        properties = {}
+        required = set.intersection(*(set(s.get("required", [])) for s in schemas.values()))
+        for schema in schemas.values():
+            properties.update(schema.get("properties", {}))
+        for tool in request.get("tools", []):
+            function = tool.get("function", {})
+            if function.get("name") == "mcp__litellm__call_tool":
+                # llama.cpp needs concrete properties at each object level, not top-level oneOf.
+                function["parameters"] = {"type": "object", "properties": {
+                    "tool_id": {"type": "string", "enum": list(schemas)},
+                    "arguments": {"type": "object", "properties": properties,
+                                  "required": sorted(required), "additionalProperties": False}},
+                    "required": ["tool_id", "arguments"], "additionalProperties": False}
+    return {"request": request}
+
+
+def register(ctx):
+    ctx.register_middleware("llm_request", typed_proxy_request)

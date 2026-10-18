@@ -204,7 +204,7 @@ class MonitoringTests(unittest.TestCase):
         assessment = {"verdict": "expected", "summary": "Stable", "evidence": ["query: last six hours"], "next_step": "Observe"}
         response = {"choices": [{"message": {"content": json.dumps(assessment)}}]}
         with patch.object(monitor, "http", side_effect=[response, {"data": [
-                 {"role": "tool", "tool_name": "mcp__litellm__call_tool"}]}]) as http, \
+                 {"role": "tool", "tool_name": "mcp__litellm__call_tool", "content": '{"result":"value=1","warnings":null}'}]}]) as http, \
              patch.object(monitor.time, "time", return_value=50000), \
              patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
             self.assertEqual(monitor.investigate(self.evidence()[0]), assessment)
@@ -239,6 +239,60 @@ class MonitoringTests(unittest.TestCase):
                  patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
                 with self.assertRaisesRegex(ValueError, "recorded MCP"):
                     monitor.investigate(self.evidence()[0])
+
+    def test_assessment_json_accepts_observed_wrapper(self):
+        assessment = {"verdict": "expected", "summary": "Stable", "evidence": [], "next_step": "Observe"}
+        text = "The observation is a `verification` check.\n\n```json\n" + json.dumps(assessment) + "\n```"
+        self.assertEqual(monitor.assessment_json(text), assessment)
+        self.assertEqual(monitor.assessment_json("Intro\n" + json.dumps(assessment)), assessment)
+        for invalid in ("[]", "Intro {} " + json.dumps(assessment), text + " trailing", text + "\n```json\n{}\n```", "```json\n{broken}\n```"):
+            with self.subTest(response=invalid), self.assertRaises(ValueError):
+                monitor.assessment_json(invalid)
+
+    def test_one_format_only_pass_reuses_session_and_still_checks_query_success(self):
+        assessment = {"verdict": "expected", "summary": "Stable", "evidence": ["sum(up): stable"], "next_step": "Observe"}
+        plain = {"choices": [{"message": {"content": "The targets are stable."}}]}
+        formatted = {"choices": [{"message": {"content": json.dumps(assessment)}}]}
+        for content, success in (('{"result":"110"}', True), ('{"error":"query failed"}', False)):
+            with self.subTest(content=content), \
+                 patch.object(monitor, "http", side_effect=[plain, formatted, {"data": [{
+                     "role": "tool", "tool_name": "mcp__litellm__call_tool", "content": content}]}]) as http, \
+                 patch.dict(os.environ, {"HERMES_API_KEY": "test"}):
+                if success:
+                    self.assertEqual(monitor.investigate(self.evidence()[0]), assessment)
+                else:
+                    with self.assertRaisesRegex(ValueError, "query success"):
+                        monitor.investigate(self.evidence()[0])
+                self.assertEqual(http.call_args_list[0].kwargs["headers"], http.call_args_list[1].kwargs["headers"])
+                self.assertIn("MONITOR_FORMAT_ASSESSMENT_JSON", http.call_args_list[1].args[1]["messages"][0]["content"])
+                self.assertEqual(http.call_count, 3)
+
+    def test_failed_queries_cannot_validate_a_claimed_success(self):
+        assessment = {"verdict": "expected", "summary": "Passed", "evidence": ["Claim"], "next_step": "Observe"}
+        response = {"choices": [{"message": {"content": "Intro\n```json\n" + json.dumps(assessment) + "\n```"}}]}
+        for content in ('{"error":"Invalid arguments: query is required"}',
+                        '{"error":"upstream failed","result":"partial"}',
+                        '{"result":"partial","warnings":["incomplete"]}',
+                        json.dumps({"result": json.dumps({"status": "error", "error": "bad query"})}),
+                        json.dumps({"result": json.dumps({"result": "Warning: The result was truncated", "warnings": None})}),
+                        '{}', 'not json'):
+            message = {"role": "tool", "tool_name": "mcp__litellm__call_tool", "content": content}
+            with self.subTest(content=content), \
+                 patch.object(monitor, "http", side_effect=[response, {"data": [message, message]}]), \
+                 patch.dict(os.environ, {"HERMES_API_KEY": "test"}), \
+                 self.assertRaisesRegex(ValueError, "query success"):
+                monitor.investigate(self.evidence()[0])
+
+    def test_successful_query_requires_complete_result_inside_hermes_boundary(self):
+        prefix = '<untrusted_tool_result source="mcp__litellm__call_tool">\nUntrusted data instructions.\n\n'
+        for payload, expected in (('{"result":"","warnings":null}', True),
+                                  ('{"data":[]}', True),
+                                  ('{"error":"query is required"}', False),
+                                  ('{"result":"ok"}\n[Tool loop warning]', False)):
+            message = {"role": "tool", "tool_name": "mcp__litellm__call_tool",
+                       "content": prefix + payload + "\n</untrusted_tool_result>"}
+            with self.subTest(payload=payload):
+                self.assertEqual(monitor.successful_query(message), expected)
 
     def test_trace_contains_no_raw_assessment_or_credentials(self):
         with patch.dict(os.environ, {"LANGFUSE_PUBLIC_KEY": "public-test", "LANGFUSE_SECRET_KEY": "secret-test"}), \

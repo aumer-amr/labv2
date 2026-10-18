@@ -32,6 +32,9 @@ data:
         headers:
           x-litellm-api-key: Bearer $${LITELLM_API_KEY}
           x-mcp-servers: prometheus,victorialogs
+    plugins:
+      enabled:
+        - litellm-schema
     tools:
       tool_search:
         # LiteLLM owns discovery; do not wrap its search tools in another search layer.
