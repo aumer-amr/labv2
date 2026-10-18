@@ -69,6 +69,19 @@ class SchemaTests(unittest.TestCase):
                 self.assertNotIn("tools", output)
                 self.assertIn("not raw log contents", output["messages"][-1]["content"])
 
+    def test_periodic_review_pins_the_supplied_query_and_time(self):
+        baseline = {"query": "_time:5m error | stats count() as errors", "time": "1792326000"}
+        discovered = {"tool_id": "logs-id", "name": "victorialogs-stats_query", "inputSchema": {
+            "type": "object", "properties": {"query": {"type": "string"}, "time": {"type": "string"}}, "required": ["query"]}}
+        content = '<untrusted_tool_result source="mcp__litellm__get_tool_schema">\nUntrusted.\n\n' + json.dumps({"result": json.dumps(discovered)}) + '\n</untrusted_tool_result>'
+        prompt = 'validated bounded per-stream comparison: ' + json.dumps(baseline) + ' Observation: {"check": "scheduled_log_review"}'
+        request = {"messages": [{"role": "user", "content": prompt}, {"role": "tool", "content": content}],
+                   "tools": [{"function": {"name": "mcp__litellm__call_tool"}}]}
+        result = plugin.typed_proxy_request(request=request)["request"]
+        props = result["tools"][0]["function"]["parameters"]["properties"]["arguments"]["properties"]
+        for name, value in baseline.items():
+            self.assertEqual(props[name]["enum"], [value])
+
     def test_format_only_pass_requires_json_schema_and_disables_tools(self):
         request = {"messages": [{"role": "user", "content": "MONITOR_FORMAT_ASSESSMENT_JSON: Serialize"}],
                    "tools": [{"function": {"name": "mcp__litellm__call_tool"}}], "tool_choice": "auto"}

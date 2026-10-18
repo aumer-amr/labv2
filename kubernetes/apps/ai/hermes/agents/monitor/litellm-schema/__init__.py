@@ -62,6 +62,15 @@ def typed_proxy_request(*, request, **_):
         required = set.intersection(*(set(s.get("required", [])) for s in schemas.values()))
         for schema in schemas.values():
             properties.update(schema.get("properties", {}))
+        if log_review:
+            try:
+                supplied = users[-1].split("validated bounded per-stream comparison: ", 1)[1]
+                baseline, _ = json.JSONDecoder().raw_decode(supplied)
+                for name in ("query", "time"):
+                    if name in properties:
+                        properties[name] = {**properties[name], "enum": [baseline[name]]}
+            except (IndexError, ValueError, KeyError, TypeError):
+                pass
         for tool in request.get("tools", []):
             function = tool.get("function", {})
             if function.get("name") == "mcp__litellm__call_tool":
