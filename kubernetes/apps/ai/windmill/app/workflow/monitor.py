@@ -237,9 +237,9 @@ def successful_query(message):
     return payload is not None and "warning: the result was truncated" not in str(payload).lower()
 
 
-def investigate(item):
+def investigate(item, timeout=240):
     now = int(time.time())
-    deadline = time.monotonic() + 240
+    deadline = time.monotonic() + timeout
     session_id = uuid.uuid4().hex
     log_guidance = ""
     if item["check"] == "scheduled_log_review":
@@ -373,6 +373,7 @@ def trace(run_id, item, assessment, start, end, error=None):
 
 
 def main():
+    run_deadline = time.monotonic() + 510
     now = time.time()
     state = wm("/resources/get_value/" + STATE_PATH)
     if state.get("version") != 1:
@@ -403,6 +404,11 @@ def main():
     save(state)
     investigated = []
     for item in candidates[:2]:
+        # Leave time to confirm cancellation and persist/export the result before Windmill's 600s limit.
+        remaining = run_deadline - time.monotonic() - 30
+        timeout = 360 if item["check"] == "scheduled_log_review" else 240
+        if remaining < timeout:
+            break
         # Count attempts for observability; there is no daily investigation cap.
         state["budget"]["investigations"] += 1
         item["last_investigated"] = time.time()
@@ -412,7 +418,7 @@ def main():
         stop_unconfirmed = False
         assessment = {}
         try:
-            assessment = investigate({k: item[k] for k in ("id", "check", "labels", "value", "query", "timestamp", "first_seen", "review_start", "review_end", "coverage_gap_seconds") if k in item})
+            assessment = investigate({k: item[k] for k in ("id", "check", "labels", "value", "query", "timestamp", "first_seen", "review_start", "review_end", "coverage_gap_seconds") if k in item}, timeout=timeout)
             item["assessment"] = assessment
             item.pop("investigation_error", None)
             if item["check"] == "scheduled_log_review" and assessment["verdict"] != "uncertain":

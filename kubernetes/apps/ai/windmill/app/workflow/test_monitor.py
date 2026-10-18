@@ -210,6 +210,29 @@ class MonitoringTests(unittest.TestCase):
             monitor.main()
         self.assertEqual(investigate.call_count, 1)
 
+    def test_log_and_metric_reviews_share_one_bounded_job_budget(self):
+        state = {"version": 1}
+        for now in (10000, 10900):
+            monitor.observe(state, self.evidence(), now)
+        with patch.object(monitor, "wm", return_value=state), \
+             patch.object(monitor.time, "time", return_value=11800), \
+             patch.object(monitor.time, "monotonic", side_effect=[0, 0, 400]), \
+             patch.object(monitor, "collect", return_value=self.evidence()), \
+             patch.object(monitor, "save"), patch.object(monitor, "trace", return_value="trace"), \
+             patch.object(monitor, "investigate", return_value={"verdict": "expected"}) as investigate:
+            monitor.main()
+        self.assertEqual([call.kwargs["timeout"] for call in investigate.call_args_list], [360])
+
+    def test_no_new_investigation_starts_when_job_budget_is_exhausted(self):
+        state = {"version": 1}
+        with patch.object(monitor, "wm", return_value=state), \
+             patch.object(monitor.time, "monotonic", side_effect=[0, 480]), \
+             patch.object(monitor, "collect", return_value=[]), patch.object(monitor, "save"), \
+             patch.object(monitor, "investigate") as investigate:
+            result = monitor.main()
+        investigate.assert_not_called()
+        self.assertEqual(result["daily_investigations"], 0)
+
     def test_due_log_review_precedes_metric_backlog(self):
         state = {"version": 1}
         for now in (10000, 10900):
@@ -219,7 +242,7 @@ class MonitoringTests(unittest.TestCase):
              patch.object(monitor.time, "time", return_value=11800), \
              patch.object(monitor, "collect", return_value=self.evidence()), \
              patch.object(monitor, "save"), patch.object(monitor, "trace", return_value="trace"), \
-             patch.object(monitor, "investigate", side_effect=lambda item: investigated.append(item["check"]) or {"verdict": "uncertain"}):
+             patch.object(monitor, "investigate", side_effect=lambda item, **_: investigated.append(item["check"]) or {"verdict": "uncertain"}):
             monitor.main()
         self.assertEqual(investigated, ["scheduled_log_review", "memory_pressure"])
 
