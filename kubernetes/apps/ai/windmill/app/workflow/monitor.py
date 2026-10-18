@@ -327,9 +327,7 @@ def main():
     save(state)
     investigated = []
     for item in candidates[:2]:
-        if state["budget"]["investigations"] >= 8:
-            break
-        # Reserve before the request; timeouts and retries still consume the budget.
+        # Count attempts for observability; there is no daily investigation cap.
         state["budget"]["investigations"] += 1
         item["last_investigated"] = time.time()
         save(state)

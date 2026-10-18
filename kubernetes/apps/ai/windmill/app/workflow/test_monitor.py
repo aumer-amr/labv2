@@ -142,16 +142,18 @@ class MonitoringTests(unittest.TestCase):
         self.assertNotIn("assessment", persisted[-1]["observations"]["stable"])
         self.assertEqual(persisted[-1]["observations"]["stable"]["investigation_error"], "TimeoutError")
 
-    def test_daily_limit_blocks_new_calls(self):
+    def test_investigations_continue_after_eight_daily_attempts(self):
         state = {"version": 1, "budget": {"day": "1970-01-01", "investigations": 8}}
         for now in (10000, 10900):
             monitor.observe(state, self.evidence(), now)
         with patch.object(monitor, "wm", return_value=copy.deepcopy(state)), \
              patch.object(monitor.time, "time", return_value=11800), \
              patch.object(monitor, "collect", return_value=self.evidence()), \
-             patch.object(monitor, "save"), patch.object(monitor, "investigate") as investigate:
+             patch.object(monitor, "save"), patch.object(monitor, "trace", return_value="trace"), \
+             patch.object(monitor, "investigate", return_value={"verdict": "expected"}) as investigate:
             result = monitor.main()
-        investigate.assert_not_called()
+        self.assertEqual(investigate.call_count, 2)
+        self.assertEqual(result["daily_investigations"], 10)
         self.assertEqual(result["issues_created"], 0)
 
     def test_due_log_review_precedes_metric_backlog(self):
