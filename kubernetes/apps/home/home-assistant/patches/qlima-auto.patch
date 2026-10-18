@@ -1,0 +1,40 @@
+--- a/custom_components/tuya_local/devices/qlima_d820a_dehumidifier.yaml
++++ b/custom_components/tuya_local/devices/qlima_d820a_dehumidifier.yaml
+@@ -49,12 +49,37 @@
+                 value_redirect: purify_speed
+               - dps_val: [dehum_air, dehum30_air]
+                 mapping:
++                  - dps_val: auto
++                    value: null
++                    hidden: true
+                   - dps_val: low
+                     value: 33
+                   - dps_val: mid
+                     value: 67
+                   - dps_val: high
+                     value: 100
++      - id: 4
++        type: string
++        name: preset_mode
++        mapping:
++          - constraint: mode
++            conditions:
++              - dps_val: [dehum_air, dehum30_air]
++                mapping:
++                  - dps_val: auto
++                    value: auto
++                  - dps_val: low
++                    value: null
++                    hidden: true
++                  - dps_val: mid
++                    value: null
++                    hidden: true
++                  - dps_val: high
++                    value: null
++                    hidden: true
++              - dps_val: airpurify
++                value: null
++                hidden: true
+       - id: 8
+         type: boolean
+         name: oscillate
