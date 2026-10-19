@@ -23,9 +23,9 @@ spec:
               repository: ghcr.io/actualbudget/actual
               tag: 26.10.0@sha256:24645e971da6bb1a1f953d6859e307a0b29be1e8b4130a35b3220c209b5b860c
             env:
-              ACTUAL_OPENID_DISCOVERY_URL: https://idm.${SECRET_DOMAIN}/oauth2/openid/actual/.well-known/openid-configuration
+              ACTUAL_OPENID_DISCOVERY_URL: https://idm.aumer.dev/oauth2/openid/actual/.well-known/openid-configuration
               ACTUAL_OPENID_ENFORCE: "true"
-              ACTUAL_OPENID_SERVER_HOSTNAME: https://actual.${SECRET_DOMAIN}
+              ACTUAL_OPENID_SERVER_HOSTNAME: https://actual.aumer.dev
               ACTUAL_PORT: &port 5006
               ACTUAL_TOKEN_EXPIRATION: "2592000"
               ACTUAL_USER_CREATION_MODE: login

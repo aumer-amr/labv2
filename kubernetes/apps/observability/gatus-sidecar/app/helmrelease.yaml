@@ -36,7 +36,7 @@ spec:
       annotations:
         gatus.home-operations.com/enabled: "false"
       hostnames:
-        - "gatus.${SECRET_DOMAIN}"
+        - "gatus.aumer.dev"
       parentRefs:
         - name: envoy-external
           namespace: network

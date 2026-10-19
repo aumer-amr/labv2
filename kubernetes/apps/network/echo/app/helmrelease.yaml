@@ -22,7 +22,7 @@ spec:
         gatus.home-operations.com/endpoint: |-
           conditions: ["[STATUS] == 200"]
       hostnames:
-        - "{{ .Release.Name }}.${SECRET_DOMAIN}"
+        - "{{ .Release.Name }}.aumer.dev"
       parentRefs:
         - name: envoy-external
           namespace: network

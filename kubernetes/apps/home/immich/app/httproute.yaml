@@ -6,11 +6,11 @@ metadata:
   name: immich-share
   annotations:
     gatus.home-operations.com/endpoint: |-
-      url: https://share.${SECRET_DOMAIN}/api/server/ping
+      url: https://share.aumer.dev/api/server/ping
       conditions: ["[STATUS] == 200"]
 spec:
   hostnames:
-    - share.${SECRET_DOMAIN}
+    - share.aumer.dev
   parentRefs:
     - name: envoy-external
       namespace: network

@@ -24,7 +24,7 @@ spec:
       extraReplicas: 0
       multiplayerReplicas: 0
       databaseUrlSecretName: windmill-secret
-      baseDomain: windmill.${SECRET_DOMAIN}
+      baseDomain: windmill.aumer.dev
       baseProtocol: https
       app:
         podSecurityContext: &id001

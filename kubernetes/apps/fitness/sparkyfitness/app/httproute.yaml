@@ -9,7 +9,7 @@ metadata:
       conditions: ["[STATUS] == 200"]
 spec:
   hostnames:
-    - fitness.${SECRET_DOMAIN}
+    - fitness.aumer.dev
   parentRefs:
     - name: envoy-external
       namespace: network

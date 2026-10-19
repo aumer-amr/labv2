@@ -54,7 +54,7 @@ spec:
               PAPERLESS_SOCIAL_AUTO_SIGNUP: "true"
               PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: "true"
               PAPERLESS_TIME_ZONE: Europe/Amsterdam
-              PAPERLESS_URL: https://paperless.${SECRET_DOMAIN}
+              PAPERLESS_URL: https://paperless.aumer.dev
             envFrom:
               - secretRef:
                   name: paperless-secret

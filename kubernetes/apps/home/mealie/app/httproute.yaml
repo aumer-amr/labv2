@@ -5,11 +5,11 @@ metadata:
   name: mealie
   annotations:
     gatus.home-operations.com/endpoint: |-
-      url: https://mealie.${SECRET_DOMAIN}/api/app/about
+      url: https://mealie.aumer.dev/api/app/about
       conditions: ["[STATUS] == 200", "[CERTIFICATE_EXPIRATION] > 48h"]
 spec:
   hostnames:
-    - mealie.${SECRET_DOMAIN}
+    - mealie.aumer.dev
   parentRefs:
     - name: envoy-external
       namespace: network

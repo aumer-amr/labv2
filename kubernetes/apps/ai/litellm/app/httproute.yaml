@@ -9,7 +9,7 @@ metadata:
       conditions: ["[STATUS] == 200"]
 spec:
   hostnames:
-    - litellm.${SECRET_DOMAIN}
+    - litellm.aumer.dev
   parentRefs:
     - name: envoy-internal
       namespace: network

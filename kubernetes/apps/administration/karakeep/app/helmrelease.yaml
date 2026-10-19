@@ -28,7 +28,7 @@ spec:
             command: [node, /db_migrations/index.js]
             env: &env
               DATA_DIR: /data
-              NEXTAUTH_URL: https://karakeep.${SECRET_DOMAIN}
+              NEXTAUTH_URL: https://karakeep.aumer.dev
               NEXTAUTH_URL_INTERNAL: http://127.0.0.1:3000
               MEILI_ADDR: http://127.0.0.1:7700
               BROWSER_WEB_URL: http://127.0.0.1:9222

@@ -48,7 +48,7 @@ spec:
     txtOwnerId: main
     txtPrefix: k8s.main.%{record_type}-
     domainFilters:
-      - "${SECRET_DOMAIN}"
+      - "aumer.dev"
     serviceMonitor:
       enabled: true
     podAnnotations:

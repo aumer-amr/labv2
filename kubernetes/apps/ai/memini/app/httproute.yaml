@@ -6,7 +6,7 @@ metadata:
   name: memini
 spec:
   hostnames:
-    - memini.${SECRET_DOMAIN}
+    - memini.aumer.dev
   parentRefs:
     - name: envoy-internal
       namespace: network

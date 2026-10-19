@@ -17,9 +17,6 @@ spec:
   timeout: 10m
   path: ./kubernetes/apps/database/clickhouse/app
   postBuild:
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
     substitute:
       APP: clickhouse
       NAMESPACE: database

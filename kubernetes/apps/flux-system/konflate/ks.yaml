@@ -14,10 +14,6 @@ spec:
       namespace: security
   interval: 1h
   path: ./kubernetes/apps/flux-system/konflate/app
-  postBuild:
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
   prune: true
   sourceRef:
     kind: GitRepository
@@ -38,10 +34,6 @@ spec:
       namespace: ai
   interval: 1h
   path: ./kubernetes/apps/flux-system/konflate/mcp
-  postBuild:
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
   prune: true
   sourceRef:
     kind: GitRepository

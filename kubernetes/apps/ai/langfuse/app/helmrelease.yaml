@@ -17,7 +17,7 @@ spec:
           name: langfuse-secret
           key: ENCRYPTION_KEY
       nextauth:
-        url: https://langfuse.${SECRET_DOMAIN}
+        url: https://langfuse.aumer.dev
         secret:
           secretKeyRef:
             name: langfuse-secret
@@ -56,7 +56,7 @@ spec:
         - name: AUTH_IGNORE_ACCOUNT_FIELDS
           value: "issued_token_type"
         - name: AUTH_CUSTOM_ISSUER
-          value: "https://idm.${SECRET_DOMAIN}/oauth2/openid/langfuse"
+          value: "https://idm.aumer.dev/oauth2/openid/langfuse"
         - name: AUTH_CUSTOM_SCOPE
           value: "openid email profile"
         - name: AUTH_CUSTOM_ID_TOKEN

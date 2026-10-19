@@ -2,17 +2,17 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: "${SECRET_DOMAIN/./-}-production"
+  name: "aumer-dev-production"
 spec:
   dnsNames:
-    - "${SECRET_DOMAIN}"
-    - "*.${SECRET_DOMAIN}"
+    - "aumer.dev"
+    - "*.aumer.dev"
   duration: 160h
   issuerRef:
     name: letsencrypt-production
     kind: ClusterIssuer
   privateKey:
     algorithm: ECDSA
-  secretName: "${SECRET_DOMAIN/./-}-production-tls"
+  secretName: "aumer-dev-production-tls"
   usages:
     - digital signature

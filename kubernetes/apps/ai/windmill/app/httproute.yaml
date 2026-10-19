@@ -9,7 +9,7 @@ metadata:
       conditions: ["[STATUS] == 200", "[BODY].status == healthy"]
 spec:
   hostnames:
-    - windmill.${SECRET_DOMAIN}
+    - windmill.aumer.dev
   parentRefs:
     - name: envoy-internal
       namespace: network

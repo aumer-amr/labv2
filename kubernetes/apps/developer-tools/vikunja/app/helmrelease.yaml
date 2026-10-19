@@ -29,7 +29,7 @@ spec:
               VIKUNJA_DATABASE_PATH: /data/vikunja.db
               VIKUNJA_FILES_BASEPATH: /data/files
               VIKUNJA_FILES_MAXSIZE: 10MB
-              VIKUNJA_SERVICE_PUBLICURL: https://vikunja.${SECRET_DOMAIN}
+              VIKUNJA_SERVICE_PUBLICURL: https://vikunja.aumer.dev
               VIKUNJA_SERVICE_ENABLEREGISTRATION: "false"
               VIKUNJA_SERVICE_ENABLELINKSHARING: "false"
               VIKUNJA_SERVICE_ENABLEPUBLICTEAMS: "false"

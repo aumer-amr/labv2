@@ -65,7 +65,7 @@ spec:
               protocol: UDP
           rules:
             dns:
-              - matchName: idm.${SECRET_DOMAIN}
+              - matchName: idm.aumer.dev
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -76,9 +76,9 @@ spec:
               protocol: TCP
           rules:
             dns:
-              - matchName: idm.${SECRET_DOMAIN}
+              - matchName: idm.aumer.dev
     - toFQDNs:
-        - matchName: idm.${SECRET_DOMAIN}
+        - matchName: idm.aumer.dev
       toPorts:
         - ports:
             - port: "443"

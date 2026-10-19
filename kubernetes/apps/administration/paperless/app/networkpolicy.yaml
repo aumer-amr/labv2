@@ -64,12 +64,12 @@ spec:
               protocol: TCP
           rules:
             dns:
-              - matchName: idm.${SECRET_DOMAIN}
+              - matchName: idm.aumer.dev
               - matchName: imap.gmail.com
               - matchName: paperless-rw.administration.svc.cluster.local
               - matchName: paperless-valkey.administration.svc.cluster.local
     - toFQDNs:
-        - matchName: idm.${SECRET_DOMAIN}
+        - matchName: idm.aumer.dev
       toPorts:
         - ports:
             - port: "443"

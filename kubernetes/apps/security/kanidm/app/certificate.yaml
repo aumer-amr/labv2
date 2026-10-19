@@ -6,7 +6,7 @@ metadata:
   name: kanidm
 spec:
   dnsNames:
-    - idm.${SECRET_DOMAIN}
+    - idm.aumer.dev
   duration: 160h
   issuerRef:
     kind: ClusterIssuer

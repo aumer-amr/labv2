@@ -19,9 +19,6 @@ spec:
   interval: 1h
   path: ./kubernetes/apps/home/home-assistant/app
   postBuild:
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
     substitute:
       APP: home-assistant
   prune: true
@@ -46,10 +43,6 @@ spec:
       namespace: external-secrets
   interval: 1h
   path: ./kubernetes/apps/home/home-assistant/mcp
-  postBuild:
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
   prune: true
   sourceRef:
     kind: GitRepository

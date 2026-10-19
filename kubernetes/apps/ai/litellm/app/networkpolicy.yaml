@@ -210,7 +210,7 @@ spec:
           rules:
             dns:
               - matchName: api.openai.com
-              - matchName: idm.${SECRET_DOMAIN}
+              - matchName: idm.aumer.dev
               - matchName: raw.githubusercontent.com
               - matchName: ha-mcp.ai.svc.cluster.local
               - matchName: konflate.flux-system.svc.cluster.local
@@ -241,7 +241,7 @@ spec:
           rules:
             dns:
               - matchName: api.openai.com
-              - matchName: idm.${SECRET_DOMAIN}
+              - matchName: idm.aumer.dev
               - matchName: raw.githubusercontent.com
               - matchName: ha-mcp.ai.svc.cluster.local
               - matchName: konflate.flux-system.svc.cluster.local
@@ -263,7 +263,7 @@ spec:
               - matchName: whisper.ai.svc.cluster.local
     - toFQDNs:
         - matchName: api.openai.com
-        - matchName: idm.${SECRET_DOMAIN}
+        - matchName: idm.aumer.dev
         - matchName: raw.githubusercontent.com
       toPorts:
         - ports:

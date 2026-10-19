@@ -10,7 +10,7 @@ metadata:
       conditions: ["[STATUS] == 200"]
 spec:
   hostnames:
-    - chat.${SECRET_DOMAIN}
+    - chat.aumer.dev
   parentRefs:
     - name: envoy-internal
       namespace: network

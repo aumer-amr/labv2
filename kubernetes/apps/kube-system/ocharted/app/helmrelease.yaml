@@ -28,7 +28,7 @@ spec:
           path: /healthz
           conditions: ["[STATUS] == 200"]
       hostnames:
-        - "{{ .Release.Name }}.${SECRET_DOMAIN}"
+        - "{{ .Release.Name }}.aumer.dev"
       parentRefs:
         - name: envoy-external
           namespace: network

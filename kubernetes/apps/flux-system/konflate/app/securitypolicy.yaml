@@ -11,9 +11,9 @@ spec:
       sectionName: ui
   oidc:
     provider:
-      issuer: https://idm.${SECRET_DOMAIN}/oauth2/openid/konflate
-      authorizationEndpoint: https://idm.${SECRET_DOMAIN}/ui/oauth2
-      tokenEndpoint: https://idm.${SECRET_DOMAIN}/oauth2/token
+      issuer: https://idm.aumer.dev/oauth2/openid/konflate
+      authorizationEndpoint: https://idm.aumer.dev/ui/oauth2
+      tokenEndpoint: https://idm.aumer.dev/oauth2/token
       backendRefs:
         - name: kanidm
           namespace: security
@@ -21,6 +21,6 @@ spec:
     clientID: konflate
     clientSecret:
       name: konflate-secret
-    redirectURL: https://konflate.${SECRET_DOMAIN}/oauth2/callback
+    redirectURL: https://konflate.aumer.dev/oauth2/callback
     logoutPath: /logout
     scopes: [openid]

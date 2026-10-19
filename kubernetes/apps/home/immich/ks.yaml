@@ -32,6 +32,9 @@ spec:
   interval: 1h
   path: ./kubernetes/apps/home/immich/app
   postBuild:
+    substituteFrom:
+      - name: cluster-secrets
+        kind: Secret
     substitute:
       APP: immich
       NAMESPACE: home
@@ -40,9 +43,6 @@ spec:
       PG_MAJOR: "18"
       PG_SSLMODE: require
       VALKEY_MAXMEMORY_POLICY: noeviction
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
   prune: true
   sourceRef:
     kind: GitRepository

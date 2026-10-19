@@ -16,10 +16,6 @@ spec:
       namespace: external-secrets
     - name: rook-ceph-cluster
       namespace: rook-ceph
-  postBuild:
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
   interval: 1h
   path: ./kubernetes/apps/observability/victoria-logs/app
   prune: true

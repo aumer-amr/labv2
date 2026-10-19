@@ -10,7 +10,7 @@ metadata:
       conditions: ["[STATUS] == 200"]
 spec:
   hostnames:
-    - atuin.${SECRET_DOMAIN}
+    - atuin.aumer.dev
   parentRefs:
     - name: envoy-internal
       namespace: network

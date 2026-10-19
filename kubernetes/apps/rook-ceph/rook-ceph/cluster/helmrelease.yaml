@@ -95,7 +95,7 @@ spec:
           gatus.home-operations.com/endpoint: |-
             conditions: ["[STATUS] == 200"]
         host:
-          name: rook.${SECRET_DOMAIN}
+          name: rook.aumer.dev
           path: /
           pathType: PathPrefix
         parentRefs:

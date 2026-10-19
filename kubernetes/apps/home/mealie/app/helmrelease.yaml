@@ -27,7 +27,7 @@ spec:
               TZ: Europe/Amsterdam
               PUID: "1000"
               PGID: "1000"
-              BASE_URL: https://mealie.${SECRET_DOMAIN}
+              BASE_URL: https://mealie.aumer.dev
               ALLOW_SIGNUP: "false"
               # This hides the form; the gateway also blocks the password-token API.
               ALLOW_PASSWORD_LOGIN: "false"
@@ -63,10 +63,10 @@ spec:
               OIDC_SIGNUP_ENABLED: "true"
               OIDC_REQUIRES_EMAIL_VERIFICATION: "true"
               OIDC_CLIENT_ID: mealie
-              OIDC_CONFIGURATION_URL: https://idm.${SECRET_DOMAIN}/oauth2/openid/mealie/.well-known/openid-configuration
+              OIDC_CONFIGURATION_URL: https://idm.aumer.dev/oauth2/openid/mealie/.well-known/openid-configuration
               OIDC_PROVIDER_NAME: Kanidm
-              OIDC_USER_GROUP: amr@idm.${SECRET_DOMAIN}
-              OIDC_ADMIN_GROUP: mealie-admins@idm.${SECRET_DOMAIN}
+              OIDC_USER_GROUP: amr@idm.aumer.dev
+              OIDC_ADMIN_GROUP: mealie-admins@idm.aumer.dev
               OIDC_SCOPES_OVERRIDE: openid profile email groups
             envFrom:
               - secretRef:

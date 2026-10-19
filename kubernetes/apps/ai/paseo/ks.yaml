@@ -30,9 +30,6 @@ spec:
       APP: paseo
       NAMESPACE: ai
       KOPIUR_CAPACITY: 30Gi
-    substituteFrom:
-      - kind: Secret
-        name: cluster-secrets
   prune: true
   sourceRef:
     kind: GitRepository

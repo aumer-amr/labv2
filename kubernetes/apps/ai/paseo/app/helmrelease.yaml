@@ -39,7 +39,7 @@ spec:
             env:
               TZ: Europe/Amsterdam
               PASEO_LISTEN: 0.0.0.0:6767
-              PASEO_HOSTNAMES: paseo.${SECRET_DOMAIN}
+              PASEO_HOSTNAMES: paseo.aumer.dev
               PASEO_TRUSTED_PROXIES: 10.42.0.0/16
               PASEO_WEB_UI_ENABLED: "true"
               PASEO_RELAY_ENABLED: "false"
@@ -102,7 +102,7 @@ spec:
           gatus.home-operations.com/endpoint: |-
             path: /api/health
         hostnames:
-          - paseo.${SECRET_DOMAIN}
+          - paseo.aumer.dev
         parentRefs:
           - name: envoy-internal
             namespace: network

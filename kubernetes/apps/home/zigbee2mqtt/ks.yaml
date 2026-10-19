@@ -21,9 +21,6 @@ spec:
   interval: 1h
   path: ./kubernetes/apps/home/zigbee2mqtt/app
   postBuild:
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
     substitute:
       APP: zigbee2mqtt
       KOPIUR_CAPACITY: 1Gi

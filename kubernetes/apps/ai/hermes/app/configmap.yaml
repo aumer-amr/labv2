@@ -111,9 +111,9 @@ data:
       redact_pii: true
     dashboard:
       theme: mono
-      public_url: https://hermes.${SECRET_DOMAIN}
+      public_url: https://hermes.aumer.dev
       oauth:
         provider: self-hosted
         self_hosted:
-          issuer: https://idm.${SECRET_DOMAIN}/oauth2/openid/hermes
+          issuer: https://idm.aumer.dev/oauth2/openid/hermes
           client_id: hermes

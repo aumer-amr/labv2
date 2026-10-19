@@ -10,7 +10,7 @@ metadata:
       conditions: ["[STATUS] == 200"]
 spec:
   hostnames:
-    - searxng.${SECRET_DOMAIN}
+    - searxng.aumer.dev
   parentRefs:
     - name: envoy-internal
       namespace: network

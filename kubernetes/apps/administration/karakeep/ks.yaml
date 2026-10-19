@@ -22,9 +22,6 @@ spec:
       APP: karakeep
       NAMESPACE: administration
       KOPIUR_CAPACITY: 10Gi
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
   prune: true
   sourceRef:
     kind: GitRepository

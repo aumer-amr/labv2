@@ -22,9 +22,6 @@ spec:
     substitute:
       APP: actual
       NAMESPACE: administration
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
   prune: true
   sourceRef:
     kind: GitRepository

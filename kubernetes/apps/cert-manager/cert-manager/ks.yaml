@@ -18,10 +18,6 @@ spec:
       current: status.conditions.exists(e, e.type == 'Ready' && e.status == 'True')
   interval: 1h
   path: ./kubernetes/apps/cert-manager/cert-manager/app
-  postBuild:
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
   prune: true
   sourceRef:
     kind: GitRepository

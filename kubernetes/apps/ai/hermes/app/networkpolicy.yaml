@@ -169,7 +169,7 @@ spec:
               - matchPattern: hermes-agent.nousresearch.com.*
               - matchName: nousresearch.github.io
               - matchPattern: nousresearch.github.io.*
-              - matchName: idm.${SECRET_DOMAIN}
+              - matchName: idm.aumer.dev
               - matchName: litellm.ai.svc.cluster.local
               - matchName: memini.ai.svc.cluster.local
               - matchName: searxng.ai.svc.cluster.local
@@ -191,7 +191,7 @@ spec:
               - matchPattern: hermes-agent.nousresearch.com.*
               - matchName: nousresearch.github.io
               - matchPattern: nousresearch.github.io.*
-              - matchName: idm.${SECRET_DOMAIN}
+              - matchName: idm.aumer.dev
               - matchName: litellm.ai.svc.cluster.local
               - matchName: memini.ai.svc.cluster.local
               - matchName: searxng.ai.svc.cluster.local
@@ -204,7 +204,7 @@ spec:
         - matchName: hermes-agent.nousresearch.com.ai.svc.cluster.local
         - matchName: nousresearch.github.io
         - matchName: nousresearch.github.io.ai.svc.cluster.local
-        - matchName: idm.${SECRET_DOMAIN}
+        - matchName: idm.aumer.dev
       toPorts:
         - ports:
             - port: "443"

@@ -62,11 +62,11 @@ spec:
               protocol: ANY
           rules:
             dns:
-              - matchName: idm.${SECRET_DOMAIN}
-              - matchName: idm.${SECRET_DOMAIN}.administration.svc.cluster.local
+              - matchName: idm.aumer.dev
+              - matchName: idm.aumer.dev.administration.svc.cluster.local
               - matchName: api.enablebanking.com
     - toFQDNs:
-        - matchName: idm.${SECRET_DOMAIN}
+        - matchName: idm.aumer.dev
       toPorts:
         - ports:
             - port: "443"
