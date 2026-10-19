@@ -218,6 +218,7 @@ spec:
               - matchName: litellm-valkey.ai.svc.cluster.local
               - matchName: paperless-mcp.ai.svc.cluster.local
               - matchName: prometheus-mcp.ai.svc.cluster.local
+              - matchName: kubernetes-mcp.ai.svc.cluster.local
               - matchName: actual-mcp.ai.svc.cluster.local
               - matchName: vikunja.developer-tools.svc.cluster.local
               - matchName: karakeep-mcp.ai.svc.cluster.local
@@ -248,6 +249,7 @@ spec:
               - matchName: litellm-valkey.ai.svc.cluster.local
               - matchName: paperless-mcp.ai.svc.cluster.local
               - matchName: prometheus-mcp.ai.svc.cluster.local
+              - matchName: kubernetes-mcp.ai.svc.cluster.local
               - matchName: actual-mcp.ai.svc.cluster.local
               - matchName: vikunja.developer-tools.svc.cluster.local
               - matchName: karakeep-mcp.ai.svc.cluster.local

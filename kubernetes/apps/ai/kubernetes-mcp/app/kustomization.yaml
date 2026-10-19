@@ -1,0 +1,13 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./mcpserver.yaml
+  - ./rbac.yaml
+  - ./networkpolicy.yaml
+configurations:
+  - ./config/name-reference.yaml
+configMapGenerator:
+  - name: kubernetes-mcp-config
+    files:
+      - config.toml=./config/config.toml

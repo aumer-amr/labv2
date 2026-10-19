@@ -19,6 +19,8 @@ spec:
       namespace: rook-ceph
     - name: litellm
       namespace: ai
+    - name: kubernetes-mcp
+      namespace: ai
     - name: memini
       namespace: ai
   interval: 1h

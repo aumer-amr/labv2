@@ -1,0 +1,9 @@
+---
+nameReference:
+  - kind: ConfigMap
+    version: v1
+    fieldSpecs:
+      - group: litellm.home-operations.com
+        version: v1alpha1
+        kind: LiteLLMMCPServer
+        path: spec/workload/volumes/configMap/name

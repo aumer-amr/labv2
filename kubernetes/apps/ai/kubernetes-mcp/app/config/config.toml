@@ -1,0 +1,24 @@
+port = "8080"
+cluster_provider_strategy = "in-cluster"
+read_only = true
+toolsets = ["core"]
+enabled_tools = [
+  "events_list",
+  "namespaces_list",
+  "pods_list",
+  "pods_list_in_namespace",
+  "pods_get",
+  "pods_log",
+  "resources_list",
+  "resources_get",
+]
+
+[[denied_resources]]
+group = ""
+version = "v1"
+kind = "Secret"
+
+[[denied_resources]]
+group = ""
+version = "v1"
+kind = "ConfigMap"
