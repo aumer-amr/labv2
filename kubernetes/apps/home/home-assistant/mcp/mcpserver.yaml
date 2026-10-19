@@ -30,7 +30,7 @@ spec:
       - ha-mcp-web
     env:
       - name: HOMEASSISTANT_URL
-        value: https://hass.${SECRET_DOMAIN}
+        value: https://hass.aumer.dev
       - name: HOMEASSISTANT_TOKEN
         valueFrom:
           secretKeyRef:

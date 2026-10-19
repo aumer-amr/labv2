@@ -52,4 +52,4 @@ spec:
               protocol: ANY
           rules:
             dns:
-              - matchName: hass.${SECRET_DOMAIN}
+              - matchName: hass.aumer.dev

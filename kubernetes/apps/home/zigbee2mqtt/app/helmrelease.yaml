@@ -116,7 +116,7 @@ spec:
             path: /healthz
             conditions: ["[STATUS] == 404"]
         hostnames:
-          - zigbee2mqtt.${SECRET_DOMAIN}
+          - zigbee2mqtt.aumer.dev
         parentRefs:
           - name: envoy-internal
             namespace: network

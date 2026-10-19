@@ -31,9 +31,9 @@ spec:
       sectionName: ui
   oidc:
     provider:
-      issuer: https://idm.${SECRET_DOMAIN}/oauth2/openid/zigbee2mqtt
-      authorizationEndpoint: https://idm.${SECRET_DOMAIN}/ui/oauth2
-      tokenEndpoint: https://idm.${SECRET_DOMAIN}/oauth2/token
+      issuer: https://idm.aumer.dev/oauth2/openid/zigbee2mqtt
+      authorizationEndpoint: https://idm.aumer.dev/ui/oauth2
+      tokenEndpoint: https://idm.aumer.dev/oauth2/token
       backendRefs:
         - name: kanidm
           namespace: security
@@ -41,6 +41,6 @@ spec:
     clientID: zigbee2mqtt
     clientSecret:
       name: zigbee2mqtt-oidc-client
-    redirectURL: https://zigbee2mqtt.${SECRET_DOMAIN}/oauth2/callback
+    redirectURL: https://zigbee2mqtt.aumer.dev/oauth2/callback
     logoutPath: /logout
     scopes: [openid]

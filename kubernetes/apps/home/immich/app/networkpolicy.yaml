@@ -166,7 +166,7 @@ spec:
             dns:
               - matchPattern: "*"
     - toFQDNs:
-        - matchName: idm.${SECRET_DOMAIN}
+        - matchName: idm.aumer.dev
       toPorts:
         - ports:
             - port: "443"

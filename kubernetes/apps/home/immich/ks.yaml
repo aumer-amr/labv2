@@ -40,9 +40,6 @@ spec:
       PG_MAJOR: "18"
       PG_SSLMODE: require
       VALKEY_MAXMEMORY_POLICY: noeviction
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
   prune: true
   sourceRef:
     kind: GitRepository

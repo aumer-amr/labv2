@@ -127,8 +127,8 @@ spec:
     route:
       app:
         hostnames:
-          - music-assistant.${SECRET_DOMAIN}
-          - mass.${SECRET_DOMAIN}
+          - music-assistant.aumer.dev
+          - mass.aumer.dev
         parentRefs:
           - name: envoy-internal
             namespace: network

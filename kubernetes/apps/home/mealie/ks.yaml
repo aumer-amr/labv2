@@ -36,9 +36,6 @@ spec:
       PG_BACKUP_BUCKET: pg-mealie
       PG_MAJOR: "18"
       PG_SSLMODE: require
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
   prune: true
   sourceRef:
     kind: GitRepository
