@@ -2,7 +2,6 @@
 
 ## Environment
 
-- Codex runs natively inside WSL. Run commands directly in Bash from `/mnt/e/code/private/labv2`.
 - Use the repository kubeconfig configured by `.mise/config.toml`; the cluster is remote.
 - Always prioritize the LiteLLM MCP server for supported operations. Discover and call its tools directly; use scripts, direct APIs, or other clients only when the required MCP capability is unavailable.
 - Never print, decode, log, or quote secret values. Treat `age.key`, `kubeconfig`, `deploy.key`, and provider credentials as sensitive.
