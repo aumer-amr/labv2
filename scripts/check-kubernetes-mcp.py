@@ -61,6 +61,26 @@ assert server["workload"]["serviceAccountName"] == "kubernetes-mcp"
 assert server["workload"]["podSecurityContext"]["runAsNonRoot"] is True
 assert server["workload"]["securityContext"]["readOnlyRootFilesystem"] is True
 
+policies = documents(APP / "networkpolicy.yaml")
+dns = next(policy for policy in policies if policy["metadata"]["name"] == "kubernetes-mcp-dns")
+assert len(dns["spec"]["egress"]) == 2
+for rule, protocol in zip(dns["spec"]["egress"], ["UDP", "TCP"]):
+    assert rule["toEndpoints"] == [{"matchLabels": {
+        "k8s:io.kubernetes.pod.namespace": "kube-system", "k8s:k8s-app": "kube-dns",
+    }}]
+    assert rule["toPorts"][0]["ports"] == [{"port": "53", "protocol": protocol}]
+    assert {entry["matchName"] for entry in rule["toPorts"][0]["rules"]["dns"]} == {
+        "kubernetes.default.svc", "kubernetes.default.svc.cluster.local",
+        "kubernetes.default.svc.ai.svc.cluster.local", "kubernetes.default.svc.svc.cluster.local",
+    }
+coredns = documents(ROOT / "kubernetes/apps/kube-system/coredns/app/networkpolicy.yaml")[0]
+assert any(
+    peer.get("namespaceSelector", {}).get("matchLabels", {}).get("kubernetes.io/metadata.name") == "ai"
+    and peer.get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name") == "kubernetes-mcp"
+    and {port["protocol"] for port in rule["ports"] if port["port"] == 53} == {"UDP", "TCP"}
+    for rule in coredns["spec"]["ingress"] for peer in rule.get("from", [])
+), "CoreDNS must accept both DNS transports from the MCP"
+
 paseo = documents(ROOT / "kubernetes/apps/ai/paseo/app/litellmvirtualkey.yaml")[0]
 assert "c53d724b-0d4e-4ffa-98cf-441e37bb809f" in paseo["spec"]["mcpToolsets"]
 

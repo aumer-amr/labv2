@@ -1,4 +1,4 @@
-# Configuration-derived flows; fresh audit traffic and separate review gate enforcement.
+# API service DNS is required by the in-cluster provider and confirmed by live flows.
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -34,6 +34,44 @@ spec:
         - ports:
             - port: "6443"
               protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: kubernetes-mcp-dns
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: kubernetes-mcp
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: kubernetes.default.svc
+              - matchName: kubernetes.default.svc.cluster.local
+              - matchName: kubernetes.default.svc.ai.svc.cluster.local
+              - matchName: kubernetes.default.svc.svc.cluster.local
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: kubernetes.default.svc
+              - matchName: kubernetes.default.svc.cluster.local
+              - matchName: kubernetes.default.svc.ai.svc.cluster.local
+              - matchName: kubernetes.default.svc.svc.cluster.local
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
