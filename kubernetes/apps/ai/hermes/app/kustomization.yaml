@@ -6,6 +6,7 @@ resources:
   - ./configmap.yaml
   - ./externalsecret.yaml
   - ./helmrelease.yaml
+  - ./httproute.yaml
   - ./litellmvirtualkey.yaml
   - ./merge-broker-pvc.yaml
   - ./networkpolicy.yaml

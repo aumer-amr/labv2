@@ -182,18 +182,3 @@ spec:
         existingClaim: open-webui
         globalMounts:
           - path: /app/backend/data
-    route:
-      app:
-        annotations:
-          gatus.home-operations.com/endpoint: |-
-            path: /health
-            conditions: ["[STATUS] == 200"]
-        hostnames:
-          - chat.${SECRET_DOMAIN}
-        parentRefs:
-          - name: envoy-internal
-            namespace: network
-        rules:
-          - backendRefs:
-              - name: open-webui
-                port: 8080

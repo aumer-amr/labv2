@@ -6,6 +6,7 @@ resources:
   - ./prometheusrule.yaml
   - ./externalsecret.yaml
   - ./helmrelease.yaml
+  - ./httproute.yaml
   - ./litellmvirtualkey.yaml
   - ./networkpolicy.yaml
   - ./ocirepository.yaml

@@ -480,18 +480,3 @@ spec:
         ports:
           http:
             port: *port
-    route:
-      app:
-        annotations:
-          gatus.home-operations.com/endpoint: |-
-            path: /api/status
-            conditions: ["[STATUS] == 200"]
-        hostnames:
-          - hermes.${SECRET_DOMAIN}
-        parentRefs:
-          - name: envoy-internal
-            namespace: network
-        rules:
-          - backendRefs:
-              - name: hermes
-                port: 9119
