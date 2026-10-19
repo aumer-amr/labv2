@@ -25,11 +25,11 @@ spec:
               KANIDM_ADMIN_BIND_PATH: /var/run/kanidmd.sock
               KANIDM_BINDADDRESS: "[::]:8443"
               KANIDM_DB_PATH: /data/kanidm.db
-              KANIDM_DOMAIN: idm.${SECRET_DOMAIN}
+              KANIDM_DOMAIN: idm.aumer.dev
               KANIDM_ONLINE_BACKUP_PATH: /data/backups
               KANIDM_ONLINE_BACKUP_SCHEDULE: "03 */6 * * *"
               KANIDM_ONLINE_BACKUP_VERSIONS: "7"
-              KANIDM_ORIGIN: https://idm.${SECRET_DOMAIN}
+              KANIDM_ORIGIN: https://idm.aumer.dev
               KANIDM_TLS_CHAIN: /certs/tls.crt
               KANIDM_TLS_KEY: /certs/tls.key
             probes:

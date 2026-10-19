@@ -21,9 +21,6 @@ spec:
   interval: 1h
   path: ./kubernetes/apps/security/kanidm/app
   postBuild:
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
     substitute:
       APP: kanidm
   prune: true
