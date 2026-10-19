@@ -116,8 +116,8 @@ kind: Gateway
 metadata:
   name: envoy-external
   annotations:
-    external-dns.alpha.kubernetes.io/target: external.${SECRET_DOMAIN}
-    external-dns.kubernetes.io/target: external.${SECRET_DOMAIN}
+    external-dns.alpha.kubernetes.io/target: external.aumer.dev
+    external-dns.kubernetes.io/target: external.aumer.dev
     gatus.home-operations.com/endpoint: |-
       alerts:
         - type: pushover
@@ -128,7 +128,7 @@ spec:
   gatewayClassName: envoy
   infrastructure:
     annotations:
-      external-dns.kubernetes.io/hostname: external.${SECRET_DOMAIN}
+      external-dns.kubernetes.io/hostname: external.aumer.dev
       lbipam.cilium.io/ips: "10.10.1.113"
   listeners:
     - name: http
@@ -146,15 +146,15 @@ spec:
       tls:
         certificateRefs:
           - kind: Secret
-            name: ${SECRET_DOMAIN/./-}-production-tls
+            name: aumer-dev-production-tls
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
   name: envoy-internal
   annotations:
-    external-dns.alpha.kubernetes.io/target: internal.${SECRET_DOMAIN}
-    external-dns.kubernetes.io/target: internal.${SECRET_DOMAIN}
+    external-dns.alpha.kubernetes.io/target: internal.aumer.dev
+    external-dns.kubernetes.io/target: internal.aumer.dev
     gatus.home-operations.com/endpoint: |-
       alerts:
         - type: pushover
@@ -170,7 +170,7 @@ spec:
       kind: EnvoyProxy
       name: envoy-internal
     annotations:
-      external-dns.kubernetes.io/hostname: internal.${SECRET_DOMAIN}
+      external-dns.kubernetes.io/hostname: internal.aumer.dev
       lbipam.cilium.io/ips: "10.10.1.111"
   listeners:
     - name: http
@@ -188,7 +188,7 @@ spec:
       tls:
         certificateRefs:
           - kind: Secret
-            name: ${SECRET_DOMAIN/./-}-production-tls
+            name: aumer-dev-production-tls
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: BackendTrafficPolicy
