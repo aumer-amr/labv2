@@ -41,6 +41,9 @@ for group, resource in [
 for resource in ["secrets", "configmaps", "pods/exec", "pods/attach", "pods/portforward", "nodes/proxy", "serviceaccounts/token"]:
     assert not any(allowed(verb, "", resource) for verb in ["get", "list", "watch", "create"]), resource
 
+for verb in ["get", "list"]:
+    assert allowed(verb, "cilium.io", "ciliumnetworkpolicies"), (verb, "ciliumnetworkpolicies")
+
 for rule in rules:
     assert set(rule["verbs"]) <= {"get", "list", "watch"}
     assert all("*" not in value for field in ["verbs", "apiGroups", "resources"] for value in rule[field])
