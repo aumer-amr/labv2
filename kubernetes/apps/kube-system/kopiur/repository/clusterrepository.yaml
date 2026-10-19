@@ -25,4 +25,4 @@ spec:
     timezone: Europe/Amsterdam
   parameters:
     epoch:
-      minDuration: 6h
+      minDuration: 3h
