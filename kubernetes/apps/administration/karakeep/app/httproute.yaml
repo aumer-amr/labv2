@@ -8,7 +8,7 @@ metadata:
       conditions: ["[STATUS] == 200"]
 spec:
   hostnames:
-    - karakeep.${SECRET_DOMAIN}
+    - karakeep.aumer.dev
   parentRefs:
     - name: envoy-internal
       namespace: network

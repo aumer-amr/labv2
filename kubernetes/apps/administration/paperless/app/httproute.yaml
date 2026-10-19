@@ -9,7 +9,7 @@ metadata:
       conditions: ["[STATUS] == 200"]
 spec:
   hostnames:
-    - paperless.${SECRET_DOMAIN}
+    - paperless.aumer.dev
   parentRefs:
     - name: envoy-internal
       namespace: network

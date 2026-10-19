@@ -9,7 +9,7 @@ metadata:
       conditions: ["[STATUS] == 200"]
 spec:
   hostnames:
-    - actual.${SECRET_DOMAIN}
+    - actual.aumer.dev
   parentRefs:
     - name: envoy-internal
       namespace: network
