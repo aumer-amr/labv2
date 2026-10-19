@@ -9,7 +9,7 @@ metadata:
       path: /healthz
       conditions: ["[STATUS] == 200"]
 spec:
-  hostnames: ["konflate.${SECRET_DOMAIN}"]
+  hostnames: ["konflate.aumer.dev"]
   parentRefs:
     - name: envoy-external
       namespace: network
@@ -39,7 +39,7 @@ spec:
       filters:
         - type: RequestRedirect
           requestRedirect:
-            hostname: konflate-mcp.${SECRET_DOMAIN}
+            hostname: konflate-mcp.aumer.dev
             statusCode: 302
     - name: ui
       matches:
@@ -56,7 +56,7 @@ kind: HTTPRoute
 metadata:
   name: konflate-mcp
 spec:
-  hostnames: ["konflate-mcp.${SECRET_DOMAIN}"]
+  hostnames: ["konflate-mcp.aumer.dev"]
   parentRefs:
     - name: envoy-internal
       namespace: network

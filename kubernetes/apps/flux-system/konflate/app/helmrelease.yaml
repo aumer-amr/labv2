@@ -20,7 +20,7 @@ spec:
       statusChecks: true
       # The rendered-summary workflow owns the revision-bound PR summary.
       prComments: false
-      publicUrl: https://konflate.${SECRET_DOMAIN}
+      publicUrl: https://konflate.aumer.dev
       mcp: true
       verifyImages: true
     secret:

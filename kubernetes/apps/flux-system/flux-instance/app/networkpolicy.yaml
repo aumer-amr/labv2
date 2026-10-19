@@ -228,8 +228,8 @@ spec:
               - matchPattern: "*.mirror.gcr.io"
               - matchName: registry.erwanleboucher.dev
               - matchName: notification-controller.flux-system.svc.cluster.local
-              - matchName: ocharted.${SECRET_DOMAIN}
-              - matchPattern: "*.ocharted.${SECRET_DOMAIN}"
+              - matchName: ocharted.aumer.dev
+              - matchPattern: "*.ocharted.aumer.dev"
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -253,8 +253,8 @@ spec:
               - matchPattern: "*.mirror.gcr.io"
               - matchName: registry.erwanleboucher.dev
               - matchName: notification-controller.flux-system.svc.cluster.local
-              - matchName: ocharted.${SECRET_DOMAIN}
-              - matchPattern: "*.ocharted.${SECRET_DOMAIN}"
+              - matchName: ocharted.aumer.dev
+              - matchPattern: "*.ocharted.aumer.dev"
     - toFQDNs:
         - matchName: codeberg.org
         - matchName: github.com
@@ -268,7 +268,7 @@ spec:
         - matchName: mirror.gcr.io
         - matchPattern: "*.mirror.gcr.io"
         - matchName: registry.erwanleboucher.dev
-        - matchName: ocharted.${SECRET_DOMAIN}
+        - matchName: ocharted.aumer.dev
       toPorts:
         - ports:
             - port: "443"
