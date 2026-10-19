@@ -105,7 +105,7 @@ spec:
               protocol: UDP
           rules:
             dns:
-              - matchName: idm.${SECRET_DOMAIN}
+              - matchName: idm.aumer.dev
               - matchName: litellm.ai.svc.cluster.local
               - matchName: piper.ai.svc.cluster.local
               - matchName: open-webui-valkey.ai.svc.cluster.local
@@ -121,14 +121,14 @@ spec:
               protocol: TCP
           rules:
             dns:
-              - matchName: idm.${SECRET_DOMAIN}
+              - matchName: idm.aumer.dev
               - matchName: litellm.ai.svc.cluster.local
               - matchName: piper.ai.svc.cluster.local
               - matchName: open-webui-valkey.ai.svc.cluster.local
               - matchName: searxng.ai.svc.cluster.local
               - matchName: qwen3-reranker-0-6b.ai.svc.cluster.local
     - toFQDNs:
-        - matchName: idm.${SECRET_DOMAIN}
+        - matchName: idm.aumer.dev
       toPorts:
         - ports:
             - port: "443"

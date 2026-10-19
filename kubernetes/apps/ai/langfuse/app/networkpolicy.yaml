@@ -107,7 +107,7 @@ spec:
       app.kubernetes.io/name: langfuse
   egress:
     - toFQDNs:
-        - matchName: idm.${SECRET_DOMAIN}
+        - matchName: idm.aumer.dev
       toPorts:
         - ports:
             - port: "443"

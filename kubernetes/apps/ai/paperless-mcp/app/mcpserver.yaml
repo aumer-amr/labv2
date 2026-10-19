@@ -32,7 +32,7 @@ spec:
       - name: PAPERLESS_URL
         value: http://paperless.administration.svc.cluster.local:8000
       - name: PAPERLESS_PUBLIC_URL
-        value: https://paperless.${SECRET_DOMAIN}
+        value: https://paperless.aumer.dev
     volumes:
       - name: tmp
         emptyDir: {}

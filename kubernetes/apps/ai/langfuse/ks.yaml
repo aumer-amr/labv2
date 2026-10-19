@@ -61,9 +61,6 @@ spec:
   interval: 1h
   path: ./kubernetes/apps/ai/langfuse/clickhouse
   postBuild:
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
     substitute:
       APP: langfuse-clickhouse
       NAMESPACE: ai

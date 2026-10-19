@@ -84,8 +84,8 @@ spec:
                   secretKeyRef:
                     name: open-webui-litellm
                     key: key
-              OPENID_PROVIDER_URL: https://idm.${SECRET_DOMAIN}/oauth2/openid/open-webui/.well-known/openid-configuration
-              OPENID_REDIRECT_URI: https://chat.${SECRET_DOMAIN}/oauth/oidc/callback
+              OPENID_PROVIDER_URL: https://idm.aumer.dev/oauth2/openid/open-webui/.well-known/openid-configuration
+              OPENID_REDIRECT_URI: https://chat.aumer.dev/oauth/oidc/callback
               RAG_EMBEDDING_ENGINE: openai
               RAG_EMBEDDING_MODEL: qwen3-embedding
               RAG_OPENAI_API_BASE_URL: http://litellm.ai.svc.cluster.local:4000/v1
@@ -106,7 +106,7 @@ spec:
               TASK_MODEL_EXTERNAL: gpt-6-luna
               TZ: Europe/Amsterdam
               WEB_SEARCH_ENGINE: searxng
-              WEBUI_URL: https://chat.${SECRET_DOMAIN}
+              WEBUI_URL: https://chat.aumer.dev
               WEBSOCKET_MANAGER: redis
             envFrom:
               - secretRef:
