@@ -10,6 +10,6 @@ components:
 
 resources:
   - ./namespace.yaml
-  - ./network-policies/kopiur-mover.yaml
+  - ./network-policies/networkpolicy.yaml
   - ./kanidm/ks.yaml
   - ./network-policies/ks.yaml

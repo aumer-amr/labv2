@@ -10,7 +10,7 @@ components:
 
 resources:
   - ./namespace.yaml
-  - ./network-policies/kopiur-mover.yaml
+  - ./network-policies/networkpolicy.yaml
   - ./actual/ks.yaml
   - ./karakeep/ks.yaml
   - ./paperless/ks.yaml
