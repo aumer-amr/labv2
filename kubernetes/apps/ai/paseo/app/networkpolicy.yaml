@@ -110,6 +110,7 @@ spec:
               - matchName: github.com
               - matchName: api.github.com
               - matchName: raw.githubusercontent.com
+              - matchName: k8s-schemas.home-operations.com
               - matchName: objects.githubusercontent.com
               - matchName: release-assets.githubusercontent.com
               - matchName: registry.npmjs.org
@@ -135,6 +136,7 @@ spec:
               - matchName: github.com
               - matchName: api.github.com
               - matchName: raw.githubusercontent.com
+              - matchName: k8s-schemas.home-operations.com
               - matchName: objects.githubusercontent.com
               - matchName: release-assets.githubusercontent.com
               - matchName: registry.npmjs.org
@@ -151,6 +153,7 @@ spec:
         - matchName: github.com
         - matchName: api.github.com
         - matchName: raw.githubusercontent.com
+        - matchName: k8s-schemas.home-operations.com
         - matchName: objects.githubusercontent.com
         - matchName: release-assets.githubusercontent.com
         - matchName: registry.npmjs.org
