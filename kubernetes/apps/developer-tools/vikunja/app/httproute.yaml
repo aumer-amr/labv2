@@ -9,7 +9,7 @@ metadata:
       conditions: ["[STATUS] == 200", "[BODY].status == OK"]
 spec:
   hostnames:
-    - vikunja.${SECRET_DOMAIN}
+    - vikunja.aumer.dev
   parentRefs:
     - name: envoy-internal
       namespace: network
