@@ -1,5 +1,13 @@
 # Repository Instructions
 
+## Persistent Skills
+
+- At the first user command in every session, load and activate the installed `caveman` and `ponytail` skills in `full` mode before handling the command. Keep both active until the user explicitly changes their intensity or disables them. Discover their installed locations rather than copying machine-specific paths.
+- Caveman applies to every response, including non-coding work. Brevity never overrides clarity, safety warnings, exact commands, required evidence, or complete answers explicitly requested by the user.
+- Ponytail governs coding, architecture, dependency, and implementation decisions. It does not reduce required analysis, validation, security controls, accessibility, recovery behavior, or repository-mandated coverage.
+- These preferences remain subordinate to platform/runtime instructions and repository safeguards. If a required skill is unavailable, report the gap rather than claiming activation.
+- `stop caveman` disables only Caveman. `stop ponytail` disables only Ponytail. For `normal mode`, ask which skill the user wants disabled.
+
 ## Environment
 
 - Use the repository kubeconfig configured by `.mise/config.toml`; the cluster is remote.
@@ -11,8 +19,24 @@
 - Inspecting files and cluster state is allowed when relevant.
 - Obtain explicit permission before any live state change unless the current request authorizes the exact action and target. This includes apply, patch, annotate, scale, restart, delete, suspend, resume, and forced reconciliation.
 - Never commit or push unless explicitly requested. Permission to commit does not permit pushing.
+- Open or modify pull requests and publish review actions only when explicitly requested.
+- Ask when intent is materially ambiguous or a proposed choice materially changes scope, behavior, interfaces, persistence, authentication, dependencies, compatibility, cost, or external state beyond the current authorization. Proceed with low-risk choices supported by repository conventions and state the assumption briefly.
 - Never delete or recreate a resource without explicit permission and a verified recovery path.
 - Always prefer non-root containers. If root is the only viable option for a new application, warn the user and explain why before applying or committing it.
+
+## Evidence and Change Scope
+
+- Inspect affected execution paths, callers, configuration, installed versions, and regression risks before behavioral, dependency, security, data, or infrastructure changes.
+- Make the smallest complete change using existing helpers, dependencies, structure, and error handling. Add dependencies only when necessary and authorized; report adjacent issues separately unless they block the requested result.
+- For review, debugging, and analysis requests, do not force code changes after the question is answered with evidence.
+- Never fabricate paths, commits, APIs, configuration, capabilities, test results, or evidence. State uncertainty and verification gaps explicitly.
+- Before claiming completion, inspect the final diff, verify the requested result, update required tracking, and report relevant checks and any known unintended effects.
+
+## Current Documentation
+
+- For library, framework, SDK, API, CLI, or cloud-service questions, identify the installed or requested version and use Context7 when available. Resolve the library ID, then query with the user's full question. Discover these tools through LiteLLM first.
+- Verify high-risk, disputed, license, security, and exact-version claims against matching official documentation or upstream source. If Context7 is unavailable or lacks the version, use official documentation and state the fallback. Purpose-built official documentation tools take precedence for their own products.
+- Context7 is not required for business-logic debugging, general programming concepts, code review, refactoring without API questions, or scripts using only language-standard features.
 
 ## Issue Tracking
 
@@ -33,6 +57,8 @@
 
 ## Required Validation
 
+- Preserve regression tests and update them when behavior changes. Use coverage proportional to the affected logic, boundaries, and runnable workflows; minimalism does not reduce required coverage.
+- Never weaken assertions, narrow required scope, reduce coverage, or skip required checks to obtain a pass. Report pre-existing failures separately and state exactly what remains unverified when full validation is impractical.
 - Run `git diff --check` for every change.
 - Run `oxfmt --check` on changed YAML, JSON, and Markdown files.
 - Build every touched Kustomize directory with `--load-restrictor=LoadRestrictionsNone`.
@@ -83,6 +109,7 @@ kubectl get httproutes.gateway.networking.k8s.io --all-namespaces
 ## Git Conventions
 
 - Preserve unrelated changes and stage explicit paths.
+- Never force-push to `main` or `master`.
 - Never stage, commit, or push documentation unless explicitly authorized; generic commit or push permission does not include documentation.
 - Split commits by Kubernetes namespace when practical.
 - Use Conventional Commits with namespace scope for `feat`, `fix`, and `chore`, for example `feat(observability): deploy Gatus sidecar`.
