@@ -47,7 +47,7 @@ spec:
               - name: victoria-logs
                 port: 9428
         hostnames:
-          - logs.${SECRET_DOMAIN}
+          - logs.aumer.dev
         parentRefs:
           - name: envoy-internal
             namespace: network

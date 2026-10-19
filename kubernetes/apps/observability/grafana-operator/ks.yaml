@@ -33,10 +33,6 @@ spec:
     - name: kube-prometheus-stack
     - name: rook-ceph-cluster
       namespace: rook-ceph
-  postBuild:
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
   interval: 1h
   path: ./kubernetes/apps/observability/grafana-operator/instance
   prune: true

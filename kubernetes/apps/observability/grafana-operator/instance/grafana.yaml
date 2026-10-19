@@ -21,8 +21,8 @@ spec:
     auth.generic_oauth:
       allow_assign_grafana_admin: "true"
       allow_sign_up: "true"
-      api_url: https://idm.${SECRET_DOMAIN}/oauth2/openid/grafana/userinfo
-      auth_url: https://idm.${SECRET_DOMAIN}/ui/oauth2
+      api_url: https://idm.aumer.dev/oauth2/openid/grafana/userinfo
+      auth_url: https://idm.aumer.dev/ui/oauth2
       client_id: grafana
       email_attribute_path: preferred_username
       enabled: "true"
@@ -31,7 +31,7 @@ spec:
       name: Kanidm
       role_attribute_path: "grafana_role == 'GrafanaAdmin' && 'GrafanaAdmin' || 'Viewer'"
       scopes: openid,profile,email,groups
-      token_url: https://idm.${SECRET_DOMAIN}/oauth2/token
+      token_url: https://idm.aumer.dev/oauth2/token
       use_pkce: "true"
       use_refresh_token: "true"
     log:
@@ -47,7 +47,7 @@ spec:
       disable_gravatar: "true"
     server:
       enable_gzip: "true"
-      root_url: https://grafana.${SECRET_DOMAIN}
+      root_url: https://grafana.aumer.dev
   deployment:
     spec:
       strategy:
@@ -98,7 +98,7 @@ spec:
           conditions: ["[STATUS] == 200"]
     spec:
       hostnames:
-        - grafana.${SECRET_DOMAIN}
+        - grafana.aumer.dev
       parentRefs:
         - name: envoy-internal
           namespace: network

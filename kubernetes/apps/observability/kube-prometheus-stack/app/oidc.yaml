@@ -51,9 +51,9 @@ spec:
       sectionName: ui
   oidc:
     provider:
-      issuer: https://idm.${SECRET_DOMAIN}/oauth2/openid/prometheus
-      authorizationEndpoint: https://idm.${SECRET_DOMAIN}/ui/oauth2
-      tokenEndpoint: https://idm.${SECRET_DOMAIN}/oauth2/token
+      issuer: https://idm.aumer.dev/oauth2/openid/prometheus
+      authorizationEndpoint: https://idm.aumer.dev/ui/oauth2
+      tokenEndpoint: https://idm.aumer.dev/oauth2/token
       backendRefs:
         - name: kanidm
           namespace: security
@@ -61,7 +61,7 @@ spec:
     clientID: prometheus
     clientSecret:
       name: prometheus-oidc-client
-    redirectURL: https://prometheus.${SECRET_DOMAIN}/oauth2/callback
+    redirectURL: https://prometheus.aumer.dev/oauth2/callback
     logoutPath: /logout
     scopes: [openid]
 ---
@@ -77,9 +77,9 @@ spec:
       sectionName: ui
   oidc:
     provider:
-      issuer: https://idm.${SECRET_DOMAIN}/oauth2/openid/alertmanager
-      authorizationEndpoint: https://idm.${SECRET_DOMAIN}/ui/oauth2
-      tokenEndpoint: https://idm.${SECRET_DOMAIN}/oauth2/token
+      issuer: https://idm.aumer.dev/oauth2/openid/alertmanager
+      authorizationEndpoint: https://idm.aumer.dev/ui/oauth2
+      tokenEndpoint: https://idm.aumer.dev/oauth2/token
       backendRefs:
         - name: kanidm
           namespace: security
@@ -87,6 +87,6 @@ spec:
     clientID: alertmanager
     clientSecret:
       name: alertmanager-oidc-client
-    redirectURL: https://alertmanager.${SECRET_DOMAIN}/oauth2/callback
+    redirectURL: https://alertmanager.aumer.dev/oauth2/callback
     logoutPath: /logout
     scopes: [openid]

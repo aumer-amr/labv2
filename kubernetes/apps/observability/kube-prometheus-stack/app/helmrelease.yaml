@@ -36,7 +36,7 @@ spec:
                 - name: kube-prometheus-stack-alertmanager
                   port: 9093
           hostnames:
-            - alertmanager.${SECRET_DOMAIN}
+            - alertmanager.aumer.dev
           parentRefs:
             - name: envoy-internal
               namespace: network
@@ -46,7 +46,7 @@ spec:
             network.home.arpa/from-envoy-internal: allow
         alertmanagerConfiguration:
           name: alertmanager
-        externalUrl: https://${SECRET_DOMAIN}
+        externalUrl: https://aumer.dev
         storage:
           volumeClaimTemplate:
             spec:
@@ -82,7 +82,7 @@ spec:
                 - name: kube-prometheus-stack-prometheus
                   port: 9090
           hostnames:
-            - prometheus.${SECRET_DOMAIN}
+            - prometheus.aumer.dev
           parentRefs:
             - name: envoy-internal
               namespace: network
@@ -90,7 +90,7 @@ spec:
         podMetadata:
           labels:
             network.home.arpa/from-envoy-internal: allow
-        externalUrl: https://prometheus.${SECRET_DOMAIN}
+        externalUrl: https://prometheus.aumer.dev
         podMonitorSelectorNilUsesHelmValues: false
         probeSelectorNilUsesHelmValues: false
         ruleSelectorNilUsesHelmValues: false
