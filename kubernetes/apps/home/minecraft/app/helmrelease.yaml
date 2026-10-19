@@ -13,6 +13,16 @@ spec:
     controllers:
       minecraft:
         strategy: Recreate
+        initContainers:
+          prepare-data:
+            image:
+              repository: docker.io/itzg/minecraft-server
+              tag: java21
+            command: ["mkdir", "-p", "/storage/aeronautics"]
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: ["ALL"]
         containers:
           app:
             image:
@@ -22,8 +32,8 @@ spec:
               TZ: Europe/Amsterdam
               EULA: "TRUE"
               TYPE: AUTO_CURSEFORGE
-              CF_SLUG: all-the-mods-10
-              CF_FILENAME_MATCHER: '/^All the Mods 10-8\.2\.zip$/'
+              CF_SLUG: all-the-mods-10-aeronautics
+              CF_FILE_ID: "9022977"
               MEMORY: 8G
               DIFFICULTY: normal
               VIEW_DISTANCE: "10"
@@ -76,7 +86,7 @@ spec:
         annotations:
           lbipam.cilium.io/ips: 10.10.1.117
           gatus.home-operations.com/endpoint: |-
-            name: Minecraft ATM10
+            name: Minecraft ATM10 Aeronautics
             group: internal
             url: tcp://10.10.1.117:25565
             interval: 1m
@@ -98,7 +108,12 @@ spec:
     persistence:
       data:
         existingClaim: minecraft
-        globalMounts:
-          - path: /data
+        advancedMounts:
+          minecraft:
+            prepare-data:
+              - path: /storage
+            app:
+              - path: /data
+                subPath: aeronautics
       tmp:
         type: emptyDir
