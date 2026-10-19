@@ -175,16 +175,3 @@ spec:
         type: emptyDir
         globalMounts:
           - path: /tmp
-    route:
-      app:
-        annotations:
-          gatus.home-operations.com/endpoint: 'conditions: ["[STATUS] == 200"]'
-        hostnames:
-          - karakeep.${SECRET_DOMAIN}
-        parentRefs:
-          - name: envoy-internal
-            namespace: network
-        rules:
-          - backendRefs:
-              - name: karakeep
-                port: 3000
