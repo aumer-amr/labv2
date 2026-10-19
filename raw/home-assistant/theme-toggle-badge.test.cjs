@@ -3,8 +3,23 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const vm = require("node:vm");
 let Badge;
+let reloads = 0;
+const icon = { setAttribute(key, value) { this[key] = value; } };
+const themeButton = {
+  disabled: false,
+  setAttribute(key, value) { this[key] = value; },
+  querySelector: () => icon,
+};
+const reloadButton = {};
 const context = vm.createContext({
-  HTMLElement: class {},
+  window: { location: { reload() { reloads++; } } },
+  HTMLElement: class {
+    attachShadow() {
+      return (this.shadowRoot = {
+        querySelector: (selector) => selector === "#reload" ? reloadButton : themeButton,
+      });
+    }
+  },
   CustomEvent: class {
     constructor(type, options) {
       Object.assign(this, { type }, options);
@@ -18,8 +33,13 @@ const context = vm.createContext({
 });
 vm.runInContext(fs.readFileSync(`${__dirname}/theme-toggle-badge.js`, "utf8"), context);
 const badge = new Badge();
-badge.button = { disabled: false, setAttribute(key, value) { this[key] = value; } };
-badge.icon = { setAttribute(key, value) { this[key] = value; } };
+badge.setConfig();
+assert.match(badge.shadowRoot.innerHTML, /aria-label="Reload page"/);
+reloadButton.onclick();
+assert.equal(reloads, 1, "Reload must work before Home Assistant connects");
+badge.setConfig();
+reloadButton.onclick();
+assert.equal(reloads, 2, "Repeated configuration must preserve the reload handler");
 let hass = {
   user: { is_admin: false },
   themes: { default_theme: "Graphite", theme: "Graphite Light", darkMode: false },
@@ -56,4 +76,4 @@ badge.dispatchEvent = (event) => {
 badge.toggle();
 assert.equal(events.at(-1).type, "hass-notification");
 assert.equal(badge.button.disabled, false);
-console.log("Theme toggle: repeated clicks with native darkMode false, read-only user, disabled guard and errors passed");
+console.log("Reload without HA and repeated setup; theme toggle, read-only user, disabled guard and errors passed");

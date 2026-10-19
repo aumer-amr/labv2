@@ -5,7 +5,8 @@ class ThemeToggleBadge extends HTMLElement {
     this.attachShadow({ mode: "open" }).innerHTML = `
       <style>
         :host { position: fixed; right: calc(20px + env(safe-area-inset-right, 0px));
-          bottom: calc(20px + env(safe-area-inset-bottom, 0px)); z-index: 5; }
+          bottom: calc(20px + env(safe-area-inset-bottom, 0px)); z-index: 5;
+          display: flex; gap: 12px; }
         button { width: 52px; height: 52px; border-radius: 50%; cursor: pointer;
           display: grid; place-items: center; border: 1px solid var(--divider-color);
           background: var(--card-background-color); color: var(--primary-text-color);
@@ -13,9 +14,13 @@ class ThemeToggleBadge extends HTMLElement {
         button:focus-visible { outline: 3px solid var(--primary-color); outline-offset: 3px; }
         button:disabled { opacity: .6; cursor: wait; }
       </style>
-      <button type="button"><ha-icon></ha-icon></button>`;
-    this.button = this.shadowRoot.querySelector("button");
-    this.icon = this.shadowRoot.querySelector("ha-icon");
+      <button id="reload" type="button" aria-label="Reload page">
+        <ha-icon icon="mdi:reload" aria-hidden="true"></ha-icon>
+      </button>
+      <button id="theme" type="button"><ha-icon></ha-icon></button>`;
+    this.shadowRoot.querySelector("#reload").onclick = () => window.location.reload();
+    this.button = this.shadowRoot.querySelector("#theme");
+    this.icon = this.button.querySelector("ha-icon");
     this.button.onclick = () => this.toggle();
     this.render();
   }
