@@ -92,18 +92,3 @@ spec:
         existingClaim: atuin
         globalMounts:
           - path: /config
-    route:
-      app:
-        annotations:
-          gatus.home-operations.com/endpoint: |-
-            path: /healthz
-            conditions: ["[STATUS] == 200"]
-        hostnames:
-          - atuin.${SECRET_DOMAIN}
-        parentRefs:
-          - name: envoy-internal
-            namespace: network
-        rules:
-          - backendRefs:
-              - name: atuin
-                port: 8888
