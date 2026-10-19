@@ -8,7 +8,7 @@ metadata:
       path: /healthz
       conditions: ["[STATUS] == 200"]
 spec:
-  hostnames: ["hubble.${SECRET_DOMAIN}"]
+  hostnames: ["hubble.aumer.dev"]
   parentRefs:
     - name: envoy-internal
       namespace: network
