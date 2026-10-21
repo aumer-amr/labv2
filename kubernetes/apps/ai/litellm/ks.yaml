@@ -6,6 +6,8 @@ metadata:
   name: litellm
 spec:
   dependsOn:
+    - name: langfuse
+      namespace: ai
     - name: barman-cloud
       namespace: database
     - name: cloudnative-pg

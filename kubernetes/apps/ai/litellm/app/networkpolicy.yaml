@@ -72,6 +72,14 @@ spec:
           protocol: TCP
   egress:
     - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: langfuse
+              app.kubernetes.io/component: web
+      ports:
+        - port: 3000
+          protocol: TCP
+    - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: developer-tools
@@ -220,6 +228,7 @@ spec:
               - matchName: konflate.flux-system.svc.cluster.local
               - matchName: litellm-rw.ai.svc.cluster.local
               - matchName: litellm-valkey.ai.svc.cluster.local
+              - matchName: langfuse-web.ai.svc.cluster.local
               - matchName: paperless-mcp.ai.svc.cluster.local
               - matchName: prometheus-mcp.ai.svc.cluster.local
               - matchName: kubernetes-mcp.ai.svc.cluster.local
@@ -251,6 +260,7 @@ spec:
               - matchName: konflate.flux-system.svc.cluster.local
               - matchName: litellm-rw.ai.svc.cluster.local
               - matchName: litellm-valkey.ai.svc.cluster.local
+              - matchName: langfuse-web.ai.svc.cluster.local
               - matchName: paperless-mcp.ai.svc.cluster.local
               - matchName: prometheus-mcp.ai.svc.cluster.local
               - matchName: kubernetes-mcp.ai.svc.cluster.local

@@ -50,6 +50,8 @@ spec:
     redis_port: os.environ/REDIS_PORT
     redis_password: os.environ/REDIS_PASSWORD
   litellmSettings:
+    callbacks:
+      - langfuse_otel
     mcp_tool_search:
       embedding_model: qwen3-embedding
     cache: true
@@ -121,6 +123,24 @@ spec:
       value: INFO
     - name: LITELLM_MODE
       value: PRODUCTION
+    - name: LITELLM_OTEL_V2
+      value: "true"
+    - name: LITELLM_OTEL_LANGFUSE_SPAN_SCOPE
+      value: llm_only
+    - name: OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
+      value: no_content
+    - name: LANGFUSE_OTEL_HOST
+      value: http://langfuse-web.ai.svc.cluster.local:3000
+    - name: LANGFUSE_PUBLIC_KEY
+      valueFrom:
+        secretKeyRef:
+          name: langfuse-secret
+          key: LANGFUSE_INIT_PROJECT_PUBLIC_KEY
+    - name: LANGFUSE_SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          name: langfuse-secret
+          key: LANGFUSE_INIT_PROJECT_SECRET_KEY
     - name: LITELLM_MASTER_KEY
       valueFrom:
         secretKeyRef:

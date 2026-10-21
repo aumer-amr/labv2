@@ -14,6 +14,13 @@ spec:
     - from:
         - podSelector:
             matchLabels:
+              app.kubernetes.io/name: litellm
+      ports:
+        - port: 3000
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
               gateway.envoyproxy.io/owning-gateway-name: envoy-internal
           namespaceSelector:
             matchLabels:
