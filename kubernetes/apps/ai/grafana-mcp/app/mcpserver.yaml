@@ -48,7 +48,7 @@ spec:
           - ALL
       readOnlyRootFilesystem: true
     # renovate: datasource=docker depName=docker.io/grafana/mcp-grafana
-    image: docker.io/grafana/mcp-grafana:2.0.2@sha256:78d208116ec52b09b44f0eca66892073b39aefcb64483c54d43255c8eab7e97a
+    image: docker.io/grafana/mcp-grafana:2.1.1@sha256:71a3f4e6f412d253611314233df709ec2571fb50e39742d23fa2940f670646dc
     port: 8000
     env:
       - name: GRAFANA_SERVICE_ACCOUNT_TOKEN
