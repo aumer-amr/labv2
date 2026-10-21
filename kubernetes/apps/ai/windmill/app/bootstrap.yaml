@@ -49,6 +49,18 @@ spec:
                     secretKeyRef:
                       name: windmill-secret
                       key: ADMIN_PASSWORD
+                - name: CLOUDFLARE_WAF_API_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: windmill-cloudflare-secret
+                      key: token
+                      optional: true
+                - name: GITHUB_HOOKS_LITELLM_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: windmill-github-hooks-litellm
+                      key: key
+                      optional: true
               securityContext:
                 allowPrivilegeEscalation: false
                 capabilities:

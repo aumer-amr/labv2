@@ -63,6 +63,10 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: hermes-monitor
+        - podSelector:
+            matchLabels:
+              release: windmill
+              app: windmill-workers
       ports:
         - port: 4000
           protocol: TCP

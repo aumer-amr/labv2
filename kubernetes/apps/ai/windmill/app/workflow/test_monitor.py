@@ -555,7 +555,8 @@ class BootstrapTests(unittest.TestCase):
             if path.endswith("/folders/get/cluster"):
                 return {"owners": ["u/owner"], "extra_perms": {"u/owner": True}}
             if "/scripts/get/p/" in path:
-                return {"content": source, "hash": "abc"}
+                content = Path(__file__).with_name("github_hooks.py").read_text() if path.endswith("github-hooks-sync") else source
+                return {"content": content, "hash": "abc"}
             if "/flows/get/" in path:
                 return {"value": {"modules": [{"id": "monitor", "value": {"type": "script", "path": bootstrap.PATH,
                                                                                  "input_transforms": {}}}]}}

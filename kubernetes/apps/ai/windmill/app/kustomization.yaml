@@ -11,6 +11,8 @@ resources:
   - ./bootstrap.yaml
   - ./httproute.yaml
   - ./bootstrap-service.yaml
+  - ./github-hooks-config.sops.yaml
+  - ./litellmvirtualkey.sops.yaml
 patches:
   - patch: |
       apiVersion: postgresql.cnpg.io/v1
@@ -60,6 +62,7 @@ configMapGenerator:
       - monitor.py=workflow/monitor.py
       - bootstrap.py=workflow/bootstrap.py
       - ready.py=workflow/ready.py
+      - github_hooks.py=workflow/github_hooks.py
 generatorOptions:
   disableNameSuffixHash: true
   annotations:

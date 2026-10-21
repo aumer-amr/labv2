@@ -33,6 +33,40 @@ def api(path, data=None, method=None, missing=False):
         return text
 
 
+def github_hooks(prefix):
+    path = "f/cluster/github-hooks-sync"
+    state = "f/cluster/github-hooks-state"
+    token_path = "f/cluster/github-hooks-token"
+    source = Path(__file__).with_name("github_hooks.py").read_text()
+    current = api(prefix + "/scripts/get/p/" + path, missing=True)
+    if current is None or current.get("content") != source:
+        payload = {"path": path, "summary": "Synchronize GitHub webhook ranges with Cloudflare",
+                   "content": source, "language": "python3", "lock": "", "timeout": 240,
+                   "concurrent_limit": 1, "description": "Repository-owned; alerts through Alertmanager"}
+        if current:
+            payload["parent_hash"] = current["hash"]
+        api(prefix + "/scripts/create", payload)
+    if api(prefix + "/resources/get_value/" + state, missing=True) is None:
+        api(prefix + "/resources/create", {"path": state, "resource_type": "state",
+                                          "value": {"version": 1}, "description": "Webhook range baseline and pending notifications"})
+    tokens = {token_path: os.environ.get("CLOUDFLARE_WAF_API_TOKEN"),
+              "f/cluster/github-hooks-litellm-key": os.environ.get("GITHUB_HOOKS_LITELLM_KEY")}
+    # Missing optional credentials must not activate a broken schedule or affect cluster monitoring.
+    if not all(tokens.values()):
+        return
+    for variable_path, token in tokens.items():
+        current_token = api(prefix + "/variables/get_value/" + variable_path, missing=True)
+        if current_token is None:
+            api(prefix + "/variables/create", {"path": variable_path, "value": token, "is_secret": True,
+                                              "description": "GitHub webhook sync credential; repository-owned"})
+        elif current_token != token:
+            api(prefix + "/variables/update/" + variable_path, {"value": token, "is_secret": True}, "POST")
+    if api(prefix + "/schedules/get/" + path, missing=True) is None:
+        api(prefix + "/schedules/create", {"path": path, "script_path": path, "is_flow": False,
+                                          "schedule": "0 17 * * * *", "timezone": "Europe/Amsterdam",
+                                          "enabled": True, "args": {}})
+
+
 def main():
     global API_TOKEN
     API_TOKEN = None
@@ -104,6 +138,7 @@ def main():
         api(prefix + "/schedules/create", {"path": PATH, "script_path": PATH, "is_flow": True,
                                           "schedule": "0 */15 * * * *", "timezone": "Europe/Amsterdam",
                                           "enabled": True, "args": {}, "no_flow_overlap": True})
+    github_hooks(prefix)
     print("Windmill shadow workflow registered; existing schedule state preserved")
 
 

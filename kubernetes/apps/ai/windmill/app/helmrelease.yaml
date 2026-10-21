@@ -115,6 +115,15 @@ spec:
               value: HERMES_API_KEY,LANGFUSE_PUBLIC_KEY,LANGFUSE_SECRET_KEY
           deploymentAnnotations:
             reloader.stakater.com/auto: "true"
+          volumes:
+            - name: github-hooks-config
+              secret:
+                secretName: windmill-github-hooks-config
+                defaultMode: 0440
+          volumeMounts:
+            - name: github-hooks-config
+              mountPath: /etc/github-hooks
+              readOnly: true
   postRenderers:
     - kustomize:
         patches:
