@@ -92,6 +92,17 @@ spec:
     - Egress
   ingress:
     - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
+              release: windmill
+              app: windmill-workers
+      ports:
+        - port: 9093
+          protocol: TCP
+    - from:
         - podSelector:
             matchLabels:
               app: grafana
