@@ -76,6 +76,10 @@ spec:
       workerGroups:
         - name: default
           replicas: 1
+          dnsConfig:
+            options:
+              - name: ndots
+                value: "1"
           privileged: false
           disableUnsharePid: true
           podSecurityContext: *id001
