@@ -155,6 +155,17 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: rook-ceph
+          podSelector:
+            matchLabels:
+              app: rook-ceph-mgr
+              rook_cluster: rook-ceph
+      ports:
+        - port: 9090
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
