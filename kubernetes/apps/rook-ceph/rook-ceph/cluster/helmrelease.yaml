@@ -37,6 +37,7 @@ spec:
           enabled: false
       dashboard:
         enabled: true
+        prometheusEndpoint: http://kube-prometheus-stack-prometheus.observability.svc.cluster.local:9090
         urlPrefix: /
         ssl: false
       healthCheck:
