@@ -378,6 +378,16 @@ class TicketTests(unittest.TestCase):
 
 
 class ConfigTests(unittest.TestCase):
+    def test_state_save_accepts_windmill_plain_text_acknowledgement(self):
+        with patch.dict(os.environ, {"BASE_INTERNAL_URL": "http://windmill.example.test", "WM_WORKSPACE": "test", "WM_TOKEN": "test-token"}), \
+             patch.object(sync.HTTP, "open", return_value=BytesIO(b"Resource value updated")):
+            sync.save({"version": 1})
+
+    def test_json_reads_still_reject_plain_text(self):
+        with patch.object(sync.HTTP, "open", return_value=BytesIO(b"unexpected plaintext")):
+            with self.assertRaises(json.JSONDecodeError):
+                sync.http("https://api.example.test")
+
     def test_mounted_configuration_loads_and_missing_fields_fail_closed(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "config.json"

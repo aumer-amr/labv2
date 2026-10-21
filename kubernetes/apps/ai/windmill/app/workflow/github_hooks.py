@@ -38,7 +38,7 @@ class NoRedirect(HTTPRedirectHandler):
 HTTP = build_opener(NoRedirect)
 
 
-def http(url, body=None, token=None, method=None):
+def http(url, body=None, token=None, method=None, json_response=True):
     headers = {"Content-Type": "application/json", "User-Agent": "GitHub-Hooks-Sync"}
     if token:
         headers["Authorization"] = "Bearer " + token
@@ -54,16 +54,16 @@ def http(url, body=None, token=None, method=None):
         raise RuntimeError("Upstream HTTP " + str(code)) from None
     if len(data) > 1_000_000:
         raise ValueError("Upstream response exceeded size limit")
-    return json.loads(data) if data else None
+    return json.loads(data) if data and json_response else None
 
 
-def wm(path, body=None, method=None):
+def wm(path, body=None, method=None, json_response=True):
     return http(os.environ["BASE_INTERNAL_URL"].rstrip("/") + "/api/w/"
-                + os.environ["WM_WORKSPACE"] + path, body, os.environ["WM_TOKEN"], method)
+                + os.environ["WM_WORKSPACE"] + path, body, os.environ["WM_TOKEN"], method, json_response)
 
 
 def save(state):
-    wm("/resources/update_value/" + config()["STATE"], {"value": state}, "POST")
+    wm("/resources/update_value/" + config()["STATE"], {"value": state}, "POST", json_response=False)
 
 
 def vikunja(name, arguments):
