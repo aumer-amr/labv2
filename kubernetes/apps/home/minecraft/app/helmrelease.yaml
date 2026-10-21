@@ -38,6 +38,7 @@ spec:
               DIFFICULTY: normal
               VIEW_DISTANCE: "10"
               ONLINE_MODE: "TRUE"
+              ALLOW_FLIGHT: "TRUE"
               ENABLE_RCON: "FALSE"
             probes:
               liveness: &probes
