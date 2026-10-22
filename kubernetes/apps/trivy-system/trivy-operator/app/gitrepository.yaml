@@ -7,5 +7,5 @@ metadata:
 spec:
   interval: 15m
   ref:
-    commit: 5171971e35c7b1d8a0e47a94a2326da4d97ff417
+    commit: 047f1d95f4f8355569aadbdad0f1c74550c6cbec
   url: https://github.com/aquasecurity/trivy-operator.git
