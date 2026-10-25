@@ -184,12 +184,42 @@ class GreetingTests(unittest.TestCase):
                          if "morning" in step.get("variables", {}))
         template = self.env.from_string(variables["morning"])
         self.states["input_datetime.surface_last_morning"] = "2026-10-12"
-        for hour, minute, expected in [(3, 59, "False"), (4, 0, "True"), (14, 0, "True")]:
+        for hour, minute, expected in [(3, 59, "False"), (4, 0, "True"),
+                                       (11, 59, "True"), (12, 0, "False"),
+                                       (14, 0, "False"), (16, 50, "False")]:
             wake = self.now.replace(hour=hour, minute=minute)
             trigger = SimpleNamespace(to_state=SimpleNamespace(attributes={"timestamp": wake.timestamp()}))
             self.assertEqual(template.render(trigger=trigger), expected)
         self.states["input_datetime.surface_last_morning"] = "2026-10-13"
         self.assertEqual(template.render(trigger=trigger), "False")
+
+    def test_morning_wake_cannot_become_a_noon_briefing(self):
+        variables = next(step["variables"] for step in ACTIONS
+                         if "morning" in step.get("variables", {}))
+        self.now = self.now.replace(hour=12)
+        wake = self.now - timedelta(seconds=20)
+        trigger = SimpleNamespace(to_state=SimpleNamespace(attributes={"timestamp": wake.timestamp()}))
+        self.assertEqual(self.env.from_string(variables["morning"]).render(trigger=trigger), "False")
+
+    def test_audio_recovery_waits_through_unavailable_until_ready(self):
+        wait = ACTIONS[2]["then"][0]
+        wake = self.now
+        trigger = SimpleNamespace(to_state=SimpleNamespace(attributes={"timestamp": wake.timestamp()}))
+        timeout = self.env.from_string(wait["timeout"]["seconds"])
+        budget = float(timeout.render(trigger=trigger, deadline=wake.timestamp() + 15))
+        self.assertGreater(budget, 21)
+        self.assertLessEqual(budget, 45)
+        self.assertFalse(wait["continue_on_timeout"])
+        ready = self.env.from_string(wait["wait_template"])
+        for elapsed, state, expected in [(0, "unknown", "False"),
+                                          (20, "unavailable", "False"),
+                                          (21, "off", "True"), (22, "idle", "True")]:
+            self.now = wake + timedelta(seconds=elapsed)
+            self.states["media_player.surface"] = state
+            self.assertEqual(ready.render(), expected)
+        # The wake, rather than each reconnect, bounds the recovery window.
+        self.now = wake + timedelta(seconds=46)
+        self.assertEqual(float(timeout.render(trigger=trigger)), 0)
 
     def test_arrival_requires_confirmed_absence_and_ignores_restored_presence(self):
         presence = SPEC["automations"]["surface_presence"]

@@ -276,15 +276,9 @@
           ],
           "then": [
             {
-              "wait_for_trigger": [
-                {
-                  "trigger": "state",
-                  "entity_id": "media_player.surface",
-                  "from": ["unknown", "unavailable"]
-                }
-              ],
+              "wait_template": "{{ states('media_player.surface') not in ['unknown','unavailable'] }}",
               "timeout": {
-                "seconds": "{{ [0, deadline | float - as_timestamp(now())] | max }}"
+                "seconds": "{{ [0, (trigger.to_state.attributes.timestamp | float) + 45 - as_timestamp(now())] | max }}"
               },
               "continue_on_timeout": false
             }
@@ -306,7 +300,7 @@
         },
         {
           "variables": {
-            "morning": "{{ (trigger.to_state.attributes.timestamp | float | timestamp_custom('%H', true) | int) >= 4 and states('input_datetime.surface_last_morning') != now().strftime('%Y-%m-%d') }}",
+            "morning": "{{ 4 <= (trigger.to_state.attributes.timestamp | float | timestamp_custom('%H', true) | int) < 12 and now().hour < 12 and states('input_datetime.surface_last_morning') != now().strftime('%Y-%m-%d') }}",
             "welcome": "{{ state_attr('input_datetime.surface_welcome_until','timestamp') | float(0) > as_timestamp(now()) }}",
             "personal_events": {},
             "birthday_events": {},
