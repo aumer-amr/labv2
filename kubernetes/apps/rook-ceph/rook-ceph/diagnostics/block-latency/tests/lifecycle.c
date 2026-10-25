@@ -48,6 +48,9 @@ int main(void)
     struct fixture_request internal = {&queue, 2, 0, 2};
     struct fixture_request other = {&other_queue, 0, 4096, 0};
 
+    // Attachment can observe starts with no matching completion hook yet.
+    AT(logical_start, a, 500); AT(issue, a, 510);
+    AT(release, other, 900);
     AT(logical_start, a, 1000); AT(issue, a, 1020);
     COMPLETE(a, 1160, 4096); AT(logical_done, a, 1165); AT(release, a, 1170);
 

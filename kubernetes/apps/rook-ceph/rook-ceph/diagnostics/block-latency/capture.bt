@@ -6,6 +6,7 @@ BEGIN
 }
 
 rawtracepoint:block_io_start
+/@armed/
 {
   $rq = (struct request *)arg0;
   $disk = $rq->q->disk;
@@ -27,6 +28,7 @@ rawtracepoint:block_io_start
 
 // Observe ALL device requests, including flush requests with no block_io_start.
 rawtracepoint:block_rq_issue
+/@armed/
 {
   $rq = (struct request *)arg0;
   $disk = $rq->q->disk;
@@ -98,6 +100,7 @@ rawtracepoint:block_rq_requeue
 }
 
 rawtracepoint:block_io_done
+/@armed/
 {
   $rq = (struct request *)arg0;
   // RQF_FLUSH_SEQ=1<<1: data-stage completion is not the logical completion.
@@ -167,6 +170,11 @@ rawtracepoint:block_rq_merge
 // Final free removes cancellations before pointer reuse; validate PMU attachment first.
 kprobe:__blk_mq_free_request
 {
+  // bpftrace 0.19 attaches raw tracepoints first and this sole kprobe last.
+  if (!@armed) {
+    @armed = (uint64)1;
+    printf("{\"event\":\"armed\",\"utc\":\"%s\"}\n", strftime("%FT%TZ", nsecs));
+  }
   $key = (uint64)arg0;
   if (@logical_start[$key]) {
     @coverage[@logical_meta[$key].0 & 255, 6] = count();
@@ -226,4 +234,5 @@ END
   clear(@stats);
   clear(@began);
   clear(@deadline);
+  clear(@armed);
 }

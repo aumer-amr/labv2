@@ -58,7 +58,7 @@ class RenderTests(unittest.TestCase):
 
 
 class SupervisorTests(unittest.TestCase):
-    def run_capture(self, lines=(), stay=False, duration="60", early=False):
+    def run_capture(self, lines=(), stay=False, duration="60", early=False, armed=True):
         with tempfile.TemporaryDirectory() as directory:
             tracer = Path(directory) / "bpftrace"
             tracer.write_text(
@@ -71,7 +71,8 @@ class SupervisorTests(unittest.TestCase):
                 " sys.exit(0)\n"
                 "signal.signal(signal.SIGINT, stop)\n"
                 "print('{\"event\":\"start\"}', flush=True)\n"
-                f"for line in {list(lines)!r}: print(line, flush=True)\n"
+                + ("print('{\"event\":\"armed\"}', flush=True)\n" if armed else "")
+                + f"for line in {list(lines)!r}: print(line, flush=True)\n"
                 + (
                     "while True: time.sleep(0.1)\n"
                     if stay
@@ -169,6 +170,11 @@ emit '{"event":"over_budget"}'
         self.assertEqual(result.returncode, 1)
         self.assertEqual(records(result.stdout)[-1]["reason"], "unexpected_exit")
 
+    def test_unarmed_capture_is_invalid(self):
+        result = self.run_capture(armed=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(records(result.stdout)[-1]["reason"], "attachment_not_ready")
+
 
 @unittest.skipUnless(KERNEL, "pass --kernel for actual local eBPF lifecycle tests")
 class LifecycleTests(unittest.TestCase):
@@ -251,6 +257,9 @@ class LifecycleTests(unittest.TestCase):
         self.assertEqual(self.logical[9000]["reason"], 4)
 
     def test_filter_merge_free_and_slow_trigger(self):
+        self.assertNotIn(500, self.logical)
+        self.assertNotIn("@coverage[0, 9]", self.output)
+        self.assertTrue(any(x["event"] == "armed" for x in self.events))
         self.assertNotIn(10000, self.logical)
         self.assertNotIn(5000, self.logical)
         self.assertNotIn(6000, self.logical)

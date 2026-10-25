@@ -16,6 +16,8 @@ mkfifo -m 600 "$fifo" || exit 1
 reason=deadline
 invalid=0
 started=0
+armed=0
+startup=$SECONDS
 stopped=0
 deadline_seen=0
 signal_at=-1
@@ -105,6 +107,7 @@ while :; do
     elif [[ -n $line ]]; then
       emit "$line"
       if [[ $line == *'"event":"start"'* ]]; then started=1; last_heartbeat=$SECONDS; fi
+      if [[ $line == *'"event":"armed"'* ]]; then armed=1; fi
       if [[ $line == *'"event":"stop"'* ]]; then stopped=1; fi
       if [[ $line == *'"event":"stop","deadline":1'* ]]; then deadline_seen=1; fi
       if [[ $line =~ \"monotonic_ns\":([0-9]+) ]]; then
@@ -123,6 +126,7 @@ while :; do
     if ((read_status == 1)); then break; fi
   fi
   if ((post_deadline >= 0 && SECONDS >= post_deadline)); then request_stop candidate_captured; fi
+  if ((!armed && SECONDS - startup > 90)); then invalid=1; request_stop attachment_not_ready; fi
   if ((SECONDS - last_heartbeat > 90)); then invalid=1; request_stop heartbeat_missing; fi
   if ((signal_at >= 0 && SECONDS - signal_at > 10)); then
     kill -KILL "$tracer" 2>/dev/null || true
@@ -135,6 +139,7 @@ exec 3<&-
 wait "$tracer"
 status=$?
 if ((signal_at < 0 && (!deadline_seen || duration == 0))); then invalid=1; reason=unexpected_exit; fi
-if ((status != 0 || !started || !stopped || logical_done == 0 || device_done == 0)); then invalid=1; fi
+if ((!armed && signal_at < 0)); then reason=attachment_not_ready; fi
+if ((status != 0 || !started || !armed || !stopped || logical_done == 0 || device_done == 0)); then invalid=1; fi
 printf '{"event":"result","reason":"%s","invalid":%d,"tracer_exit":%d,"logical_done":%d,"device_done":%d}\n' "$reason" "$invalid" "$status" "$logical_done" "$device_done"
 exit "$invalid"
