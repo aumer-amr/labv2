@@ -1,0 +1,73 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ceph-block-latency
+  labels:
+    app.kubernetes.io/name: ceph-block-latency
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ceph-block-latency
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: epyon
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      containers:
+        - name: tracer
+          image: quay.io/iovisor/bpftrace@sha256:ceeff3fb27b644dcec07f0da4fd725a1209a07a0b1a12079b99c80324a3568b2
+          command: [/bin/bash]
+          args: [/capture/run.sh, "0"]
+          env:
+            - name: TZ
+              value: UTC
+            - name: BPFTRACE_BTF
+              value: /sys/kernel/btf/vmlinux
+            - name: BPFTRACE_MAP_KEYS_MAX
+              value: "4096"
+            - name: BPFTRACE_PERF_RB_PAGES
+              value: "64"
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+              add: [BPF, PERFMON, SYS_RESOURCE]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          volumeMounts:
+            - name: capture
+              mountPath: /capture
+              readOnly: true
+            - name: btf
+              mountPath: /sys/kernel/btf
+              readOnly: true
+            - name: tracing
+              mountPath: /sys/kernel/tracing
+              readOnly: true
+            - name: temporary
+              mountPath: /tmp
+      volumes:
+        - name: capture
+          configMap:
+            name: ceph-block-latency
+        - name: btf
+          hostPath:
+            path: /sys/kernel/btf
+            type: Directory
+        - name: tracing
+          hostPath:
+            path: /sys/kernel/tracing
+            type: Directory
+        - name: temporary
+          emptyDir:
+            sizeLimit: 16Mi

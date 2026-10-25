@@ -1,0 +1,229 @@
+// Linux 6.18: logical flushes may share a separate physical REQ_OP_FLUSH request.
+BEGIN
+{
+  @began = nsecs;
+  printf("{\"event\":\"start\",\"schema\":1,\"device\":\"8:0\",\"duration_seconds\":%llu,\"slow_ms\":100,\"trigger_ms\":5000}\n", $1);
+}
+
+rawtracepoint:block_io_start
+{
+  $rq = (struct request *)arg0;
+  $disk = $rq->q->disk;
+  if ($disk->major == 8 && $disk->first_minor == 0) {
+    if (@logical_start[arg0]) {
+      @coverage[@logical_meta[arg0].0 & 255, 9] = count();
+      @stats[10] = count();
+    }
+    @logical_start[arg0] = nsecs;
+    @logical_meta[arg0] = ((uint64)$rq->cmd_flags, (uint64)$rq->__data_len);
+    @service[arg0] = (uint64)0;
+    @attempts[arg0] = (uint64)0;
+    @ends[arg0] = (uint64)0;
+    @requeues[arg0] = (uint64)0;
+    @ambiguous[arg0] = (uint64)0;
+    @stats[0] = count();
+  }
+}
+
+// Observe ALL device requests, including flush requests with no block_io_start.
+rawtracepoint:block_rq_issue
+{
+  $rq = (struct request *)arg0;
+  $disk = $rq->q->disk;
+  if ($disk->major == 8 && $disk->first_minor == 0) {
+    if (@device_start[arg0]) {
+      @device_bad[arg0] = (uint64)1;
+      if (@logical_start[arg0]) {
+        @ambiguous[arg0] = (uint64)1;
+      }
+      @stats[8] = count();
+    } else {
+      @device_start[arg0] = nsecs;
+      @device_meta[arg0] = ((uint64)$rq->cmd_flags, (uint64)$rq->__data_len);
+      @device_bad[arg0] = (uint64)0;
+    }
+    if (@logical_start[arg0]) {
+      @attempts[arg0] = @attempts[arg0] + (uint64)1;
+    }
+    @stats[2] = count();
+  }
+}
+
+rawtracepoint:block_rq_complete
+/@device_start[arg0]/
+{
+  $rq = (struct request *)arg0;
+  // This tracepoint runs before __data_len is reduced (blk_update_request).
+  if (arg2 < $rq->__data_len) {
+    @stats[5] = count();
+  } else {
+    $ns = nsecs - @device_start[arg0];
+    $ms = $ns / (uint64)1000000;
+    $meta = @device_meta[arg0];
+    if (@logical_start[arg0]) {
+      @service[arg0] = @service[arg0] + $ns;
+      @ends[arg0] = @ends[arg0] + (uint64)1;
+    }
+    if ($ms >= 100) {
+      printf("{\"event\":\"device\",\"utc\":\"%s\",\"id\":%llu,\"duration_ms\":%llu,\"op\":%llu,\"bytes\":%llu,\"error\":%llu,\"valid\":%llu,\"trigger\":%llu}\n", strftime("%FT%TZ", nsecs), @device_start[arg0], $ms, $meta.0 & 255, $meta.1, arg1, (uint64)1 - @device_bad[arg0], (uint64)($ms >= 5000));
+    }
+    @operations[2, $meta.0 & 255] = count();
+    @stats[3] = count();
+    delete(@device_start[arg0]);
+    delete(@device_meta[arg0]);
+    delete(@device_bad[arg0]);
+  }
+}
+
+rawtracepoint:block_rq_requeue
+{
+  if (@logical_start[arg0]) {
+    @requeues[arg0] = @requeues[arg0] + (uint64)1;
+    @stats[4] = count();
+  }
+  if (@device_start[arg0]) {
+    $ns = nsecs - @device_start[arg0];
+    $ms = $ns / (uint64)1000000;
+    if (@logical_start[arg0]) {
+      @service[arg0] = @service[arg0] + $ns;
+      @ends[arg0] = @ends[arg0] + (uint64)1;
+    }
+    if ($ms >= 100) {
+      printf("{\"event\":\"requeue\",\"utc\":\"%s\",\"id\":%llu,\"duration_ms\":%llu,\"op\":%llu,\"valid\":%llu,\"trigger\":%llu}\n", strftime("%FT%TZ", nsecs), @device_start[arg0], $ms, @device_meta[arg0].0 & 255, (uint64)1 - @device_bad[arg0], (uint64)($ms >= 5000));
+    }
+    delete(@device_start[arg0]);
+    delete(@device_meta[arg0]);
+    delete(@device_bad[arg0]);
+  }
+}
+
+rawtracepoint:block_io_done
+{
+  $rq = (struct request *)arg0;
+  // RQF_FLUSH_SEQ=1<<1: data-stage completion is not the logical completion.
+  if ($rq->rq_flags & 2) {
+    if (@logical_start[arg0]) {
+      @stats[11] = count();
+    }
+    return;
+  }
+  $disk = $rq->q->disk;
+  if (@logical_start[arg0]) {
+    $meta = @logical_meta[arg0];
+    $ns = nsecs - @logical_start[arg0];
+    $ms = $ns / (uint64)1000000;
+    $reason = (uint64)0;
+    $host = (int64)-1;
+    $driver = (int64)-1;
+    // __REQ_FUA=17 and __REQ_PREFLUSH=18 in Linux 6.18 blk_types.h.
+    if ($meta.0 & (((uint64)1 << 17) | ((uint64)1 << 18))) {
+      $reason = 1;
+    } else if (@ambiguous[arg0]) {
+      $reason = 3;
+    } else if (@attempts[arg0] == 0) {
+      $reason = 2;
+    } else if (@attempts[arg0] != @ends[arg0]) {
+      $reason = 4;
+    } else if (@service[arg0] > $ns) {
+      $reason = 5;
+    } else {
+      $host = (int64)(($ns - @service[arg0]) / (uint64)1000000);
+      $driver = (int64)(@service[arg0] / (uint64)1000000);
+    }
+    if ($ms >= 100) {
+      printf("{\"event\":\"logical\",\"utc\":\"%s\",\"id\":%llu,\"duration_ms\":%llu,\"outside_driver_ms\":%lld,\"driver_ms\":%lld,\"op\":%llu,\"bytes\":%llu,\"reason\":%llu,\"requeues\":%llu,\"trigger\":%llu}\n", strftime("%FT%TZ", nsecs), @logical_start[arg0], $ms, $host, $driver, $meta.0 & 255, $meta.1, $reason, @requeues[arg0], (uint64)($ms >= 5000));
+    }
+    @coverage[$meta.0 & 255, $reason] = count();
+    @operations[1, $meta.0 & 255] = count();
+    @stats[1] = count();
+    delete(@logical_start[arg0]);
+    delete(@logical_meta[arg0]);
+    delete(@service[arg0]);
+    delete(@attempts[arg0]);
+    delete(@ends[arg0]);
+    delete(@requeues[arg0]);
+    delete(@ambiguous[arg0]);
+  } else if ($disk->major == 8 && $disk->first_minor == 0) {
+    // Expected for requests already in flight when attachment begins.
+    @stats[9] = count();
+  }
+}
+
+// A merged request is freed without normal completion. Never age it as stuck.
+rawtracepoint:block_rq_merge
+/@logical_start[arg0]/
+{
+  @coverage[@logical_meta[arg0].0 & 255, 7] = count();
+  @stats[6] = count();
+  delete(@logical_start[arg0]);
+  delete(@logical_meta[arg0]);
+  delete(@service[arg0]);
+  delete(@attempts[arg0]);
+  delete(@ends[arg0]);
+  delete(@requeues[arg0]);
+  delete(@ambiguous[arg0]);
+}
+
+// Final free removes cancellations before pointer reuse; validate PMU attachment first.
+kprobe:__blk_mq_free_request
+{
+  $key = (uint64)arg0;
+  if (@logical_start[$key]) {
+    @coverage[@logical_meta[$key].0 & 255, 6] = count();
+    @stats[7] = count();
+    delete(@logical_start[$key]);
+    delete(@logical_meta[$key]);
+    delete(@service[$key]);
+    delete(@attempts[$key]);
+    delete(@ends[$key]);
+    delete(@requeues[$key]);
+    delete(@ambiguous[$key]);
+  }
+  if (@device_start[$key]) {
+    delete(@device_start[$key]);
+    delete(@device_meta[$key]);
+    delete(@device_bad[$key]);
+  }
+}
+
+interval:s:60
+{
+  printf("{\"event\":\"heartbeat\",\"monotonic_ns\":%llu}\n", nsecs);
+  // The supervisor converts these snapshots to ages and removes pointer keys.
+  print(@logical_start);
+  print(@device_start);
+  print(@coverage);
+  print(@operations);
+  print(@stats);
+  printf("{\"event\":\"snapshot_end\"}\n");
+}
+
+interval:s:1
+/$1 > 0 && (nsecs - @began) / (uint64)1000000000 >= $1/
+{
+  @deadline = (uint64)1;
+  exit();
+}
+
+END
+{
+  printf("{\"event\":\"stop\",\"deadline\":%llu}\n", @deadline);
+  print(@coverage);
+  print(@operations);
+  print(@stats);
+  clear(@logical_start);
+  clear(@logical_meta);
+  clear(@device_start);
+  clear(@device_meta);
+  clear(@device_bad);
+  clear(@service);
+  clear(@attempts);
+  clear(@ends);
+  clear(@requeues);
+  clear(@ambiguous);
+  clear(@coverage);
+  clear(@operations);
+  clear(@stats);
+  clear(@began);
+  clear(@deadline);
+}
