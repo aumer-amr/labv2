@@ -46,7 +46,7 @@ spec:
           - ALL
       readOnlyRootFilesystem: true
     # renovate: datasource=docker depName=ghcr.io/henfrydls/actual-budget-mcp
-    image: ghcr.io/henfrydls/actual-budget-mcp:0.10.9@sha256:41f54c2576bc3574e36eab7b2f6ad6afef4c3529cdad7cddf9d5e538089d09ec
+    image: ghcr.io/henfrydls/actual-budget-mcp:0.11.0@sha256:3387bd8e7a0e620d20801536435e5c54aa80a5e8d5872f49596febd6b0c34c42
     port: 8080
     env:
       - name: ACTUAL_SESSION_TOKEN
