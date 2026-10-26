@@ -57,7 +57,7 @@ spec:
               mountPath: /tmp
       containers:
         - name: mcp
-          image: ghcr.io/karakeep-app/karakeep-mcp:0.34.0@sha256:12146575839deef3fd694d28ec69ee77fb22937128818b48da131b8f775d3850
+          image: ghcr.io/karakeep-app/karakeep-mcp:0.34.1@sha256:2324608f8649dab13bc25705f83c80994baff0aee9e787f000e9fdbae3ad02aa
           # The official server is stdio-only; bridge it for the in-cluster proxy.
           command: [node, /gateway/node_modules/supergateway/dist/index.js]
           args:
