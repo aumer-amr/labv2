@@ -14,9 +14,9 @@ from urllib.error import HTTPError, URLError
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def read_yaml(path):
+def read_yaml(path, expression="."):
     return json.loads(subprocess.check_output(
-        ["yq", "-o=json", ".", str(ROOT / path)], text=True
+        ["yq", "-o=json", expression, str(ROOT / path)], text=True
     ))
 
 
@@ -70,6 +70,22 @@ providers = json.loads((ROOT / review["evidence-providers-file"]).read_text())
 assert providers["providers"][0]["command"] == ["python3", "scripts/pr-review-oci.py"]
 assert review["ai-base-url"].startswith("http://litellm.ai.svc.cluster.local:")
 assert "http://konflate.flux-system.svc.cluster.local:" in review["tool-mcp-servers"]
+
+# Mise's signed release verification needs Sigstore trust metadata on cold runners.
+policy = read_yaml("kubernetes/apps/actions-runners/pr-reviewer/app/networkpolicy.yaml",
+                   'select(.kind == "CiliumNetworkPolicy")')
+assert policy["spec"]["endpointSelector"]["matchLabels"] == {
+    "app.kubernetes.io/name": job["runs-on"],
+    "app.kubernetes.io/instance": job["runs-on"],
+    "app.kubernetes.io/component": "runner",
+}
+sigstore = {"matchName": "tuf-repo-cdn.sigstore.dev"}
+egress = policy["spec"]["egress"]
+for rule, protocol in zip(egress[:2], ["UDP", "TCP"], strict=True):
+    assert rule["toPorts"][0]["ports"] == [{"port": "53", "protocol": protocol}]
+    assert sigstore in rule["toPorts"][0]["rules"]["dns"]
+assert sigstore in egress[2]["toFQDNs"]
+assert egress[2]["toPorts"] == [{"ports": [{"port": "443", "protocol": "TCP"}]}]
 
 release = read_yaml("kubernetes/apps/actions-runners/pr-reviewer/app/helmrelease.yaml")
 values = release["spec"]["values"]

@@ -24,6 +24,7 @@ spec:
               - matchName: api.github.com
               - matchName: ghcr.io
               - matchName: codeload.github.com
+              - matchName: tuf-repo-cdn.sigstore.dev
               - matchPattern: "*.actions.githubusercontent.com"
               - matchPattern: "*.githubusercontent.com"
               - matchPattern: "*.blob.core.windows.net"
@@ -43,6 +44,7 @@ spec:
               - matchName: api.github.com
               - matchName: ghcr.io
               - matchName: codeload.github.com
+              - matchName: tuf-repo-cdn.sigstore.dev
               - matchPattern: "*.actions.githubusercontent.com"
               - matchPattern: "*.githubusercontent.com"
               - matchPattern: "*.blob.core.windows.net"
@@ -53,6 +55,7 @@ spec:
         - matchName: api.github.com
         - matchName: ghcr.io
         - matchName: codeload.github.com
+        - matchName: tuf-repo-cdn.sigstore.dev
         - matchPattern: "*.actions.githubusercontent.com"
         - matchPattern: "*.githubusercontent.com"
         - matchPattern: "*.blob.core.windows.net"
