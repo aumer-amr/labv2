@@ -84,6 +84,9 @@ int main(void)
     AT(logical_start, other, 10000); AT(issue, other, 10010);
     COMPLETE(other, 10120, 4096); AT(logical_done, other, 10130);
 
+    AT(logical_start, b, 11000); AT(logical_start, b, 11010);
+    AT(release, b, 11020);
+
     AT(logical_start, b, 20000); AT(issue, b, 20020);
     AT(logical_start, a, 30000); AT(issue, a, 30010);
     COMPLETE(a, 36010, 4096); AT(logical_done, a, 36020); AT(release, a, 36030);

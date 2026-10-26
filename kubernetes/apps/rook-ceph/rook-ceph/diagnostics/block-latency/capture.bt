@@ -12,6 +12,7 @@ rawtracepoint:block_io_start
   $disk = $rq->q->disk;
   if ($disk->major == 8 && $disk->first_minor == 0) {
     if (@logical_start[arg0]) {
+      printf("{\"event\":\"lifecycle_error\",\"utc\":\"%s\",\"reason\":\"logical_start_overwrite\",\"id\":%llu,\"age_ns\":%llu,\"previous_flags\":%llu,\"previous_bytes\":%llu,\"flags\":%llu,\"bytes\":%llu,\"rq_flags\":%llu}\n", strftime("%FT%TZ", nsecs), @logical_start[arg0], nsecs - @logical_start[arg0], @logical_meta[arg0].0, @logical_meta[arg0].1, (uint64)$rq->cmd_flags, (uint64)$rq->__data_len, (uint64)$rq->rq_flags);
       @coverage[@logical_meta[arg0].0 & 255, 9] = count();
       @stats[10] = count();
     }
@@ -34,6 +35,7 @@ rawtracepoint:block_rq_issue
   $disk = $rq->q->disk;
   if ($disk->major == 8 && $disk->first_minor == 0) {
     if (@device_start[arg0]) {
+      printf("{\"event\":\"lifecycle_error\",\"utc\":\"%s\",\"reason\":\"device_issue_repeat\",\"id\":%llu,\"age_ns\":%llu,\"previous_flags\":%llu,\"previous_bytes\":%llu,\"flags\":%llu,\"bytes\":%llu,\"rq_flags\":%llu,\"logical_id\":%llu,\"attempts\":%llu,\"ends\":%llu,\"requeues\":%llu}\n", strftime("%FT%TZ", nsecs), @device_start[arg0], nsecs - @device_start[arg0], @device_meta[arg0].0, @device_meta[arg0].1, (uint64)$rq->cmd_flags, (uint64)$rq->__data_len, (uint64)$rq->rq_flags, @logical_start[arg0], @attempts[arg0], @ends[arg0], @requeues[arg0]);
       @device_bad[arg0] = (uint64)1;
       if (@logical_start[arg0]) {
         @ambiguous[arg0] = (uint64)1;

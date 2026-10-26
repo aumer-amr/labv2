@@ -256,6 +256,24 @@ class LifecycleTests(unittest.TestCase):
         self.assertEqual(self.logical[8000]["reason"], 3)
         self.assertEqual(self.logical[9000]["reason"], 4)
 
+    def test_repeated_issue_records_lifecycle_without_pointer(self):
+        event = next(x for x in self.events if x["event"] == "lifecycle_error")
+        self.assertEqual(event["reason"], "device_issue_repeat")
+        self.assertEqual(event["id"], 8010000000)
+        self.assertEqual(event["age_ns"], 10000000)
+        self.assertEqual(event["logical_id"], 8000000000)
+        self.assertEqual((event["previous_flags"], event["flags"]), (1, 1))
+        self.assertEqual((event["previous_bytes"], event["bytes"]), (4096, 4096))
+        self.assertEqual((event["attempts"], event["ends"], event["requeues"]), (1, 0, 0))
+        self.assertNotIn("pointer", event)
+
+    def test_overwritten_start_records_previous_request(self):
+        event = next(x for x in self.events if x.get("reason") == "logical_start_overwrite")
+        self.assertEqual(event["id"], 11000000000)
+        self.assertEqual(event["age_ns"], 10000000)
+        self.assertEqual((event["previous_flags"], event["flags"]), (1, 1))
+        self.assertEqual((event["previous_bytes"], event["bytes"]), (4096, 4096))
+
     def test_filter_merge_free_and_slow_trigger(self):
         self.assertNotIn(500, self.logical)
         self.assertNotIn("@coverage[0, 9]", self.output)
@@ -264,7 +282,7 @@ class LifecycleTests(unittest.TestCase):
         self.assertNotIn(5000, self.logical)
         self.assertNotIn(6000, self.logical)
         self.assertIn("@coverage[1, 7]: 1", self.output)
-        self.assertIn("@coverage[1, 6]: 1", self.output)
+        self.assertIn("@coverage[1, 6]: 2", self.output)
         self.assertEqual(self.logical[30000]["trigger"], 1)
         self.assertEqual(self.logical[30000]["duration_ms"], 6020)
 
