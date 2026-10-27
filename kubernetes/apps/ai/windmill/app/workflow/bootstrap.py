@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import time
+import uuid
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.parse import quote
@@ -16,10 +17,21 @@ PATH = "f/cluster/monitor"
 API_TOKEN = None
 
 
-def api(path, data=None, method=None, missing=False):
-    request = Request(BASE + path, data=json.dumps(data).encode() if data is not None else None,
+def api(path, data=None, method=None, missing=False, js=None):
+    content_type = "application/json"
+    body = json.dumps(data).encode() if data is not None else None
+    if js is not None:
+        boundary = "windmill-" + uuid.uuid4().hex
+        content_type = "multipart/form-data; boundary=" + boundary
+        body = ("--" + boundary + '\r\nContent-Disposition: form-data; name="app"\r\n'
+                "Content-Type: application/json\r\n\r\n" + json.dumps(data) + "\r\n--" + boundary
+                + '\r\nContent-Disposition: form-data; name="js"; filename="review.js"\r\n'
+                + "Content-Type: application/javascript\r\n\r\n" + js + "\r\n--" + boundary
+                + '\r\nContent-Disposition: form-data; name="css"; filename="review.css"\r\n'
+                + "Content-Type: text/css\r\n\r\n\r\n--" + boundary + "--\r\n").encode()
+    request = Request(BASE + path, data=body,
                       headers={"Authorization": "Bearer " + (API_TOKEN or os.environ["SUPERADMIN_SECRET"]),
-                               "Content-Type": "application/json"}, method=method)
+                               "Content-Type": content_type}, method=method)
     try:
         with urlopen(request, timeout=20) as response:
             text = response.read().decode()
@@ -31,6 +43,19 @@ def api(path, data=None, method=None, missing=False):
         return json.loads(text)
     except json.JSONDecodeError:
         return text
+
+
+def review_app(prefix):
+    path = "f/cluster/monitor-review"
+    source = Path(__file__).with_name("monitor-review.js").read_text()
+    value = {"files": {"/index.js": source}, "runnables": {}, "data": {}}
+    policy = {"execution_mode": "viewer", "triggerables": {}, "triggerables_v2": {}, "sandbox": False}
+    current = api(prefix + "/apps/get/p/" + path, missing=True)
+    if current and current.get("value") == value and all(current.get("policy", {}).get(k) == v for k, v in policy.items()):
+        return
+    payload = {"path": path, "summary": "Review monitoring drafts", "value": value, "policy": policy}
+    endpoint = "/apps/update_raw/" + path if current else "/apps/create_raw"
+    api(prefix + endpoint, payload, js=source)
 
 
 def github_hooks(prefix):
@@ -152,6 +177,7 @@ def main():
                                           "schedule": "0 */15 * * * *", "timezone": "Europe/Amsterdam",
                                           "enabled": True, "args": {}, "no_flow_overlap": True})
     github_hooks(prefix)
+    review_app(prefix)
     print("Windmill shadow workflow registered; existing schedule state preserved")
 
 

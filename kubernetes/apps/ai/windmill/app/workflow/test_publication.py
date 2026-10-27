@@ -227,6 +227,14 @@ class PublicationTests(unittest.TestCase):
 
 
 class SerializationTests(unittest.TestCase):
+    def test_listing_or_collection_with_approval_inputs_cannot_silently_succeed(self):
+        for action in ("collect", "drafts"):
+            for inputs in ({"draft_id": "observation"}, {"draft_hash": "hash"}, {"approve": True}):
+                with self.subTest(action=action, inputs=inputs), patch.object(monitor, "monitor_lock") as lock:
+                    with self.assertRaisesRegex(ValueError, "Nothing was approved.*Monitor Review app"):
+                        monitor.main(action=action, **inputs)
+                    lock.assert_not_called()
+
     def test_lock_covers_body_and_releases_on_failure(self):
         with patch.dict(os.environ, {"WM_JOB_ID": "owner-job"}), patch.object(monitor, "wm") as wm:
             with self.assertRaises(ValueError), monitor.monitor_lock():

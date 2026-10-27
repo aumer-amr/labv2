@@ -63,6 +63,7 @@ configMapGenerator:
       - bootstrap.py=workflow/bootstrap.py
       - ready.py=workflow/ready.py
       - github_hooks.py=workflow/github_hooks.py
+      - monitor-review.js=workflow/monitor-review.js
 generatorOptions:
   disableNameSuffixHash: true
   annotations:

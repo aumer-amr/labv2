@@ -719,6 +719,8 @@ def review_draft(settings, state, action, draft_id, draft_hash, approve):
 def main(action: str = "collect", draft_id: str = "", draft_hash: str = "", approve: bool = False):
     if action not in ("collect", "drafts", "approve", "reject"):
         raise ValueError("Unknown monitoring action")
+    if action in ("collect", "drafts") and (draft_id or draft_hash or approve):
+        raise ValueError("Nothing was approved. Open the Monitor Review app to review and approve a draft.")
     with monitor_lock():
         settings = wm("/resources/get_value/" + PUBLICATION_PATH)
         if settings.get("mode", "shadow") not in ("shadow", "approval_required"):

@@ -154,13 +154,29 @@ Bootstrap preserves these settings. To promote after verification, select
 set `paused` to `true`; select `shadow` to disable draft review as well. Collection
 continues in either mode. The scheduled flow always runs `collect`.
 
-In Windmill, open the script `f/cluster/monitor` and run action `drafts`. Review the
-returned title, description, verified query/window, correlation IDs, and expiry.
-To approve one draft, run the same script with action `approve`, copy its `id` to
-`draft_id` and its `hash` to `draft_hash`, and check `approve`. To reject it, use
-`reject` with the same ID and hash. There is no publisher schedule or approval link
-that bypasses login. The script checks the server-recorded job creator against the
-configured reviewer and rejects child jobs, scheduled jobs, and previews.
+Open [Monitoring review](https://windmill.aumer.dev/apps_raw/get/f/cluster/monitor-review?workspace=cluster)
+and sign in with the existing Windmill administrator account. Expand **Review
+evidence** on a draft, read the proposed task and its query/window references, then
+click **Approve and publish** or **Reject draft**. No IDs or hashes need to be
+entered. The buttons carry the exact draft displayed on screen; a refreshed or
+changed assessment cannot silently replace it during approval. Successful
+publication shows **Open Vikunja task**. Pending, paused, rejected, expired, and
+unconfirmed actions have explicit outcomes. A failed or unconfirmed action disables
+decision buttons until refresh; it does not automatically retry a publication.
+
+The app uses the existing signed-in viewer's Windmill session to invoke the same
+monitoring script. It introduces no credentials, external frontend dependencies,
+or publisher identity shared between viewers. Draft text is rendered as text,
+never executable HTML. Reviewer identity, exact draft hash, expiry, evidence,
+publication pause, and persisted approval are still enforced by the backend.
+There is no publisher schedule or approval link that bypasses login. The backend
+checks the server-recorded job creator and rejects child jobs, scheduled jobs,
+and previews.
+
+The script `f/cluster/monitor` remains available for collection and API clients.
+Its advanced approval actions still require exact ID/hash inputs. Collection or
+listing requests that also include approval fields fail explicitly instead of
+returning a misleading successful listing.
 
 A draft requires a currently persistent metric signal, fresh complete collection,
 a successful investigation and trace export, and a successful recorded MCP query

@@ -501,6 +501,35 @@ class MonitoringTests(unittest.TestCase):
 
 
 class BootstrapTests(unittest.TestCase):
+    def test_review_app_uses_viewer_session_and_uploads_bundle(self):
+        with patch.object(bootstrap, "api", side_effect=[None, "created"]) as api:
+            bootstrap.review_app("/w/cluster")
+        call = api.call_args
+        self.assertEqual(call.args[0], "/w/cluster/apps/create_raw")
+        self.assertEqual(call.args[1]["path"], "f/cluster/monitor-review")
+        self.assertEqual(call.args[1]["policy"], {
+            "execution_mode": "viewer", "triggerables": {}, "triggerables_v2": {}, "sandbox": False})
+        self.assertEqual(call.args[1]["value"]["files"]["/index.js"], call.kwargs["js"])
+        with patch.object(bootstrap, "api", side_effect=[{"value": {}, "policy": {}}, "updated"]) as api:
+            bootstrap.review_app("/w/cluster")
+        self.assertEqual(api.call_args.args[0], "/w/cluster/apps/update_raw/f/cluster/monitor-review")
+
+    def test_raw_app_upload_matches_windmill_multipart_contract(self):
+        from email import policy
+        from email.parser import BytesParser
+        payload = {"path": "f/cluster/monitor-review", "value": {"files": {"/index.js": "source"}}}
+        with patch.object(bootstrap, "urlopen", return_value=BytesIO(b'"created"')) as open_request, \
+             patch.object(bootstrap, "API_TOKEN", "test-session"):
+            self.assertEqual(bootstrap.api("/w/cluster/apps/create_raw", payload, js="source"), "created")
+        request = open_request.call_args.args[0]
+        body = BytesParser(policy=policy.default).parsebytes(
+            ("Content-Type: " + request.get_header("Content-type") + "\r\n\r\n").encode() + request.data)
+        parts = list(body.iter_parts())
+        self.assertEqual([p.get_param("name", header="Content-Disposition") for p in parts], ["app", "js", "css"])
+        self.assertEqual(json.loads(parts[0].get_content()), payload)
+        self.assertEqual(parts[1].get_content(), b"source")
+        self.assertEqual(parts[2].get_content(), "")
+
     def test_readiness_requires_owner_and_disabled_demo(self):
         owner = {"email": "owner@example.invalid", "disabled": False}
         self.assertFalse(readiness.ready([], owner["email"]))
@@ -510,7 +539,7 @@ class BootstrapTests(unittest.TestCase):
     def test_new_workspace_uses_automated_usernames(self):
         calls = []
 
-        def api(path, data=None, method=None, missing=False):
+        def api(path, data=None, method=None, missing=False, js=None):
             calls.append((path, data))
             if path == "/auth/login":
                 return "session-token"
@@ -547,7 +576,7 @@ class BootstrapTests(unittest.TestCase):
         calls = []
         source = Path(__file__).with_name("monitor.py").read_text()
 
-        def api(path, data=None, method=None, missing=False):
+        def api(path, data=None, method=None, missing=False, js=None):
             calls.append((path, data, method))
             if path == "/auth/login":
                 return "session-token"
@@ -567,6 +596,10 @@ class BootstrapTests(unittest.TestCase):
             if "/flows/get/" in path:
                 return {"value": {"modules": [{"id": "monitor", "value": {"type": "script", "path": bootstrap.PATH,
                                                                                  "input_transforms": {}}}]}}
+            if "/apps/get/p/" in path:
+                return {"value": {"files": {"/index.js": Path(__file__).with_name("monitor-review.js").read_text()},
+                                  "runnables": {}, "data": {}},
+                        "policy": {"execution_mode": "viewer", "triggerables": {}, "triggerables_v2": {}, "sandbox": False}}
             return {"existing": True}
 
         with patch.dict(os.environ, {"ADMIN_EMAIL": "owner@example.invalid", "ADMIN_PASSWORD": "x" * 32}), \
