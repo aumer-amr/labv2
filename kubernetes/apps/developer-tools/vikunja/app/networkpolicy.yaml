@@ -15,6 +15,16 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: krr
+      ports:
+        - port: 3456
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
