@@ -19,7 +19,7 @@ spec:
   postBuild:
     substitute:
       APP: minecraft
-      KOPIUR_CAPACITY: 20Gi
+      KOPIUR_CAPACITY: 60Gi
   prune: true
   sourceRef:
     kind: GitRepository
