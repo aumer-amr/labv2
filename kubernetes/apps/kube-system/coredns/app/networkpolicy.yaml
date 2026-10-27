@@ -245,6 +245,13 @@ spec:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
+              app.kubernetes.io/instance: paseo-automation
+              app.kubernetes.io/name: paseo-automation
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
               app.kubernetes.io/name: searxng
         - namespaceSelector:
             matchLabels:
