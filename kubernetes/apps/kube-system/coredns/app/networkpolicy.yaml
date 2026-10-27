@@ -500,6 +500,12 @@ spec:
               kubernetes.io/metadata.name: observability
           podSelector:
             matchLabels:
+              app.kubernetes.io/name: krr
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
               app.kubernetes.io/name: grafana-operator
         - namespaceSelector:
             matchLabels:
