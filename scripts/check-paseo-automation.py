@@ -75,6 +75,7 @@ assert codex["sandbox_mode"] == "workspace-write"
 assert codex["sandbox_workspace_write"]["network_access"] is False
 daemon = json.loads(config["data"]["paseo.json"])
 assert daemon["daemon"] == {"relay": {"enabled": False}, "mcp": {"enabled": False}}
+assert daemon["features"] == {"dictation": {"enabled": False}, "voiceMode": {"enabled": False}}
 for password in (None, ""):
     test_env = dict(os.environ)
     test_env.pop("PASEO_PASSWORD", None)

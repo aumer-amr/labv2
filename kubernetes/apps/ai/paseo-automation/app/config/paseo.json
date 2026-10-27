@@ -5,6 +5,10 @@
     "mcp": { "enabled": false }
   },
   "worktrees": { "root": "/workspace/worktrees" },
+  "features": {
+    "dictation": { "enabled": false },
+    "voiceMode": { "enabled": false }
+  },
   "agents": {
     "providers": {
       "codex": {
