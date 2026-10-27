@@ -15,9 +15,9 @@ spec:
       valuesKey: flux-metrics.yaml
   values:
     cleanPrometheusOperatorObjectNames: true
-    customRules:
-      etcdDatabaseHighFragmentationRatio:
-        for: 1h
+    defaultRules:
+      disabled:
+        etcdDatabaseHighFragmentationRatio: true
     alertmanager:
       route:
         main:

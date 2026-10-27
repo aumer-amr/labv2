@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - ./cilium-policy.yaml
   - ./dockerhub-rate-limit.yaml
+  - ./etcd-fragmentation.yaml
   - ./kopiur-snapshot-pending.yaml
   - ./kopiur-repository-index-blobs.yaml
   - ./oom-killed.yaml

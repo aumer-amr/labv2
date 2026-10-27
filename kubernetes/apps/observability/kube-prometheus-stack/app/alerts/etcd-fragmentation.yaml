@@ -1,0 +1,32 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: etcd-fragmentation
+spec:
+  groups:
+    - name: etcd-fragmentation
+      rules:
+        - alert: etcdDatabaseHighFragmentationRatio
+          annotations:
+            summary: etcd has over 256 MiB reclaimable and less than 50% database utilization.
+            description: >-
+              etcd member {{ $labels.instance }} uses less than 50% of its allocated
+              database and has over 256 MiB reclaimable. Plan sequential defragmentation
+              after taking a verified snapshot.
+            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/etcd/etcddatabasehighfragmentationratio
+          # Gate on space worth reclaiming, not live data oscillating around 100 MiB.
+          expr: |-
+            (
+              last_over_time(etcd_mvcc_db_total_size_in_use_in_bytes{job=~".*etcd.*"}[5m])
+              / last_over_time(etcd_mvcc_db_total_size_in_bytes{job=~".*etcd.*"}[5m])
+            ) < 0.5
+            and (
+              last_over_time(etcd_mvcc_db_total_size_in_bytes{job=~".*etcd.*"}[5m])
+              - last_over_time(etcd_mvcc_db_total_size_in_use_in_bytes{job=~".*etcd.*"}[5m])
+            ) > 268435456
+          for: 1h
+          keep_firing_for: 1h
+          labels:
+            severity: warning
