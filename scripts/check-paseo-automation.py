@@ -113,6 +113,13 @@ route = route_resource["spec"]
 assert route["hostnames"] == ["paseo-automation.aumer.dev"]
 assert route["parentRefs"] == [{"group": "gateway.networking.k8s.io", "kind": "Gateway",
                                "name": "envoy-internal", "namespace": "network"}]
+gateway_policies = documents((ROOT / "kubernetes/apps/network/envoy-gateway/app/networkpolicy.yaml").read_text())
+gateway = next(d for d in gateway_policies if d["metadata"]["name"] == "allow-from-envoy-internal")
+assert any(
+    {"k8sService": {"serviceName": "paseo-automation", "namespace": "ai"}} in rule.get("toServices", [])
+    and {"ports": [{"port": "6767", "protocol": "TCP"}]} in rule.get("toPorts", [])
+    for spec in gateway["specs"] for rule in spec.get("egress", [])
+), "Internal Envoy must be allowed to reach the daemon backend"
 
 flux = documents(run("flux", "build", "kustomization", "paseo-automation", "--path", str(APP),
                      "--kustomization-file", str(APP.parent / "ks.yaml"), "--dry-run"))

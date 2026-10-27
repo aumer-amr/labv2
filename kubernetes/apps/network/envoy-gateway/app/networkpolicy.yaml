@@ -412,6 +412,9 @@ specs:
           - k8sService:
               serviceName: paseo
               namespace: ai
+          - k8sService:
+              serviceName: paseo-automation
+              namespace: ai
         toPorts:
           - ports:
               - port: "6767"
