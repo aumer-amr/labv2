@@ -15,6 +15,18 @@
   },
   packageRules: [
     {
+      description: "Look up Windmill chart versions upstream of the private OCI proxy",
+      matchManagers: ["flux"],
+      matchFileNames: ["kubernetes/apps/ai/windmill/app/ocirepository.yaml"],
+      matchPackageNames: [
+        "ocharted.aumer.dev/windmill-labs.github.io/windmill-helm-charts/windmill",
+      ],
+      overrideDatasource: "helm",
+      overridePackageName: "windmill",
+      registryUrls: ["https://windmill-labs.github.io/windmill-helm-charts"],
+      versioning: "helm",
+    },
+    {
       description: "Let mise manage generated npm lock sidecars",
       matchManagers: ["npm"],
       matchFileNames: [".mise/locks/**"],
