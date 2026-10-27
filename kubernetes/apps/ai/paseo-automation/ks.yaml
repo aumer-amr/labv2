@@ -1,0 +1,33 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: paseo-automation
+spec:
+  components:
+    - ../../../../components/kopiur/backup
+  dependsOn:
+    - name: onepassword-connect
+      namespace: external-secrets
+    - name: envoy-gateway
+      namespace: network
+    - name: gvisor
+      namespace: kube-system
+    - name: kopiur
+      namespace: kube-system
+    - name: rook-ceph-cluster
+      namespace: rook-ceph
+  interval: 1h
+  path: ./kubernetes/apps/ai/paseo-automation/app
+  postBuild:
+    substitute:
+      APP: paseo-automation
+      NAMESPACE: ai
+      KOPIUR_CAPACITY: 10Gi
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: ai
+  wait: true

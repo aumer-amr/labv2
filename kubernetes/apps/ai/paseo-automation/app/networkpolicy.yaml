@@ -1,0 +1,71 @@
+# Configuration-derived flows; live cold-start and deny tests are rollout gates.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: paseo-automation
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: paseo-automation
+      app.kubernetes.io/name: paseo-automation
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: envoy-internal
+      ports:
+        - port: 6767
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: paseo-automation-external
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: paseo-automation
+      app.kubernetes.io/name: paseo-automation
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: api.openai.com
+              - matchName: auth.openai.com
+              - matchName: chatgpt.com
+              - matchName: ab.chatgpt.com
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: api.openai.com
+              - matchName: auth.openai.com
+              - matchName: chatgpt.com
+              - matchName: ab.chatgpt.com
+    - toFQDNs:
+        - matchName: api.openai.com
+        - matchName: auth.openai.com
+        - matchName: chatgpt.com
+        - matchName: ab.chatgpt.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

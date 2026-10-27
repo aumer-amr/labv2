@@ -1,0 +1,10 @@
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
+sandbox_mode = "workspace-write"
+cli_auth_credentials_store = "file"
+
+[features]
+multi_agent_v2 = false
+
+[sandbox_workspace_write]
+network_access = false
