@@ -21,3 +21,45 @@ spec:
       kind: CephCluster
       expr: |-
         status.ceph.health in ['HEALTH_OK']
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: minecraft
+      namespace: home
+      description: Minecraft stays stopped after the maintenance save
+      expr: |-
+        !has(object.metadata.annotations) ||
+        !('maintenance.home.arpa/tuppr-run' in object.metadata.annotations) ||
+        (object.spec.replicas == 0 &&
+         (!has(status.replicas) || status.replicas == 0) &&
+         (!has(status.terminatingReplicas) || status.terminatingReplicas == 0))
+  hooks:
+    pre:
+      - name: minecraft-save-stop
+        image: &maintenanceImage ghcr.io/fluxcd/flux-cli:v2.9.6@sha256:b1ac18156f227af9a524b842a96f2c20986c7a779ef721df3ba4e4540f449d76
+        command: [sh, /maintenance/maintenance.sh]
+        args: [pre]
+        serviceAccountName: tuppr-minecraft-maintenance
+        activeDeadlineSeconds: 600
+        backoffLimit: 0
+        volumes: &maintenanceVolumes
+          - name: maintenance
+            configMap:
+              name: tuppr-minecraft-maintenance
+          - name: tmp
+            emptyDir: {}
+        volumeMounts: &maintenanceMounts
+          - name: maintenance
+            mountPath: /maintenance
+            readOnly: true
+          - name: tmp
+            mountPath: /tmp
+    post:
+      - name: minecraft-restore
+        image: *maintenanceImage
+        command: [sh, /maintenance/maintenance.sh]
+        args: [post]
+        serviceAccountName: tuppr-minecraft-maintenance
+        activeDeadlineSeconds: 2400
+        backoffLimit: 0
+        volumes: *maintenanceVolumes
+        volumeMounts: *maintenanceMounts

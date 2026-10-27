@@ -4,5 +4,15 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - ./helmrelease.yaml
+  - ./minecraft-maintenance.yaml
   - ./networkpolicy.yaml
   - ./ocirepository.yaml
+configMapGenerator:
+  - name: tuppr-minecraft-maintenance
+    files:
+      - maintenance.sh=../maintenance/maintenance.sh
+      - save.sh=../maintenance/save.sh
+generatorOptions:
+  disableNameSuffixHash: true
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled

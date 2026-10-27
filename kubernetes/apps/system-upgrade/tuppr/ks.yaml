@@ -33,6 +33,8 @@ spec:
       namespace: kube-system
     - name: rook-ceph-cluster
       namespace: rook-ceph
+    - name: minecraft
+      namespace: home
   interval: 1h
   path: ./kubernetes/apps/system-upgrade/tuppr/upgrades
   prune: true

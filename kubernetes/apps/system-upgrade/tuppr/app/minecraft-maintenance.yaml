@@ -1,0 +1,29 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tuppr-minecraft-maintenance
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tuppr-minecraft-maintenance
+rules:
+  - apiGroups: [tuppr.home-operations.com]
+    resources: [talosupgrades]
+    resourceNames: [talos]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tuppr-minecraft-maintenance
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tuppr-minecraft-maintenance
+subjects:
+  - kind: ServiceAccount
+    name: tuppr-minecraft-maintenance
+    namespace: system-upgrade
