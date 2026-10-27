@@ -7,18 +7,23 @@ import hashlib
 import json
 import math
 import os
+import re
 import time
 import uuid
+from contextlib import contextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 from urllib.error import HTTPError
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 
 PROMETHEUS = "http://kube-prometheus-stack-prometheus.observability.svc.cluster.local:9090"
 HERMES = "http://hermes-monitor.ai.svc.cluster.local:8642"
 LANGFUSE = "http://langfuse-web.ai.svc.cluster.local:3000"
 STATE_PATH = "f/cluster/monitor-state"
+PUBLICATION_PATH = "f/cluster/monitor-publication"
+LOCK_PATH = "f/cluster/monitor-lock"
 MAX_SIGNALS = 500
 QUERIES = {
     "restarts": 'sum by (namespace,pod,container) (increase(kube_pod_container_status_restarts_total{container!=""}[1h])) >= 3',
@@ -40,6 +45,14 @@ REQUIRED_METRICS = (
 )
 
 
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+HTTP = build_opener(NoRedirect)
+
+
 def http(url, body=None, token=None, method=None, timeout=30, headers=None):
     request_headers = {"Content-Type": "application/json", **(headers or {})}
     if token:
@@ -50,7 +63,7 @@ def http(url, body=None, token=None, method=None, timeout=30, headers=None):
         headers=request_headers,
         method=method,
     )
-    with urlopen(request, timeout=timeout) as response:
+    with HTTP.open(request, timeout=timeout) as response:
         data = response.read(2_000_001)
     if len(data) > 2_000_000:
         raise ValueError("Response exceeded monitoring limit")
@@ -240,8 +253,40 @@ def successful_query(message):
 def investigation_tools(session_id):
     messages = http(HERMES + "/api/sessions/" + session_id + "/messages",
                     token=os.environ["HERMES_API_KEY"], timeout=10).get("data", [])
-    return [{"name": message.get("tool_name", "tool"), "query_success": successful_query(message)}
-            for message in messages if message.get("role") == "tool"]
+    calls = {}
+    for message in messages:
+        for call in message.get("tool_calls") or []:
+            try:
+                arguments = call["function"]["arguments"]
+                calls[call["id"]] = json.loads(arguments) if isinstance(arguments, str) else arguments
+            except (KeyError, ValueError, TypeError):
+                continue
+    activity = []
+    for message in messages:
+        if message.get("role") != "tool":
+            continue
+        entry = {"name": message.get("tool_name", "tool"), "query_success": successful_query(message)}
+        arguments = calls.get(message.get("tool_call_id"), {})
+        query_arguments = arguments.get("arguments", {}) if isinstance(arguments, dict) else {}
+        if entry["query_success"] and isinstance(query_arguments, dict):
+            entry["query_arguments"] = {k: query_arguments[k] for k in ("query", "start_time", "end_time", "step", "time")
+                                        if k in query_arguments}
+        activity.append(entry)
+    return activity
+
+
+def metric_history(item):
+    expression = item["query"]
+    keys = ("namespace", "pod", "container") if item["check"] == "memory_pressure" else sorted(item["labels"])
+    selectors = ",".join(key + "=" + json.dumps(item["labels"][key]) for key in keys)
+    if not selectors or expression != QUERIES[item["check"]]:
+        raise ValueError("History requires a known check and affected-resource labels")
+    if item["check"] == "memory_pressure":
+        expression = expression.removesuffix(" > 0.85")
+    for metric in REQUIRED_METRICS:
+        expression = re.sub(r"\b" + metric + r"\b(\{)?",
+                            lambda match: metric + "{" + selectors + ("," if match[1] else "}"), expression)
+    return "sum(" + expression + ")"
 
 
 def investigate(item, timeout=360):
@@ -267,19 +312,13 @@ def _investigate(item, timeout, diagnostics):
     log_guidance = ""
     metric_guidance = ""
     if item["check"] != "scheduled_log_review":
-        expression = item["query"]
-        if item["check"] == "memory_pressure":
-            selectors = ",".join(key + "=" + json.dumps(item["labels"][key])
-                                 for key in ("namespace", "pod", "container"))
-            expression = expression.removesuffix(" > 0.85").replace("{", "{" + selectors + ",")
-        baseline = {"query": "sum(" + expression + ")", "start_time": str(now - 21600),
+        baseline = {"query": metric_history(item), "start_time": str(now - 21600),
                     "end_time": str(now), "step": "30m", "truncation_limit": 40}
         metric_guidance = (
             "Use this bounded metric history: " + json.dumps(baseline)
-            + ". The sum yields one series; memory_pressure is scoped to the observed container and "
-            "includes values below the alert threshold. Other checks summarize matching signals across "
-            "the cluster, not just the observed workload. Do not infer individual workload history from "
-            "cluster totals. After this query, assess the available evidence without more tool calls. "
+            + ". The sum yields one series scoped to the observed resource's labels. memory_pressure "
+            "includes values below the alert threshold; other checks retain their alert filter. "
+            "A forecast is not current free capacity. After this query, assess the available evidence without more tool calls. "
         )
     if item["check"] == "scheduled_log_review":
         start, end = item["review_start"], item["review_end"]
@@ -392,7 +431,7 @@ def _investigate(item, timeout, diagnostics):
     return assessment
 
 
-def trace(run_id, item, assessment, start, end, error=None):
+def trace(run_id, item, assessment, start, end, error=None, mode="shadow"):
     auth = base64.b64encode((os.environ["LANGFUSE_PUBLIC_KEY"] + ":" + os.environ["LANGFUSE_SECRET_KEY"]).encode()).decode()
     trace_id = uuid.uuid4().hex
     attributes = {
@@ -417,7 +456,7 @@ def trace(run_id, item, assessment, start, end, error=None):
         "startTimeUnixNano": str(int(start * 1_000_000_000)), "endTimeUnixNano": str(int(end * 1_000_000_000)),
         "attributes": [{"key": key, "value": {"stringValue": value}} for key, value in attributes.items()] + [
             {"key": "langfuse.trace.tags", "value": {"arrayValue": {"values": [
-                {"stringValue": "shadow"}, {"stringValue": item["check"]},
+                {"stringValue": mode}, {"stringValue": item["check"]},
             ]}}},
         ],
         "status": {"code": 2, "message": error} if error else {"code": 1},
@@ -445,7 +484,7 @@ def trace(run_id, item, assessment, start, end, error=None):
     return trace_id
 
 
-def main():
+def collect_main(mode="shadow"):
     run_deadline = time.monotonic() + 510
     now = time.time()
     state = wm("/resources/get_value/" + STATE_PATH)
@@ -473,7 +512,7 @@ def main():
         review["review_end"] = now
         review["coverage_gap_seconds"] = max(0, review["review_start"] - previous_end)
         candidates.insert(0, review)
-    state["last_run"] = {"at": now, "coverage": "metrics_complete", "signals": len(evidence), "mode": "shadow"}
+    state["last_run"] = {"at": now, "coverage": "metrics_complete", "signals": len(evidence), "mode": mode}
     save(state)
     investigated = []
     for item in candidates[:2]:
@@ -485,6 +524,7 @@ def main():
         # Count attempts for observability; there is no daily investigation cap.
         state["budget"]["investigations"] += 1
         item["last_investigated"] = time.time()
+        item["investigation_job_id"] = os.environ.get("WM_JOB_ID", "manual")
         save(state)
         started = time.time()
         error = None
@@ -505,7 +545,7 @@ def main():
                 stop_unconfirmed = True
         save(state)
         try:
-            item["trace_id"] = trace(os.environ.get("WM_JOB_ID", "manual"), item, assessment, started, time.time(), error)
+            item["trace_id"] = trace(os.environ.get("WM_JOB_ID", "manual"), item, assessment, started, time.time(), error, mode=mode)
             item.pop("trace_error", None)
         except Exception as exc:
             item["trace_error"] = type(exc).__name__
@@ -516,5 +556,175 @@ def main():
     failures = any(item.get("investigation_error") or item.get("trace_error") for item in candidates[:len(investigated)])
     if failures:
         raise RuntimeError("Investigation or trace export failed; details retained in observation state")
-    return {"mode": "shadow", "signals": len(evidence), "investigations": investigated,
+    return {"mode": mode, "signals": len(evidence), "investigations": investigated,
             "daily_investigations": state["budget"]["investigations"], "issues_created": 0}
+
+
+@contextmanager
+def monitor_lock():
+    # Resource creation is atomic across workers; Community script concurrency limits are not.
+    owner = os.environ["WM_JOB_ID"]
+    try:
+        wm("/resources/create", {"path": LOCK_PATH, "resource_type": "state", "value": {"job_id": owner}})
+    except Exception:
+        if wm("/resources/get_value/" + LOCK_PATH).get("job_id") != owner:
+            raise RuntimeError("Monitor is locked; verify the owning job before recovering a stale lock") from None
+    try:
+        yield
+    finally:
+        wm("/resources/delete/" + LOCK_PATH, method="DELETE")
+
+
+def draft_for(state, item, now):
+    assessment = item.get("assessment", {})
+    if (state.get("last_run", {}).get("coverage") != "metrics_complete"
+            or not 0 <= now - state["last_run"]["at"] <= 1800
+            or item.get("status") != "observing" or item.get("consecutive", 0) < 3
+            or now - item["first_seen"] < 1800 or not 0 <= now - item["last_seen"] <= 1800
+            or not item["first_seen"] <= item.get("last_investigated", 0) <= now
+            or now - item["last_investigated"] >= 21600
+            or assessment.get("verdict") != "actionable" or not assessment.get("evidence")
+            or not any(a.get("query_success") for a in assessment.get("tool_activity", []))
+            or item.get("investigation_error") or item.get("trace_error") or not item.get("trace_id")
+            or not item.get("investigation_job_id") or not assessment.get("hermes_session_id")):
+        return None
+    verified = []
+    for activity in assessment["tool_activity"]:
+        arguments = activity.get("query_arguments", {})
+        try:
+            end = float(arguments["end_time"])
+            if (activity["query_success"] and arguments.get("query") == metric_history(item)
+                    and abs(end - item["last_investigated"]) <= 300
+                    and end - float(arguments["start_time"]) == 21600 and arguments.get("step") == "30m"):
+                verified.append(arguments)
+        except (KeyError, TypeError, ValueError):
+            continue
+    if not verified:
+        return None
+    target = "/".join(item["labels"].get(k, "") for k in ("namespace", "pod", "container"))
+    marker = "[monitor:" + item["id"] + "]"
+    description = (
+        "Persistent monitoring observation requiring human investigation. No remediation is authorized.\n\n"
+        + "Check: `" + item["check"] + "`\n\nAffected labels: `" + json.dumps(item["labels"], sort_keys=True) + "`\n\n"
+        + "First seen (UTC Unix seconds): " + str(item["first_seen"]) + "\n\n"
+        + "Investigated (UTC Unix seconds): " + str(item["last_investigated"]) + "\n\n"
+        + "Collector query: `" + item["query"] + "`\n\n"
+        + "Verified MCP query and time window: `" + json.dumps(verified, sort_keys=True) + "`\n\n"
+        + "Qwen interpretation (may contain errors; review against query evidence):\n\n" + assessment["summary"]
+        + "\n\nEvidence references (model supplied):\n\n" + "\n".join("- " + e for e in assessment["evidence"])
+        + "\n\nUncertainty: successful tool execution does not prove the interpretation or workload attribution."
+        + "\n\nSuggested next step: " + assessment["next_step"]
+        + "\n\nWindmill: https://windmill.aumer.dev/run/" + item["investigation_job_id"] + "?workspace=cluster"
+        + "\n\nLangfuse trace ID: `" + item["trace_id"] + "`"
+        + "\n\nHermes session ID: `" + assessment["hermes_session_id"] + "`"
+    )
+    payload = {"title": (item["check"] + " " + target)[:180] + " " + marker, "description": description}
+    return {"id": item["id"], "hash": hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest(),
+            "expires_at": item["last_investigated"] + 21600, "payload": payload}
+
+
+def publication_mcp(name, arguments):
+    # Reuse Windmill's existing no-model, Vikunja-only gateway credential and encrypted endpoint configuration.
+    config = json.loads(Path("/etc/github-hooks/config.json").read_text())
+    token = wm("/variables/get_value/" + config["TICKET_TOKEN"])
+    if not isinstance(token, str) or not token:
+        raise ValueError("Vikunja gateway credential is unavailable")
+    try:
+        response = http(config["MCP"], {"server_id": config["VIKUNJA_SERVER"], "name": name,
+                                        "arguments": arguments}, token)
+    except HTTPError as exc:
+        raise RuntimeError("Vikunja gateway HTTP " + str(exc.code)) from None
+    if response.get("isError"):
+        raise RuntimeError("Vikunja MCP operation failed")
+    result = response.get("structuredContent")
+    if result is None:
+        result = json.loads(next(c["text"] for c in response.get("content", []) if c.get("type") == "text"))
+    if not isinstance(result, dict):
+        raise ValueError("Invalid Vikunja MCP result")
+    return result
+
+
+def publish_draft(draft):
+    projects = publication_mcp("projects_list", {"q": "LabV2", "format": "markdown"})
+    matches = [p for p in projects["items"] if p["title"] == "LabV2" and not p.get("is_archived")]
+    if len(matches) != 1 or projects.get("total_pages", 1) != 1:
+        raise ValueError("Expected exactly one active LabV2 project")
+    project = matches[0]
+    tasks = publication_mcp("tasks_list", {"q": "[monitor:" + draft["id"] + "]",
+                                           "filter": "project = " + str(project["id"]), "format": "markdown"})
+    matches = [t for t in tasks["items"] if t["project_id"] == project["id"]
+               and "[monitor:" + draft["id"] + "]" in t["title"]]
+    if len(matches) > 1 or tasks.get("total_pages", 1) != 1:
+        raise ValueError("Ambiguous existing tasks; refusing duplicate publication")
+    # Existing tasks, including completed ones, stay human-owned: never auto-update, reopen, or resolve.
+    if matches:
+        result = matches[0]
+    else:
+        payload = {**draft["payload"], "project": project["id"], "done": False, "format": "markdown"}
+        board = next((v for v in project.get("views", []) if v.get("view_kind") == "kanban"), {})
+        if board.get("default_bucket_id"):
+            payload["bucket_id"] = board["default_bucket_id"]
+        result = publication_mcp("tasks_create", payload)
+    if type(result.get("id")) is not int or result["id"] <= 0 or result.get("project_id") != project["id"]:
+        raise ValueError("Invalid published task")
+    return result["id"]
+
+
+def review_draft(settings, state, action, draft_id, draft_hash, approve):
+    now = time.time()
+    drafts = [draft for item in state.get("observations", {}).values()
+              if (draft := draft_for(state, item, now)) is not None]
+    if action == "drafts":
+        for draft in drafts:
+            decision = state.get("publication_audit", {}).get(draft["hash"], {})
+            draft["status"] = decision.get("status", "pending")
+            if decision.get("task_id"):
+                draft["task_url"] = "https://vikunja.aumer.dev/tasks/" + str(decision["task_id"])
+        return {"mode": settings["mode"], "paused": settings.get("paused", True), "drafts": drafts}
+    if settings.get("paused") is not False:
+        raise ValueError("Publication is paused")
+    job_id = os.environ["WM_JOB_ID"]
+    job = wm("/jobs_u/get/" + job_id + "?no_logs=true&no_code=true")
+    if (not settings.get("reviewer") or job.get("created_by") != settings["reviewer"]
+            or job.get("schedule_path") or job.get("parent_job") or job.get("trigger_kind") == "schedule"
+            or job.get("script_path") != "f/cluster/monitor" or job.get("job_kind") != "script"):
+        raise ValueError("Approval requires a direct run by the configured administrator")
+    draft = next((d for d in drafts if d["id"] == draft_id and d["hash"] == draft_hash), None)
+    if draft is None:
+        raise ValueError("Draft changed, expired, resolved, or lacks complete evidence; review it again")
+    if action == "approve" and approve is not True:
+        raise ValueError("Explicit approval checkbox is required")
+    audit = state.setdefault("publication_audit", {})
+    previous = audit.get(draft_hash, {})
+    if previous.get("status") in ("published", "rejected"):
+        return previous
+    record = {"draft_id": draft_id, "draft_hash": draft_hash, "reviewer": job["created_by"],
+              "job_id": job_id, "at": now, "status": "approved" if action == "approve" else "rejected",
+              "payload": draft["payload"], "expires_at": draft["expires_at"]}
+    audit[draft_hash] = record
+    save(state)
+    if action == "approve":
+        # Persist exact approval before any write. A lost response is recovered through the identity lookup.
+        retained = wm("/resources/get_value/" + STATE_PATH).get("publication_audit", {}).get(draft_hash, {})
+        current_settings = wm("/resources/get_value/" + PUBLICATION_PATH)
+        if (retained != record or current_settings.get("mode") != "approval_required"
+                or current_settings.get("paused") is not False or current_settings.get("reviewer") != record["reviewer"]):
+            raise ValueError("Approval persistence or publication settings changed; refusing publication")
+        record["task_id"] = publish_draft(draft)
+        record["status"] = "published"
+        save(state)
+    return record
+
+
+def main(action: str = "collect", draft_id: str = "", draft_hash: str = "", approve: bool = False):
+    if action not in ("collect", "drafts", "approve", "reject"):
+        raise ValueError("Unknown monitoring action")
+    with monitor_lock():
+        settings = wm("/resources/get_value/" + PUBLICATION_PATH)
+        if settings.get("mode", "shadow") not in ("shadow", "approval_required"):
+            raise ValueError("Automatic publication is not implemented or authorized")
+        if action == "collect":
+            return collect_main(settings.get("mode", "shadow"))
+        if settings.get("mode") != "approval_required":
+            raise ValueError("Publication requires approval-required mode")
+        return review_draft(settings, wm("/resources/get_value/" + STATE_PATH), action, draft_id, draft_hash, approve)

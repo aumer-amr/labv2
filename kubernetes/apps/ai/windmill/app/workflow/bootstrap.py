@@ -113,13 +113,26 @@ def main():
             raise ValueError("Cannot migrate unknown observation state")
         api(prefix + "/resources/create", {"path": "f/cluster/monitor-state", "resource_type": "state", "value": state,
                                           "description": "Persistent shadow observations and investigation budget"})
+    if api(prefix + "/resources/get_value/f/cluster/monitor-publication", missing=True) is None:
+        api(prefix + "/resources/create", {
+            "path": "f/cluster/monitor-publication", "resource_type": "state",
+            "value": {"mode": "shadow", "paused": True, "reviewer": owner.removeprefix("u/")},
+            "description": "Select shadow or approval_required; paused stops publication without stopping collection",
+        })
     source = Path(__file__).with_name("monitor.py").read_text()
     digest = hashlib.sha256(source.encode()).hexdigest()
     current = api(prefix + "/scripts/get/p/" + PATH, missing=True)
     if current is None or current.get("content") != source:
-        payload = {"path": PATH, "summary": "Proactive cluster monitoring (shadow)", "content": source,
+        payload = {"path": PATH, "summary": "Cluster monitoring and approved Vikunja publication", "content": source,
                    "language": "python3", "lock": "", "timeout": 600, "concurrent_limit": 1,
-                   "description": "Repository source SHA256: " + digest}
+                   "description": "Repository source SHA256: " + digest,
+                   "schema": {"type": "object", "properties": {
+                       "action": {"type": "string", "enum": ["collect", "drafts", "approve", "reject"], "default": "collect"},
+                       "draft_id": {"type": "string", "default": ""},
+                       "draft_hash": {"type": "string", "default": ""},
+                       "approve": {"type": "boolean", "default": False,
+                                   "description": "I reviewed this exact draft and approve publishing it to LabV2"},
+                   }}}
         if current:
             payload["parent_hash"] = current["hash"]
         api(prefix + "/scripts/create", payload)

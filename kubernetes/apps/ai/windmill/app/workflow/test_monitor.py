@@ -1,4 +1,5 @@
 from io import BytesIO
+from contextlib import nullcontext
 from urllib.error import HTTPError
 import copy
 import importlib.util
@@ -64,9 +65,15 @@ class HermesRunTests(unittest.TestCase):
 
 
 class MonitoringTests(unittest.TestCase):
+    def setUp(self):
+        # These tests exercise collection; the distributed lock is covered separately below.
+        lock = patch.object(monitor, "monitor_lock", return_value=nullcontext())
+        lock.start()
+        self.addCleanup(lock.stop)
+
     def evidence(self, value=0.9):
         return [{"id": "stable", "check": "memory_pressure", "labels": {"namespace": "ai", "pod": "test", "container": "app"},
-                 "value": value, "query": "test", "timestamp": 10000}]
+                 "value": value, "query": monitor.QUERIES["memory_pressure"], "timestamp": 10000}]
 
     def test_state_api_error_reports_reason_without_token(self):
         error = HTTPError("http://windmill/api", 400, "Bad Request", {}, BytesIO(b"Rejected session-token"))
