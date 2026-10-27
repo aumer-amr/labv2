@@ -9,21 +9,21 @@
 
   const style = document.createElement("style");
   style.textContent = `
-    :root { font: 16px/1.5 system-ui, sans-serif; color: #172033; background: #f5f7fa; }
+    :root { color-scheme: dark; font: 16px/1.5 system-ui, sans-serif; color: #d4d7dd; background: #2e3441; }
     * { box-sizing: border-box; }
     body { margin: 0; }
     main { max-width: 960px; margin: auto; padding: 24px; }
     h1 { margin: 0; font-size: 26px; } h2 { margin: 0; font-size: 18px; overflow-wrap: anywhere; }
     p { margin: 8px 0 16px; } header, .actions { display: flex; align-items: center; gap: 12px; }
     header { justify-content: space-between; margin-bottom: 20px; }
-    article { background: white; border: 1px solid #d8dee8; border-radius: 10px; padding: 20px; margin: 16px 0; }
-    button, a { font: inherit; } button { cursor: pointer; padding: 9px 14px; border-radius: 6px; border: 1px solid #8794a8; background: white; }
+    article { background: #252b36; border: 1px solid #4b5563; border-radius: 10px; padding: 20px; margin: 16px 0; }
+    button, a { font: inherit; } button { cursor: pointer; padding: 9px 14px; border-radius: 6px; border: 1px solid #667085; background: #384152; color: #e5e7eb; }
     button.approve { background: #166534; border-color: #166534; color: white; }
-    button:disabled { opacity: .5; cursor: default; } button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
+    button:disabled { opacity: .5; cursor: default; } button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }
     summary { cursor: pointer; padding: 8px 0; font-weight: 600; }
     pre { font: 14px/1.6 system-ui, sans-serif; white-space: pre-wrap; overflow-wrap: anywhere; margin: 12px 0 20px; }
-    .meta { color: #526178; font-size: 14px; margin: 8px 0; } [role="alert"] { color: #9f1239; }
-    a { color: #1d4ed8; } .notice { background: #fff7d6; border-radius: 6px; padding: 12px; }
+    .meta { color: #aab4c3; font-size: 14px; margin: 8px 0; } [role="alert"] { color: #fda4af; }
+    a { color: #93c5fd; } .notice { background: #393522; border-radius: 6px; padding: 12px; }
     @media (max-width: 600px) { main { padding: 16px; } header { align-items: flex-start; } article { padding: 16px; } }
   `;
   document.head.append(style);

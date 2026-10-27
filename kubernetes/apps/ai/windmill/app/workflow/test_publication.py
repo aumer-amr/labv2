@@ -206,7 +206,8 @@ class PublicationTests(unittest.TestCase):
     def test_new_task_uses_resolved_project_and_default_board_bucket(self):
         with patch.object(monitor, "publication_mcp", side_effect=[
             {"items": [{"id": 2, "title": "LabV2", "views": [{"view_kind": "kanban", "default_bucket_id": 4}]}]},
-            {"items": []}, {"id": 101, "project_id": 2},
+            {"items": [], "page": 1, "per_page": 50, "total": 0, "total_pages": 0},
+            {"id": 101, "project_id": 2},
         ]) as mcp:
             self.assertEqual(monitor.publish_draft(self.draft), 101)
         payload = mcp.call_args.args[1]

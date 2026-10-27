@@ -654,7 +654,7 @@ def publish_draft(draft):
                                            "filter": "project = " + str(project["id"]), "format": "markdown"})
     matches = [t for t in tasks["items"] if t["project_id"] == project["id"]
                and "[monitor:" + draft["id"] + "]" in t["title"]]
-    if len(matches) > 1 or tasks.get("total_pages", 1) != 1:
+    if len(matches) > 1 or tasks.get("total_pages", 1) > 1:
         raise ValueError("Ambiguous existing tasks; refusing duplicate publication")
     # Existing tasks, including completed ones, stay human-owned: never auto-update, reopen, or resolve.
     if matches:
