@@ -1,0 +1,42 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: krr
+spec:
+  groups:
+    - name: krr
+      rules:
+        - alert: KRRReportOverdue
+          expr: |-
+            time() - (
+              kube_cronjob_status_last_successful_time{namespace="observability",cronjob="krr"}
+              or
+              kube_cronjob_created{namespace="observability",cronjob="krr"}
+            ) > 8 * 24 * 60 * 60
+          for: 15m
+          labels:
+            severity: warning
+            namespace: observability
+          annotations:
+            summary: Weekly KRR report is overdue
+            description: No successful KRR report delivery in eight days. Inspect observability/krr and https://vikunja.aumer.dev/tasks/44.
+        - alert: KRRReportJobFailed
+          expr: |-
+            (kube_job_status_failed{namespace="observability",job_name=~"krr-.*"} > 0)
+            and on (namespace, job_name)
+            (
+              kube_job_created{namespace="observability",job_name=~"krr-.*"}
+              > on (namespace) group_left()
+              max by (namespace) (
+                kube_cronjob_status_last_successful_time{namespace="observability",cronjob="krr"}
+                or
+                kube_cronjob_created{namespace="observability",cronjob="krr"}
+              )
+            )
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: KRR report job failed
+            description: A KRR report job failed, including possible OOM or delivery failure. Inspect observability/krr and https://vikunja.aumer.dev/tasks/44.

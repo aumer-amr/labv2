@@ -1,0 +1,26 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: krr
+spec:
+  dependsOn:
+    - name: krr-discovery
+      namespace: home
+    - name: network-policies
+    - name: kube-prometheus-stack
+    - name: onepassword-connect
+      namespace: external-secrets
+    - name: litellm-operator
+      namespace: ai
+    - name: vikunja
+      namespace: developer-tools
+  interval: 1h
+  path: ./kubernetes/apps/observability/krr/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: observability
+  wait: true

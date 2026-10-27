@@ -11,6 +11,7 @@ resources:
   - ./gatus-sidecar/ks.yaml
   - ./grafana-operator/ks.yaml
   - ./kube-prometheus-stack/ks.yaml
+  - ./krr/ks.yaml
   - ./network-policies/ks.yaml
   - ./smartctl-exporter/ks.yaml
   - ./victoria-logs/ks.yaml

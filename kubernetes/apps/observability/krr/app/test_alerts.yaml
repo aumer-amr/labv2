@@ -1,0 +1,62 @@
+---
+rule_files:
+  - rules.yaml
+evaluation_interval: 1m
+tests:
+  - name: Retained failures stop alerting after a successful report
+    interval: 1m
+    input_series:
+      - series: kube_job_status_failed{namespace="observability",job_name="krr-old"}
+        values: "1+0x15"
+      - series: kube_job_created{namespace="observability",job_name="krr-old"}
+        values: "60+0x15"
+      - series: kube_cronjob_status_last_successful_time{namespace="observability",cronjob="krr"}
+        values: "600+0x15"
+      - series: kube_cronjob_created{namespace="observability",cronjob="krr"}
+        values: "0+0x15"
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: KRRReportJobFailed
+        exp_alerts: []
+  - name: Failures newer than the last successful report alert
+    interval: 1m
+    input_series:
+      - series: kube_job_status_failed{namespace="observability",job_name="krr-new"}
+        values: "1+0x15"
+      - series: kube_job_created{namespace="observability",job_name="krr-new"}
+        values: "700+0x15"
+      - series: kube_cronjob_status_last_successful_time{namespace="observability",cronjob="krr"}
+        values: "600+0x15"
+      - series: kube_cronjob_created{namespace="observability",cronjob="krr"}
+        values: "0+0x15"
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: KRRReportJobFailed
+        exp_alerts:
+          - exp_labels:
+              namespace: observability
+              job_name: krr-new
+              severity: warning
+            exp_annotations:
+              summary: KRR report job failed
+              description: A KRR report job failed, including possible OOM or delivery failure. Inspect observability/krr and https://vikunja.aumer.dev/tasks/44.
+  - name: Initial failures alert before any successful report
+    interval: 1m
+    input_series:
+      - series: kube_job_status_failed{namespace="observability",job_name="krr-first"}
+        values: "1+0x15"
+      - series: kube_job_created{namespace="observability",job_name="krr-first"}
+        values: "60+0x15"
+      - series: kube_cronjob_created{namespace="observability",cronjob="krr"}
+        values: "0+0x15"
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: KRRReportJobFailed
+        exp_alerts:
+          - exp_labels:
+              namespace: observability
+              job_name: krr-first
+              severity: warning
+            exp_annotations:
+              summary: KRR report job failed
+              description: A KRR report job failed, including possible OOM or delivery failure. Inspect observability/krr and https://vikunja.aumer.dev/tasks/44.

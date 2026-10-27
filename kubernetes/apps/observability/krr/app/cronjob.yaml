@@ -1,0 +1,74 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: krr
+spec:
+  schedule: "0 9 * * 1"
+  timeZone: Europe/Amsterdam
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 1800
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: krr
+        spec:
+          serviceAccountName: krr
+          automountServiceAccountToken: true
+          dnsConfig:
+            options:
+              - name: ndots
+                value: "1"
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: report
+              image: docker.io/robustadev/krr:v1.31.1@sha256:835bf3b6fec4d8f27d96d236a36542bd87bfcb4f12f3537f8dce7f886916ed9c
+              command: [python, -I, /report/report.py]
+              env:
+                - name: HOME
+                  value: /tmp
+                - name: LITELLM_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: krr-litellm
+                      key: key
+              envFrom:
+                - secretRef:
+                    name: krr-secret
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  memory: 1Gi
+              volumeMounts:
+                - name: report
+                  mountPath: /report
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: report
+              configMap:
+                name: krr-report
+            - name: tmp
+              emptyDir:
+                sizeLimit: 128Mi

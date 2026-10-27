@@ -1,0 +1,18 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./cronjob.yaml
+  - ./rbac.yaml
+  - ./externalsecret.yaml
+  - ./litellmvirtualkey.sops.yaml
+  - ./networkpolicy.yaml
+  - ./prometheusrule.yaml
+configMapGenerator:
+  - name: krr-report
+    files:
+      - report.py
+generatorOptions:
+  disableNameSuffixHash: true
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
