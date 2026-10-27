@@ -12,6 +12,7 @@ resources:
   - ./network-policies/networkpolicy.yaml
   - ./home-assistant/ks.yaml
   - ./immich/ks.yaml
+  - ./krr-discovery/ks.yaml
   - ./mealie/ks.yaml
   - ./minecraft/ks.yaml
   - ./music-assistant/ks.yaml
