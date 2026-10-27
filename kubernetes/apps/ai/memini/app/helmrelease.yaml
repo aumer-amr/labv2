@@ -40,8 +40,8 @@ spec:
                     name: memini-litellm-secret
                     key: LITELLM_API_KEY
               MEMINI_LLM_BASE_URL: http://litellm.ai.svc.cluster.local:4000/v1
-              # Keep JSON instructions in Responses input instead of LiteLLM's instructions field.
-              MEMINI_LLM_EXTRA_BODY: '{"additional_drop_params":["temperature"],"messages.0.role":"developer"}'
+              # LiteLLM hoists leading system messages; append the JSON reminder so it stays in input.
+              MEMINI_LLM_EXTRA_BODY: '{"additional_drop_params":["temperature"],"messages.-1":{"role":"system","content":"When JSON output is requested, return only JSON."}}'
               MEMINI_LLM_MODEL: gpt-6-luna
               MEMINI_RERANK: http://qwen3-reranker-0-6b.ai.svc.cluster.local:8080/v1
               MEMINI_RERANK_MODEL: qwen3-reranker-0.6b
