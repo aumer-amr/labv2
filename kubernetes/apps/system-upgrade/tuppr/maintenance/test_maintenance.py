@@ -25,8 +25,9 @@ path = Path(os.environ["FAKE_CLUSTER"])
 state = json.loads(path.read_text())
 args = sys.argv[1:]
 assert args[0] == "--namespace" and args[1] in ("home", "system-upgrade")
-assert args[3] == "--cache-dir=/tmp/kube-cache"
-args = args[4:]
+assert args[2] == "--cache-dir=/tmp/kube-cache"
+assert not any(arg.startswith("--request-timeout") for arg in args), "request-timeout breaks in-cluster fallback"
+args = args[3:]
 state["calls"].append(args[:3])
 def finish(output="", code=0):
     path.write_text(json.dumps(state))
