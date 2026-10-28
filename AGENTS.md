@@ -44,7 +44,8 @@
 - Use the Vikunja MCP tools through LiteLLM to search, create, update, and close issues. Resolve the project named `LabV2` before creating tasks; use that project rather than Inbox.
 - When starting work on an issue or task, move it from **To-Do** to **Doing**. When the work and required verification are complete, move it to **Done** and mark it complete; keep its board column and completion state consistent.
 - Mark subtasks and checklist items done as soon as their work is complete, rather than waiting for the parent task to finish.
-- Keep the task current with comments about substantial progress, decisions and their rationale, blockers, and verification results.
+- Always keep the Vikunja task up to date throughout the work: update its status, board column, completion state, subtasks, and checklists as they change. Add comments promptly for substantial progress, decisions and their rationale, blockers, scope changes, and verification results; do not defer updates until the final response.
+- Never create documentation files unless the user specifically requests them. Record relevant findings, plans, implementation details, decisions, and verification evidence in the Vikunja task description or comments instead.
 - Remember durable task context, decisions, and the Vikunja task link in memini under relevant topic tags so future work can recover the connection. Keep current status and checklists in Vikunja.
 
 ## Desired State and Namespace Safety
