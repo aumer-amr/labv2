@@ -7,7 +7,7 @@ struct fixture_disk { uint64_t major, first_minor; };
 struct fixture_queue { struct fixture_disk *disk; };
 struct fixture_request {
     struct fixture_queue *q;
-    uint64_t cmd_flags, __data_len, rq_flags;
+    uint64_t cmd_flags, __data_len, rq_flags, state;
 };
 
 #define MARKER(name) \
@@ -18,6 +18,7 @@ struct fixture_request {
 MARKER(logical_start)
 MARKER(issue)
 MARKER(complete)
+MARKER(flush_done)
 MARKER(requeue)
 MARKER(logical_done)
 MARKER(merge)
@@ -26,6 +27,7 @@ MARKER(tick)
 
 #define AT(event, request, ms) event(&(request), 0, 0, (uint64_t)(ms) * 1000000)
 #define COMPLETE(request, ms, bytes) complete(&(request), 0, bytes, (uint64_t)(ms) * 1000000)
+#define FLUSH_DONE(request, ms) do { (request).state = 2; AT(flush_done, request, ms); } while (0)
 
 int main(void)
 {
@@ -50,6 +52,9 @@ int main(void)
 
     // Attachment can observe starts with no matching completion hook yet.
     AT(logical_start, a, 500); AT(issue, a, 510);
+    AT(release, other, 600);
+    AT(logical_start, a, 650); AT(issue, a, 660);
+    AT(flush_done, internal, 800);
     AT(release, other, 900);
     AT(logical_start, a, 1000); AT(issue, a, 1020);
     COMPLETE(a, 1160, 4096); AT(logical_done, a, 1165); AT(release, a, 1170);
@@ -86,6 +91,18 @@ int main(void)
 
     AT(logical_start, b, 11000); AT(logical_start, b, 11010);
     AT(release, b, 11020);
+
+    // Internal flush requests are reused without being freed. Recover a missed
+    // generic completion at the flush callback before the next issue.
+    internal.cmd_flags = 262146; internal.rq_flags = 10;
+    AT(issue, internal, 15000);
+    internal.state = 1; AT(flush_done, internal, 15050);
+    FLUSH_DONE(internal, 15120);
+    AT(issue, internal, 15200); COMPLETE(internal, 15320, 0);
+    FLUSH_DONE(internal, 15321);
+    AT(issue, internal, 15400); FLUSH_DONE(internal, 15520);
+    AT(issue, internal, 15600); AT(issue, internal, 15620);
+    FLUSH_DONE(internal, 15720);
 
     AT(logical_start, b, 20000); AT(issue, b, 20020);
     AT(logical_start, a, 30000); AT(issue, a, 30010);

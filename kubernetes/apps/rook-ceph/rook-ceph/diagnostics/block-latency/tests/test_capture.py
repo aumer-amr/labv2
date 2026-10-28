@@ -184,6 +184,7 @@ class LifecycleTests(unittest.TestCase):
             "rawtracepoint:block_io_start": "logical_start",
             "rawtracepoint:block_rq_issue": "issue",
             "rawtracepoint:block_rq_complete": "complete",
+            "kprobe:flush_end_io*": "flush_done",
             "rawtracepoint:block_rq_requeue": "requeue",
             "rawtracepoint:block_io_done": "logical_done",
             "rawtracepoint:block_rq_merge": "merge",
@@ -193,7 +194,7 @@ class LifecycleTests(unittest.TestCase):
         source = (
             "struct fixture_disk { unsigned long long major, first_minor; };\n"
             "struct fixture_queue { struct fixture_disk *disk; };\n"
-            "struct fixture_request { struct fixture_queue *q; unsigned long long cmd_flags, __data_len, rq_flags; };\n"
+            "struct fixture_request { struct fixture_queue *q; unsigned long long cmd_flags, __data_len, rq_flags, state; };\n"
         )
         for part in re.split(r"(?m)(?=^(?:BEGIN|END|rawtracepoint:|kprobe:|interval:))", (ROOT / "capture.bt").read_text()):
             header = part.partition("\n")[0]
@@ -244,12 +245,27 @@ class LifecycleTests(unittest.TestCase):
         self.assertEqual(self.logical[2000]["requeues"], 1)
 
     def test_flush_request_is_captured_without_logical_start(self):
-        flushes = [x for x in self.events if x["event"] == "device" and x["op"] == 2]
+        flushes = [x for x in self.events if x["event"] == "device" and x["op"] == 2 and x["id"] < 15000000000]
         self.assertEqual(len(flushes), 2)
         self.assertTrue(all(x["duration_ms"] == 120 and x["valid"] == 1 for x in flushes))
         self.assertEqual(self.logical[4000]["reason"], 1)
         self.assertEqual(self.logical[4500]["duration_ms"], 250)
         self.assertEqual(self.logical[4500]["driver_ms"], -1)
+
+    def test_flush_callback_recovers_missing_completion_before_reuse(self):
+        flushes = [x for x in self.events if x["event"] == "device" and x["op"] == 2 and 15000000000 <= x["id"] < 15600000000]
+        self.assertEqual([x["id"] for x in flushes], [15000000000, 15200000000, 15400000000])
+        self.assertTrue(all(x["duration_ms"] == 120 and x["valid"] == 1 for x in flushes))
+        self.assertEqual([x.get("completion", "tracepoint") for x in flushes], ["flush_end_io", "tracepoint", "flush_end_io"])
+        self.assertFalse(any(x["event"] == "lifecycle_error" and 15000000000 <= x["id"] < 15600000000 for x in self.events))
+        self.assertIn("@stats[12]: 3", self.output)
+
+    def test_flush_recovery_does_not_hide_a_genuine_repeated_issue(self):
+        error = next(x for x in self.events if x["event"] == "lifecycle_error" and x["id"] == 15600000000)
+        self.assertEqual(error["reason"], "device_issue_repeat")
+        recovered = next(x for x in self.events if x["event"] == "device" and x["id"] == 15600000000)
+        self.assertEqual(recovered["valid"], 0)
+        self.assertIn("@stats[8]: 2", self.output)
 
     def test_missing_and_repeated_events_are_explicit(self):
         self.assertEqual(self.logical[7000]["reason"], 2)
@@ -276,6 +292,8 @@ class LifecycleTests(unittest.TestCase):
 
     def test_filter_merge_free_and_slow_trigger(self):
         self.assertNotIn(500, self.logical)
+        self.assertNotIn(650, self.logical)
+        self.assertFalse(any(x.get("reason") == "logical_start_overwrite" and x["id"] == 650000000 for x in self.events))
         self.assertNotIn("@coverage[0, 9]", self.output)
         self.assertTrue(any(x["event"] == "armed" for x in self.events))
         self.assertNotIn(10000, self.logical)

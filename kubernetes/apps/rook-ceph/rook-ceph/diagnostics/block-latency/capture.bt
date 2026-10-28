@@ -169,11 +169,35 @@ rawtracepoint:block_rq_merge
   delete(@ambiguous[arg0]);
 }
 
-// Final free removes cancellations before pointer reuse; validate PMU attachment first.
+// Internal flush requests are reused without a free. Recover at their real
+// completion callback if the generic completion tracepoint was not observed.
+kprobe:flush_end_io*
+{
+  @flush_hook_ready = (uint64)1;
+  $rq = (struct request *)arg0;
+  // Timeout reference releases also call this callback while still in flight.
+  if (@device_start[arg0] && $rq->state == 2 &&
+      ($rq->cmd_flags & 255) == 2 && ($rq->rq_flags & 2) &&
+      $rq->__data_len == 0 && !@logical_start[arg0]) {
+    $ns = nsecs - @device_start[arg0];
+    $ms = $ns / (uint64)1000000;
+    if ($ms >= 100) {
+      printf("{\"event\":\"device\",\"utc\":\"%s\",\"id\":%llu,\"duration_ms\":%llu,\"op\":2,\"bytes\":0,\"error\":%llu,\"valid\":%llu,\"trigger\":%llu,\"completion\":\"flush_end_io\"}\n", strftime("%FT%TZ", nsecs), @device_start[arg0], $ms, arg1, (uint64)1 - @device_bad[arg0], (uint64)($ms >= 5000));
+    }
+    @operations[2, (uint64)2] = count();
+    @stats[3] = count();
+    @stats[12] = count();
+    delete(@device_start[arg0]);
+    delete(@device_meta[arg0]);
+    delete(@device_bad[arg0]);
+  }
+}
+
+// Final free removes cancellations before pointer reuse; validate both kprobes.
 kprobe:__blk_mq_free_request
 {
-  // bpftrace 0.19 attaches raw tracepoints first and this sole kprobe last.
-  if (!@armed) {
+  // bpftrace 0.19 attaches raw tracepoints before kprobes.
+  if (!@armed && @flush_hook_ready) {
     @armed = (uint64)1;
     printf("{\"event\":\"armed\",\"utc\":\"%s\"}\n", strftime("%FT%TZ", nsecs));
   }
@@ -237,4 +261,5 @@ END
   clear(@began);
   clear(@deadline);
   clear(@armed);
+  clear(@flush_hook_ready);
 }
