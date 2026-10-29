@@ -43,6 +43,7 @@
 - Track all issues for this repository in the **LabV2** project in [Vikunja](https://vikunja.aumer.dev), instead of GitHub Issues.
 - Use the Vikunja MCP tools through LiteLLM to search, create, update, and close issues. Resolve the project named `LabV2` before creating tasks; use that project rather than Inbox.
 - When starting work on an issue or task, move it from **To-Do** to **Doing**. When the work and required verification are complete, move it to **Done** and mark it complete; keep its board column and completion state consistent.
+- For an existing or newly created Vikunja task, create or reuse a task-specific Git worktree before making any code changes, and make all code changes there. Defer creating a worktree until code changes are needed; tasks without code changes do not need a worktree. Never make code changes outside a worktree.
 - Mark subtasks and checklist items done as soon as their work is complete, rather than waiting for the parent task to finish.
 - Always keep the Vikunja task up to date throughout the work: update its status, board column, completion state, subtasks, and checklists as they change. Add comments promptly for substantial progress, decisions and their rationale, blockers, scope changes, and verification results; do not defer updates until the final response.
 - Never create documentation files unless the user specifically requests them. Record relevant findings, plans, implementation details, decisions, and verification evidence in the Vikunja task description or comments instead.
