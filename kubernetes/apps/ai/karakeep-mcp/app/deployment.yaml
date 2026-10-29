@@ -29,7 +29,7 @@ spec:
           type: RuntimeDefault
       initContainers:
         - name: gateway
-          image: docker.io/library/node:24.22.1-slim
+          image: docker.io/library/node:24.22.2-slim
           command: [npm]
           args:
             [
