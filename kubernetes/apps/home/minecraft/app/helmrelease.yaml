@@ -34,6 +34,7 @@ spec:
               TYPE: AUTO_CURSEFORGE
               CF_SLUG: all-the-mods-10-aeronautics
               CF_FILE_ID: "9022977"
+              CURSEFORGE_FILES: schematic-energistics:9041916
               MEMORY: 8G
               DIFFICULTY: normal
               VIEW_DISTANCE: "10"
