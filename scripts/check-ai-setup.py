@@ -74,6 +74,7 @@ assert inference["resources"] == {"cpu": "500m", "memory": "12Gi", "memoryLimit"
 assert inference["podSecurityContext"]["runAsUser"] == 101
 assert inference["securityContext"]["runAsNonRoot"] is True
 cron = read_yaml(AI / "hermes/app/bootstrap/cron-jobs.yaml")["jobs"]
+assert all(job.get("enabled", True) is False for job in cron)
 assert next(j for j in cron if j["name"] == "Morning exception brief")["model"] == primary
 assert "model" not in next(j for j in cron if j["name"] == "Weekly personal review")
 
