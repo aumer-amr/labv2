@@ -9,6 +9,7 @@ spec:
   mcpToolsets:
     - 8d99ba5f-d06c-423c-9014-e2e8a9e3f9b5
   models:
+    - qwen3.5-9b-fallback
     - gpt-6-luna
     - gpt-6.1-sol
     - gpt-6-astra

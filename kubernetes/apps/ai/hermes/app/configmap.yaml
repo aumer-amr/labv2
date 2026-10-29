@@ -10,13 +10,10 @@ data:
     database:
       journal_mode: delete
     model:
-      default: gpt-5.6-terra
+      default: qwen3.5-9b-fallback
       provider: lab-litellm
-    fallback_providers:
-      - provider: lab-litellm
-        model: qwen3.5-9b-fallback
-        base_url: http://litellm.ai.svc.cluster.local:4000/v1
-        key_env: LITELLM_API_KEY
+      context_length: 65536
+    fallback_providers: []
     model_overrides:
       lab-litellm:
         qwen3.5-9b-fallback:
@@ -74,6 +71,8 @@ data:
       protect_last_n: 20
       threshold: 0.5
     auxiliary:
+      title_generation:
+        model_upgrade_enabled: false
       compression:
         timeout: 1800
     agent:

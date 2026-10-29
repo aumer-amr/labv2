@@ -53,7 +53,7 @@ spec:
               AUDIO_TTS_VOICE: en_US-lessac-medium
               BYPASS_WEB_SEARCH_WEB_LOADER: "true"
               DO_NOT_TRACK: "true"
-              DEFAULT_MODELS: gpt-6.1-sol
+              DEFAULT_MODELS: qwen3.5-9b-fallback
               ENABLE_DIRECT_CONNECTIONS: "false"
               ENABLE_LOGIN_FORM: "false"
               ENABLE_OAUTH_PERSISTENT_CONFIG: "false"
@@ -103,7 +103,7 @@ spec:
               REDIS_KEY_PREFIX: open-webui
               SEARXNG_QUERY_URL: "http://searxng.ai.svc.cluster.local:8080/search?q=<query>"
               STATIC_DIR: /app/backend/data/static
-              TASK_MODEL_EXTERNAL: gpt-6-luna
+              TASK_MODEL_EXTERNAL: qwen3.5-9b-fallback
               TZ: Europe/Amsterdam
               WEB_SEARCH_ENGINE: searxng
               WEBUI_URL: https://chat.aumer.dev

@@ -6,19 +6,7 @@ metadata:
   name: litellm
 spec:
   groups:
-    - name: litellm.rules
-      rules:
-        - alert: LiteLLMAuthOrQuotaFailures
-          expr: |-
-            sum by (namespace, litellm_model_name, exception_status) (
-              increase(litellm_deployment_failure_responses_total{namespace="ai", exception_status=~"401|403|429"}[15m])
-            ) > 5
-          for: 5m
-          annotations:
-            summary: LiteLLM {{ $labels.litellm_model_name }} has repeated authentication or quota failures
-            description: Check the upstream credential, rate limit, and provider allowance (HTTP {{ $labels.exception_status }}).
-          labels:
-            severity: warning
+    # Auth/quota alerts are disabled while ChatGPT is opt-in and quota exhaustion is expected.
     - name: llamacpp.rules
       rules:
         - alert: LlamaCppRequestsDeferred

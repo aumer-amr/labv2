@@ -29,13 +29,27 @@ config_text = read_yaml(AI / "hermes/app/configmap.yaml")["data"]["config.yaml"]
 config = json.loads(subprocess.check_output(
     ["yq", "-o=json", "."], input=config_text, text=True
 ))
-primary = read_yaml(models / "gpt-5-6-terra.yaml")["spec"]["modelName"]
+primary = fallback["modelName"]
 assert config["model"]["default"] == primary
-assert config["fallback_providers"][0]["model"] == fallback["modelName"]
+assert config["model"]["context_length"] == 65536
+assert not config.get("fallback_providers"), "ChatGPT must remain opt-in"
+assert config["auxiliary"]["title_generation"]["model_upgrade_enabled"] is False
 assert config["model_overrides"]["lab-litellm"][fallback["modelName"]]["context_window"] == 65536
 assert config["agent"]["reasoning_overrides"][fallback["modelName"]] is False
 allowed = read_yaml(AI / "hermes/app/litellmvirtualkey.yaml")["spec"]["models"]
-assert {primary, fallback["modelName"]} <= set(allowed), "Hermes cannot use its configured models"
+assert {primary, "gpt-5.6-terra", "gpt-6.1-sol"} <= set(allowed), "Hermes must retain manual ChatGPT selection"
+
+webui = read_yaml(AI / "open-webui/app/helmrelease.yaml")["spec"]["values"]["controllers"]["open-webui"]["containers"]["app"]["env"]
+assert webui["DEFAULT_MODELS"] == primary
+assert webui["TASK_MODEL_EXTERNAL"] == primary
+assert webui["ENABLE_PERSISTENT_CONFIG"] == "false", "Stored defaults must not override Git"
+memini = read_yaml(AI / "memini/app/helmrelease.yaml")["spec"]["values"]["controllers"]["main"]["containers"]["main"]["env"]
+assert memini["MEMINI_LLM_MODEL"] == primary
+assert memini["MEMINI_EMBED_MODEL"] == "qwen3-embedding"
+assert "MEMINI_LLM_EXTRA_BODY" not in memini, "Qwen must not inherit the ChatGPT Responses workaround"
+for app in ("open-webui", "memini"):
+    permitted = read_yaml(AI / app / "app/litellmvirtualkey.yaml")["spec"]["models"]
+    assert {primary, "gpt-6-luna"} <= set(permitted), f"{app} must allow Qwen and manual ChatGPT selection"
 
 monitor_config = json.loads(subprocess.check_output(
     ["yq", "-o=json", "."], input=read_yaml(AI / "hermes/agents/monitor/configmap.yaml")["data"]["config.yaml"], text=True
@@ -50,7 +64,7 @@ for path in AI.rglob("*virtualkey.yaml"):
     else:
         assert local["modelName"] not in permitted, str(path)
         assert "*" not in permitted and permitted, str(path)
-    if key["metadata"]["name"] in ("hermes", "pr-reviewer"):
+    if key["metadata"]["name"] in ("hermes", "pr-reviewer", "open-webui", "memini"):
         assert fallback["modelName"] in permitted
 inference = read_yaml(AI / "llmkube/models/qwen3-5-9b-fallback.yaml")["spec"]
 assert inference["modelRef"] == local["modelName"]
@@ -65,8 +79,6 @@ assert "model" not in next(j for j in cron if j["name"] == "Weekly personal revi
 
 # Exercise sustained failures, isolated failures, recovery, and namespace isolation.
 cases = [
-    ("LiteLLMAuthOrQuotaFailures", 'litellm_deployment_failure_responses_total{namespace="ai",litellm_model_name="gpt-5.6-terra",exception_status="401"}', "0+1x30", "0x30", 20,
-     {"namespace": "ai", "litellm_model_name": "gpt-5.6-terra", "exception_status": "401"}),
     ("LlamaCppRequestsDeferred", 'llamacpp:requests_deferred{namespace="ai",service="qwen3.5-9b"}', "1x30", "0x30", 15,
      {"namespace": "ai", "service": "qwen3.5-9b"}),
     ("LlamaCppRequestsDeferred", 'llamacpp:requests_deferred{namespace="ai",service="qwen3-5-9b-fallback"}', "1x30", "0x30", 15,
@@ -88,7 +100,19 @@ with tempfile.TemporaryDirectory(prefix="ai-alert-tests-") as directory:
         files.append(str(path))
         for group in spec["groups"]:
             rules.update({rule["alert"]: rule for rule in group["rules"]})
-    tests = []
+    assert "LiteLLMAuthOrQuotaFailures" not in rules
+    tests = [
+        {
+            "name": f"Disabled auth/quota alert: HTTP {status} at {minute}m",
+            "interval": "1m",
+            "input_series": [{
+                "series": 'litellm_deployment_failure_responses_total{namespace="ai",litellm_model_name="gpt-5.6-terra",exception_status="' + status + '"}',
+                "values": "0+1x120",
+            }],
+            "alert_rule_test": [{"eval_time": f"{minute}m", "alertname": "LiteLLMAuthOrQuotaFailures", "exp_alerts": []}],
+        }
+        for status in ("401", "403", "429") for minute in (20, 120)
+    ]
     for alert, series, failing, healthy, minute, labels in cases:
         annotations = {}
         for key, value in rules[alert]["annotations"].items():
@@ -115,4 +139,4 @@ with tempfile.TemporaryDirectory(prefix="ai-alert-tests-") as directory:
     subprocess.run(["promtool", "check", "rules", *files], check=True)
     subprocess.run(["promtool", "test", "rules", str(path)], check=True)
 
-print("AI model authorization, local routing, and 36 alert scenarios passed")
+print(f"AI model defaults, authorization, local routing, and {len(tests)} alert scenarios passed")
