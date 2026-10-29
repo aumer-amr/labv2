@@ -184,7 +184,8 @@ class LifecycleTests(unittest.TestCase):
             "rawtracepoint:block_io_start": "logical_start",
             "rawtracepoint:block_rq_issue": "issue",
             "rawtracepoint:block_rq_complete": "complete",
-            "kprobe:flush_end_io*": "flush_done",
+            "kprobe:flush_end_io*": "flush_done",  # Keep the old hook testable when reverting the fix.
+            "kprobe:blk_flush_complete_seq": "flush_sequence",
             "rawtracepoint:block_rq_requeue": "requeue",
             "rawtracepoint:block_io_done": "logical_done",
             "rawtracepoint:block_rq_merge": "merge",
@@ -195,18 +196,22 @@ class LifecycleTests(unittest.TestCase):
             "struct fixture_disk { unsigned long long major, first_minor; };\n"
             "struct fixture_queue { struct fixture_disk *disk; };\n"
             "struct fixture_request { struct fixture_queue *q; unsigned long long cmd_flags, __data_len, rq_flags, state; };\n"
+            "struct fixture_flush_queue { struct fixture_request *flush_rq; };\n"
         )
         for part in re.split(r"(?m)(?=^(?:BEGIN|END|rawtracepoint:|kprobe:|interval:))", (ROOT / "capture.bt").read_text()):
             header = part.partition("\n")[0]
             if header in markers:
                 part = part.replace(header, f"uprobe:/tmp/lifecycle:{markers[header]}", 1)
                 part = part.replace("(struct request *)arg0", "uptr((struct fixture_request *)arg0)")
-                part = re.sub(r"\bnsecs\b", "((uint64)arg3)", part)
+                part = part.replace("(struct blk_flush_queue *)arg1", "uptr((struct fixture_flush_queue *)arg1)")
+                part = part.replace("$fq->flush_rq", "uptr($fq->flush_rq)")
+                clock = "arg4" if markers[header] == "flush_sequence" else "arg3"
+                part = re.sub(r"\bnsecs\b", f"((uint64){clock})", part)
             source += part
 
         with tempfile.TemporaryDirectory() as directory:
             binary = Path(directory) / "lifecycle"
-            subprocess.run(["cc", "-static", "-O0", "-g", "-o", str(binary), str(ROOT / "tests/lifecycle.c")], check=True)
+            subprocess.run(["cc", "-static", "-pthread", "-O0", "-g", "-o", str(binary), str(ROOT / "tests/lifecycle.c")], check=True)
             payload = io.BytesIO()
             with tarfile.open(fileobj=payload, mode="w") as archive:
                 archive.add(binary, arcname="lifecycle")
@@ -256,9 +261,9 @@ class LifecycleTests(unittest.TestCase):
         flushes = [x for x in self.events if x["event"] == "device" and x["op"] == 2 and 15000000000 <= x["id"] < 15600000000]
         self.assertEqual([x["id"] for x in flushes], [15000000000, 15200000000, 15400000000])
         self.assertTrue(all(x["duration_ms"] == 120 and x["valid"] == 1 for x in flushes))
-        self.assertEqual([x.get("completion", "tracepoint") for x in flushes], ["flush_end_io", "tracepoint", "flush_end_io"])
+        self.assertEqual([x.get("completion", "tracepoint") for x in flushes], ["flush_sequence", "tracepoint", "flush_sequence"])
         self.assertFalse(any(x["event"] == "lifecycle_error" and 15000000000 <= x["id"] < 15600000000 for x in self.events))
-        self.assertIn("@stats[12]: 3", self.output)
+        self.assertIn("@stats[12]: 134", self.output)
 
     def test_flush_recovery_does_not_hide_a_genuine_repeated_issue(self):
         error = next(x for x in self.events if x["event"] == "lifecycle_error" and x["id"] == 15600000000)
@@ -266,6 +271,29 @@ class LifecycleTests(unittest.TestCase):
         recovered = next(x for x in self.events if x["event"] == "device" and x["id"] == 15600000000)
         self.assertEqual(recovered["valid"], 0)
         self.assertIn("@stats[8]: 2", self.output)
+
+    def test_timeout_callback_does_not_consume_completion(self):
+        events = [x for x in self.events if x.get("id") == 16000000000 and x["event"] == "device"]
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["duration_ms"], 120)
+        self.assertNotIn("completion", events[0])
+
+    def test_only_final_flush_sequence_recovers_with_error(self):
+        events = [x for x in self.events if x.get("id") == 17000000000 and x["event"] == "device"]
+        self.assertEqual(len(events), 1)
+        self.assertEqual((events[0]["duration_ms"], events[0]["error"], events[0]["completion"]), (120, 5, "flush_sequence"))
+
+    def test_concurrent_callbacks_and_reuse_complete_once(self):
+        events = [x for x in self.events if x["event"] == "device" and x.get("id", 0) >= 100000000000]
+        self.assertEqual(sorted(x["id"] for x in events), [(100000 + i * 1000) * 1000000 for i in range(128)])
+        self.assertTrue(all(x["duration_ms"] == 120 and x["valid"] == 1 for x in events))
+        self.assertFalse(any(x.get("id") == 0 for x in self.events))
+        self.assertNotIn("WARNING:", self.output)
+        self.assertNotIn("ERROR:", self.output)
+
+    def test_old_waiters_do_not_consume_reused_physical_request(self):
+        events = [x for x in self.events if x["event"] == "device" and 18000000000 <= x.get("id", 0) <= 18200000000]
+        self.assertEqual([(x["id"], x["duration_ms"]) for x in events], [(18000000000, 120), (18200000000, 120)])
 
     def test_missing_and_repeated_events_are_explicit(self):
         self.assertEqual(self.logical[7000]["reason"], 2)

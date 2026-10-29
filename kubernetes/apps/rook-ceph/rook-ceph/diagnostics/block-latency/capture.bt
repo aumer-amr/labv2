@@ -169,27 +169,31 @@ rawtracepoint:block_rq_merge
   delete(@ambiguous[arg0]);
 }
 
-// Internal flush requests are reused without a free. Recover at their real
-// completion callback if the generic completion tracepoint was not observed.
-kprobe:flush_end_io*
+// flush_end_io entry precedes its lock/refcount check and can race a timeout.
+// Sequence completion holds mq_flush_lock, after the final reference is gone
+// and before blk_kick_flush can reuse the physical request.
+kprobe:blk_flush_complete_seq
 {
   @flush_hook_ready = (uint64)1;
-  $rq = (struct request *)arg0;
-  // Timeout reference releases also call this callback while still in flight.
-  if (@device_start[arg0] && $rq->state == 2 &&
+  $fq = (struct blk_flush_queue *)arg1;
+  $rq = $fq->flush_rq;
+  $key = (uint64)$rq;
+  $start = @device_start[$key];
+  // PREFLUSH=1, POSTFLUSH=4, MQ_RQ_IDLE=0 in Linux 6.18.
+  if ($start && (arg2 == 1 || arg2 == 4) && $rq->state == 0 &&
       ($rq->cmd_flags & 255) == 2 && ($rq->rq_flags & 2) &&
-      $rq->__data_len == 0 && !@logical_start[arg0]) {
-    $ns = nsecs - @device_start[arg0];
+      $rq->__data_len == 0 && !@logical_start[$key]) {
+    $ns = nsecs - $start;
     $ms = $ns / (uint64)1000000;
     if ($ms >= 100) {
-      printf("{\"event\":\"device\",\"utc\":\"%s\",\"id\":%llu,\"duration_ms\":%llu,\"op\":2,\"bytes\":0,\"error\":%llu,\"valid\":%llu,\"trigger\":%llu,\"completion\":\"flush_end_io\"}\n", strftime("%FT%TZ", nsecs), @device_start[arg0], $ms, arg1, (uint64)1 - @device_bad[arg0], (uint64)($ms >= 5000));
+      printf("{\"event\":\"device\",\"utc\":\"%s\",\"id\":%llu,\"duration_ms\":%llu,\"op\":2,\"bytes\":0,\"error\":%llu,\"valid\":%llu,\"trigger\":%llu,\"completion\":\"flush_sequence\"}\n", strftime("%FT%TZ", nsecs), $start, $ms, arg3, (uint64)1 - @device_bad[$key], (uint64)($ms >= 5000));
     }
     @operations[2, (uint64)2] = count();
     @stats[3] = count();
     @stats[12] = count();
-    delete(@device_start[arg0]);
-    delete(@device_meta[arg0]);
-    delete(@device_bad[arg0]);
+    delete(@device_start[$key]);
+    delete(@device_meta[$key]);
+    delete(@device_bad[$key]);
   }
 }
 
