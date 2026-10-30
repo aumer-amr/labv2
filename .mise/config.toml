@@ -44,4 +44,4 @@ lockfile_platforms = [
 ]
 
 [settings.aqua]
-cosign = false
+cosign = true
