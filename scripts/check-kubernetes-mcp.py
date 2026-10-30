@@ -88,23 +88,17 @@ assert any(
 paseo = documents(ROOT / "kubernetes/apps/ai/paseo/app/litellmvirtualkey.yaml")[0]
 assert "c53d724b-0d4e-4ffa-98cf-441e37bb809f" in paseo["spec"]["mcpToolsets"]
 
-schema_host = "k8s-schemas.home-operations.com"
 paseo_external = next(
     policy for policy in documents(ROOT / "kubernetes/apps/ai/paseo/app/networkpolicy.yaml")
     if policy["metadata"]["name"] == "paseo-external"
 )
-dns_protocols = {
-    port["protocol"] for rule in paseo_external["spec"]["egress"]
-    for entry in rule.get("toPorts", [])
-    if {"matchName": schema_host} in entry.get("rules", {}).get("dns", [])
-    for port in entry["ports"] if port["port"] == "53"
-}
-assert dns_protocols == {"UDP", "TCP"}, "Paseo must resolve the schema host over both DNS transports"
-assert any(
-    {"matchName": schema_host} in rule.get("toFQDNs", [])
-    and {"port": "443", "protocol": "TCP"} in entry.get("ports", [])
-    for rule in paseo_external["spec"]["egress"] for entry in rule.get("toPorts", [])
-), "Paseo must download schemas over HTTPS"
+assert paseo_external["spec"] == {
+    "endpointSelector": {"matchLabels": {
+        "app.kubernetes.io/instance": "paseo",
+        "app.kubernetes.io/name": "paseo",
+    }},
+    "egress": [{"toEntities": ["all"]}],
+}, "Only interactive Paseo has unrestricted egress, including DNS and schema downloads"
 
 
 def config_reference(directory):

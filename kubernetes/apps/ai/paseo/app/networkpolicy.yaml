@@ -90,75 +90,7 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: paseo
       app.kubernetes.io/name: paseo
+  # Interactive sessions fetch arbitrary URLs; automation has a separate restricted policy.
   egress:
-    - toEndpoints:
-        - matchLabels:
-            k8s:io.kubernetes.pod.namespace: kube-system
-            k8s:k8s-app: kube-dns
-      toPorts:
-        - ports:
-            - port: "53"
-              protocol: UDP
-          rules:
-            dns:
-              - matchName: api.openai.com
-              - matchName: auth.openai.com
-              - matchName: chatgpt.com
-              - matchName: ab.chatgpt.com
-              - matchName: developers.openai.com
-              - matchName: learn.chatgpt.com
-              - matchName: github.com
-              - matchName: api.github.com
-              - matchName: raw.githubusercontent.com
-              - matchName: k8s-schemas.home-operations.com
-              - matchName: objects.githubusercontent.com
-              - matchName: release-assets.githubusercontent.com
-              - matchName: registry.npmjs.org
-              - matchName: mise.jdx.dev
-              - matchName: litellm.ai.svc.cluster.local
-              - matchName: memini.ai.svc.cluster.local
-    - toEndpoints:
-        - matchLabels:
-            k8s:io.kubernetes.pod.namespace: kube-system
-            k8s:k8s-app: kube-dns
-      toPorts:
-        - ports:
-            - port: "53"
-              protocol: TCP
-          rules:
-            dns:
-              - matchName: api.openai.com
-              - matchName: auth.openai.com
-              - matchName: chatgpt.com
-              - matchName: ab.chatgpt.com
-              - matchName: developers.openai.com
-              - matchName: learn.chatgpt.com
-              - matchName: github.com
-              - matchName: api.github.com
-              - matchName: raw.githubusercontent.com
-              - matchName: k8s-schemas.home-operations.com
-              - matchName: objects.githubusercontent.com
-              - matchName: release-assets.githubusercontent.com
-              - matchName: registry.npmjs.org
-              - matchName: mise.jdx.dev
-              - matchName: litellm.ai.svc.cluster.local
-              - matchName: memini.ai.svc.cluster.local
-    - toFQDNs:
-        - matchName: api.openai.com
-        - matchName: auth.openai.com
-        - matchName: chatgpt.com
-        - matchName: ab.chatgpt.com
-        - matchName: developers.openai.com
-        - matchName: learn.chatgpt.com
-        - matchName: github.com
-        - matchName: api.github.com
-        - matchName: raw.githubusercontent.com
-        - matchName: k8s-schemas.home-operations.com
-        - matchName: objects.githubusercontent.com
-        - matchName: release-assets.githubusercontent.com
-        - matchName: registry.npmjs.org
-        - matchName: mise.jdx.dev
-      toPorts:
-        - ports:
-            - port: "443"
-              protocol: TCP
+    - toEntities:
+        - all
