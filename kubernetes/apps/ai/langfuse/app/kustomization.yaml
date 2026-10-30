@@ -11,3 +11,28 @@ resources:
   - ./ocirepository.yaml
   - ./httproute.yaml
   - ./networkpolicy.yaml
+patches:
+  - target:
+      group: helm.toolkit.fluxcd.io
+      kind: HelmRelease
+      name: .*-valkey
+    patch: |-
+      - op: replace
+        path: /spec/values/dataStorage/enabled
+        value: true
+      - op: add
+        path: /spec/values/dataStorage/requestedSize
+        value: 1Gi
+      - op: add
+        path: /spec/values/dataStorage/className
+        value: ceph-block
+      - op: add
+        path: /spec/values/dataStorage/keepPvc
+        value: true
+      - op: replace
+        path: /spec/values/valkeyConfig
+        value: |-
+          maxmemory 192mb
+          maxmemory-policy noeviction
+          appendonly yes
+          appendfsync everysec
