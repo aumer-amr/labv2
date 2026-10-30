@@ -11,5 +11,5 @@ spec:
     operation: copy
   ref:
     tag: 4.0.303
-    digest: sha256:a706c1970c23c2ed63685662bca4ae97f2ef5a89e765104142d01cfb1a61b779
-  url: oci://ocharted.aumer.dev/windmill-labs.github.io/windmill-helm-charts/windmill
+    digest: sha256:3f7c8764f7c34ac6acd89347d42ead2d2beff3b65bad2f1be0ada7d91472123f
+  url: oci://ghcr.io/windmill-labs/charts/windmill
