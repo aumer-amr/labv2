@@ -20,6 +20,9 @@ spec:
             command: ["/bin/sh", "-ec"]
             args:
               - |-
+                # Use root-owned APT directories with all capabilities dropped.
+                mkdir -p /tmp/apt/lists/partial /tmp/apt/archives/partial
+                printf 'Dir::State::lists "/tmp/apt/lists";\nDir::Cache::archives "/tmp/apt/archives";\n' > /etc/apt/apt.conf.d/99sendspin
                 apt-get -o APT::Sandbox::User=root update
                 mkdir -p /runtime/native /tmp/packages
                 cd /tmp/packages
