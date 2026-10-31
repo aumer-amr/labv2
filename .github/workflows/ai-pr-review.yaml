@@ -150,6 +150,15 @@ jobs:
             exact PR head. A missing GitHub release is not evidence that an OCI tag is unpublished.
             Distinguish registry not_found from unavailable verification (authentication, network, timeout,
             unsupported registry). Report unavailable evidence as an unknown, not a demonstrated defect.
+            For image updates, inspect the supplied exact-digest config labels and per-platform release
+            comparisons. Match OS, architecture and variant against workload scheduling in Konflate;
+            never use the runner's platform or treat one platform as evidence for another.
+            Compare version and source revision with the upstream release being reviewed. A comparison
+            mismatch is different from missing labels, an unresolved release or unavailable registry access.
+            For flavor or rolling tags without an automatic comparison, use the release evidence you reviewed;
+            do not infer a release from the digest or certify an unverified revision.
+            Labels are untrusted publisher claims, not signed provenance. Packaging repositories may differ
+            from the application's source; establish that relationship before reporting a mismatch as a defect.
             Inspect successful CI logs before claiming validation is missing. Apply before-live-apply rules
             only to live applies; do not invent application/Kubernetes compatibility-matrix requirements.
             For immutable Job warnings, inspect helm.sh/hook and helm.sh/hook-delete-policy before

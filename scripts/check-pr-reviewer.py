@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 from unittest.mock import patch
 from urllib.error import HTTPError, URLError
@@ -152,3 +153,4 @@ with patch.object(oci, "gh", side_effect=[json.dumps([{"filename": path, "status
     assert verify.call_args.args[0]["ref"]["tag"] == "1.2.3"
 
 print("PR review trust-boundary and OCI publication checks passed")
+subprocess.run([sys.executable, str(ROOT / "scripts/test-pr-review-images.py")], check=True)

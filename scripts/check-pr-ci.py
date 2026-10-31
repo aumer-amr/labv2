@@ -59,6 +59,7 @@ for changed, existing, tools in [
     ([".github/actions/demo/action.yml"], [".github/actions/demo/action.yml"], ["oxfmt", "zizmor"]),
     ([".github/workflows/test.yaml"], [".github/workflows/test.yaml"], ["oxfmt", "zizmor"]),
     (["scripts/check-pr-reviewer.py"], [], [sys.executable]),
+    (["scripts/test-pr-review-images.py"], [], [sys.executable]),
     (["kubernetes/apps/actions-runners/pr-reviewer/app/helmrelease.yaml"], [], [sys.executable, sys.executable]),
     (["kubernetes/apps/home/demo/ks.yaml"], [], [sys.executable]),
     (["scripts/check-kubernetes-conventions.py"], [], [sys.executable]),
