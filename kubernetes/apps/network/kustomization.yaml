@@ -15,3 +15,5 @@ resources:
   - ./envoy-gateway/ks.yaml
   - ./k8s-gateway/ks.yaml
   - ./echo/ks.yaml
+  - ./crowdsec/ks.yaml
+  - ./crowdsec-bouncer/ks.yaml

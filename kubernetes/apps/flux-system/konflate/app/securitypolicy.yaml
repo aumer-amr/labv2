@@ -4,6 +4,8 @@ kind: SecurityPolicy
 metadata:
   name: konflate-oidc
 spec:
+  # Keep route authentication/authorization while inheriting gateway CrowdSec checks.
+  mergeType: StrategicMerge
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute

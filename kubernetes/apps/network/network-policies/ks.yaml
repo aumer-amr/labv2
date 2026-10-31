@@ -5,6 +5,8 @@ metadata:
   name: network-policies
 spec:
   dependsOn:
+    - name: crowdsec
+    - name: crowdsec-bouncer
     - name: cloudflare-dns
     - name: cloudflare-tunnel
     - name: echo

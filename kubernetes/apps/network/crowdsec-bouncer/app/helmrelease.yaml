@@ -1,0 +1,55 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: crowdsec-bouncer
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: crowdsec-bouncer
+  interval: 1h
+  values:
+    fullnameOverride: crowdsec-bouncer
+    replicaCount: 2
+    podAnnotations:
+      secret.reloader.stakater.com/reload: crowdsec-secret
+    podSecurityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 65532
+      runAsGroup: 65532
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: envoy-proxy-bouncer
+                app.kubernetes.io/instance: crowdsec-bouncer
+            topologyKey: kubernetes.io/hostname
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+    config:
+      # Match Envoy's trustedCIDRs; Envoy appends the connection peer to XFF.
+      trustedProxies:
+        - "10.42.0.0/16"
+      bouncer:
+        lapiURL: http://crowdsec-service.network.svc.cluster.local:8080
+        metrics: true
+        apiKeySecretRef:
+          name: crowdsec-secret
+          key: BOUNCER_KEY_ENVOY
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
