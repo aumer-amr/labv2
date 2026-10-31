@@ -1,0 +1,107 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: crowdsec
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: crowdsec
+  interval: 1h
+  # Chart 0.24.2 omits the supported Kubernetes datasource from its values schema.
+  install:
+    disableSchemaValidation: true
+  upgrade:
+    disableSchemaValidation: true
+  values:
+    container_runtime: containerd
+    image:
+      repository: mirror.gcr.io/crowdsecurity/crowdsec
+    secrets:
+      externalSecret:
+        name: crowdsec-secret
+    lapi:
+      env:
+        - name: USE_WAL
+          value: "true"
+        - name: BOUNCER_KEY_ENVOY
+          valueFrom:
+            secretKeyRef:
+              name: crowdsec-secret
+              key: BOUNCER_KEY_ENVOY
+      podAnnotations:
+        secret.reloader.stakater.com/reload: crowdsec-secret
+      podSecurityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      # Stock startup writes root-owned /staging and creates /etc/crowdsec.
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        allowPrivilegeEscalation: false
+        privileged: false
+        capabilities: &capabilities
+          drop:
+            - ALL
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          memory: 512Mi
+      persistentVolume:
+        data:
+          enabled: true
+          storageClassName: ceph-block
+          size: 1Gi
+        config:
+          enabled: true
+          storageClassName: ceph-block
+          size: 100Mi
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+    agent:
+      isDeployment: true
+      replicas: 1
+      hostVarLog: false
+      serviceAccountName: crowdsec-agent
+      podAnnotations:
+        secret.reloader.stakater.com/reload: crowdsec-secret
+      additionalAcquisition:
+        - source: kubernetes
+          namespace: network
+          selector: gateway.envoyproxy.io/owning-gateway-name=envoy-external
+          labels:
+            type: envoy
+      env:
+        - name: COLLECTIONS
+          value: yanis-kouidri/envoy
+      podSecurityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      # Stock startup writes root-owned /staging and creates /etc/crowdsec.
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        allowPrivilegeEscalation: false
+        privileged: false
+        capabilities: *capabilities
+      wait_for_lapi:
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          allowPrivilegeEscalation: false
+          privileged: false
+          capabilities: *capabilities
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          memory: 256Mi
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
