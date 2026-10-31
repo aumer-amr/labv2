@@ -474,6 +474,27 @@ spec:
               kubernetes.io/metadata.name: network
           podSelector:
             matchLabels:
+              k8s-app: crowdsec
+              type: agent
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
+              k8s-app: crowdsec
+              type: lapi
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: envoy-proxy-bouncer
+              app.kubernetes.io/instance: crowdsec-bouncer
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network
+          podSelector:
+            matchLabels:
               gateway.envoyproxy.io/owning-gateway-name: envoy-internal
         - namespaceSelector:
             matchLabels:
