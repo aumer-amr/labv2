@@ -12,7 +12,8 @@ spec:
     # Preserve gateway availability on bouncer transport failure; OIDC still applies.
     failOpen: true
     headersToExtAuth:
-      - X-Envoy-External-Address
+      # Forward only the chain Envoy appends, never caller-supplied IP overrides.
+      - X-Forwarded-For
     grpc:
       backendRefs:
         - name: crowdsec-bouncer

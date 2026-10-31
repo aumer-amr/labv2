@@ -40,7 +40,9 @@ spec:
       limits:
         memory: 128Mi
     config:
-      trustedIPHeader: X-Envoy-External-Address
+      # Match Envoy's trustedCIDRs; Envoy appends the connection peer to XFF.
+      trustedProxies:
+        - "10.42.0.0/16"
       bouncer:
         lapiURL: http://crowdsec-service.network.svc.cluster.local:8080
         metrics: true

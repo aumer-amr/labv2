@@ -87,9 +87,13 @@ def main():
     policy = documents(NETWORK / "crowdsec-bouncer/app/securitypolicy.yaml")[0]["spec"]
     assert policy["targetRefs"] == [{"group": "gateway.networking.k8s.io", "kind": "Gateway", "name": "envoy-external"}]
     assert policy["extAuth"]["failOpen"] is True
-    assert policy["extAuth"]["headersToExtAuth"] == ["X-Envoy-External-Address"], "Do not pass spoofable client IP headers"
+    assert policy["extAuth"]["headersToExtAuth"] == ["X-Forwarded-For"], "Do not pass caller-supplied IP overrides"
     config = yaml.safe_load(resource(bouncer, "ConfigMap", "crowdsec-bouncer-config")["data"]["config.yaml"])
-    assert config["trustedIPHeader"] == "X-Envoy-External-Address"
+    assert not config.get("trustedIPHeader"), "trustedCIDRs does not sanitize X-Envoy-External-Address"
+    client_policy = resource(documents(NETWORK / "envoy-gateway/app/envoy.yaml"), "ClientTrafficPolicy", "envoy")["spec"]
+    xff = client_policy["clientIPDetection"]["xForwardedFor"]
+    assert not xff.get("disableXForwardedForAppend", False), "Envoy must append the connection peer before external auth"
+    assert config["trustedProxies"] == xff["trustedCIDRs"] == ["10.42.0.0/16"]
     for app, name, control in [("flux-system/konflate", "konflate-oidc", "oidc"), ("home/mealie", "mealie", "authorization")]:
         route_policy = resource(documents(ROOT / f"kubernetes/apps/{app}/app/securitypolicy.yaml"), "SecurityPolicy", name)["spec"]
         assert route_policy["mergeType"] == "StrategicMerge" and control in route_policy
@@ -105,6 +109,13 @@ def main():
     for name, port in [("crowdsec-agent", 6060), ("crowdsec-lapi", 6060), ("crowdsec-bouncer", 9090)]:
         assert allows(policies, pods[name], prometheus, "ingress", port, peer_namespace="observability")
         assert allows(monitoring, prometheus, pods[name], "egress", port, namespace="observability")
+    dns_policies = documents(ROOT / "kubernetes/apps/kube-system/coredns/app/networkpolicy.yaml")
+    dns_ingress = resource(dns_policies, "NetworkPolicy", "coredns")["spec"]["ingress"]
+    for name in pods:
+        peer = {"namespaceSelector": {"matchLabels": {"kubernetes.io/metadata.name": "network"}},
+                "podSelector": resource(policies, "NetworkPolicy", name)["spec"]["podSelector"]}
+        for protocol in ["UDP", "TCP"]:
+            assert any(peer in rule.get("from", []) and {"port": 53, "protocol": protocol} in rule.get("ports", []) for rule in dns_ingress), (name, protocol)
     print("CrowdSec rendered workload, credential, acquisition, policy coexistence and traffic contracts passed")
 
 
