@@ -1,0 +1,152 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whisper-assist
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: whisper-assist
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: whisper-assist
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: adapter
+          image: ghcr.io/roryeckel/wyoming_openai:0.8.0@sha256:c88a1b06e3305140a830705213977dd5ea7cd7dd970bf99e3f84abfd7e83f26e
+          env:
+            - name: STT_OPENAI_URL
+              value: http://whisper.ai.svc.cluster.local:8080/v1
+            - name: STT_MODELS
+              value: Systran/faster-whisper-base
+            - name: STT_BACKEND
+              value: SPEACHES
+            - name: WYOMING_LANGUAGES
+              value: en
+            - name: WYOMING_LOG_LEVEL
+              value: WARNING
+            - name: HOME
+              value: /tmp
+          ports:
+            - name: wyoming
+              containerPort: 10300
+          readinessProbe:
+            tcpSocket:
+              port: wyoming
+          livenessProbe:
+            tcpSocket:
+              port: wyoming
+            periodSeconds: 30
+          startupProbe:
+            tcpSocket:
+              port: wyoming
+            failureThreshold: 30
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: whisper-assist
+spec:
+  selector:
+    app.kubernetes.io/name: whisper-assist
+  ports:
+    - name: wyoming
+      port: 10300
+      targetPort: wyoming
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: whisper-assist
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: whisper-assist
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: home
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: home-assistant
+              app.kubernetes.io/name: home-assistant
+      ports:
+        - port: 10300
+          protocol: TCP
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: whisper
+              app.kubernetes.io/name: whisper
+      ports:
+        - port: 8080
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: whisper-assist-backend
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: whisper
+      app.kubernetes.io/name: whisper
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: whisper-assist
+      ports:
+        - port: 8080
+          protocol: TCP
