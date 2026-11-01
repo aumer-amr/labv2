@@ -12,6 +12,82 @@ spec:
   datasources:
     - datasourceName: prometheus
       inputName: DS_PROMETHEUS
-  configMapRef:
-    name: cnpg-grafana-dashboard
-    key: cnp.json
+  envs:
+    - name: dashboard
+      valueFrom:
+        configMapKeyRef:
+          name: cnpg-grafana-dashboard
+          key: cnp.json
+  jsonnet: |
+    local dashboard = std.parseJson(std.extVar('dashboard'));
+    local filters = 'namespace=~"$namespace",pod=~"$instances"';
+    local primary = 'cnpg_pg_replication_in_recovery{' + filters + '} == 0';
+    local onPod = ' on(namespace,pod) ';
+    local metric(name, extra='') = '(' + name + '{' + filters + extra + '} and' + onPod + '(' + primary + '))';
+    local age = '(' + metric('cnpg_pg_stat_archiver_seconds_since_last_archival') +
+                ' + time() - timestamp(' + metric('cnpg_pg_stat_archiver_seconds_since_last_archival') + '))';
+    local activity = '(increase(cnpg_collector_wal_bytes{' + filters + '}[15m]) and' + onPod + '(' + primary + '))';
+    local ready = metric('cnpg_collector_pg_wal_archive_status', ',value="ready"');
+    local failures = '(increase(cnpg_pg_stat_archiver_failed_count{' + filters + '}[15m]) and' + onPod + '(' + primary + '))';
+    local active = 'clamp_max((' + activity + ' > bool 0) +' + onPod + '(' + ready + ' > bool 0), 1)';
+    // Failure takes precedence, including when another input is missing. Arithmetic requires every input for other states.
+    local walStatus = 'max(((5 + 0 * ' + failures + ') and' + onPod + '(' + failures + ' > 0)) or' + onPod +
+                      '((' + age + ' <= bool 360) +' + onPod + '(' + age + ' > bool 360) *' + onPod + active +
+                      ' *' + onPod + '(2 + (' + age + ' > bool 900)) +' + onPod +
+                      '(0 * ' + failures + ')' +
+                      ') or' + onPod + '(4 + 0 * (' + primary + '))) or vector(4)';
+    local walMappings = [{
+      type: 'value',
+      options: {
+        '0': { text: 'Idle', color: 'green' },
+        '1': { text: 'Healthy', color: 'green' },
+        '2': { text: 'Delayed', color: 'orange' },
+        '3': { text: 'Unsynced', color: 'red' },
+        '4': { text: 'Unknown', color: 'orange' },
+        '5': { text: 'Failed', color: 'red' },
+      },
+    }];
+    local replaceMetrics(expr) = std.strReplace(
+      std.strReplace(expr, 'cnpg_collector_first_recoverability_point',
+                     'barman_cloud_cloudnative_pg_io_first_recoverability_point'),
+      'cnpg_collector_last_available_backup_timestamp',
+      'barman_cloud_cloudnative_pg_io_last_available_backup_timestamp');
+    local reconcile(expr, indicator) =
+      local recent = std.strReplace(
+        std.strReplace(expr, 'max(controller_runtime_reconcile_total{',
+                       'sum(increase(controller_runtime_reconcile_total{job="database/cloudnative-pg",'),
+        '})', '}[1h]))');
+      if indicator then '(' + std.strReplace(std.strReplace(recent, 'clamp_max(', ''), ', 1)', '') + ' > bool 0)'
+      else recent;
+    local patchPanel(p) =
+      local targets = p.targets;
+      local hasReconcile = std.any([std.objectHas(t, 'expr') && std.length(std.findSubstr('controller_runtime_reconcile_total', t.expr)) > 0 for t in targets]);
+      p + {
+        targets: [
+          if !std.objectHas(t, 'expr') then t
+          else if p.id == 612 then t + { expr: walStatus, instant: true, range: false }
+          else t + { expr: replaceMetrics(if hasReconcile then reconcile(t.expr, p.id == 655) else t.expr) } +
+               (if hasReconcile && p.type == 'stat' then { instant: true, range: false } else {})
+          for t in targets
+        ],
+      } + (if p.id == 612 then {
+        description: 'Primary WAL archive status. Recent failures in 15 minutes take precedence. Archive age over 6 minutes is Delayed. Archive age over 15 minutes is Unsynced. These states require WAL activity in 15 minutes or completed segments awaiting archive. An older archive with no activity or queued segments is Idle. Missing inputs are Unknown.',
+        fieldConfig: p.fieldConfig + {
+          defaults: p.fieldConfig.defaults + { mappings: walMappings, noValue: 'Unknown' },
+          overrides: [],
+        },
+      } else if hasReconcile then {
+        description: 'Estimated CNPG operator errors in the last hour. These errors cover all managed clusters. Missing metrics do not mean zero errors.',
+        fieldConfig: p.fieldConfig + {
+          defaults: p.fieldConfig.defaults + {
+            noValue: 'Unknown',
+            thresholds: { mode: 'absolute', steps: [{ color: 'green', value: null }, { color: 'red', value: 0.000000001 }] },
+          },
+        },
+      } else {});
+    local panels(items) = [
+      (if std.objectHas(p, 'targets') then patchPanel(p) else p) +
+      (if std.objectHas(p, 'panels') then { panels: panels(p.panels) } else {})
+      for p in items
+    ];
+    dashboard + { panels: panels(dashboard.panels) }
