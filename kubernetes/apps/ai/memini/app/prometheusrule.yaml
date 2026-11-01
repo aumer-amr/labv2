@@ -26,12 +26,3 @@ spec:
             description: Check reranker availability and inference capacity; recall quality may be degraded.
           labels:
             severity: warning
-        - alert: MeminiConsolidateErrors
-          expr: |-
-            sum by (namespace) (increase(memini_consolidate_results_total{namespace="ai", result="error"}[1h])) > 3
-          for: 15m
-          annotations:
-            summary: Memini consolidation is repeatedly failing
-            description: Check Memini logs and its LiteLLM model; memory maintenance is failing.
-          labels:
-            severity: warning
