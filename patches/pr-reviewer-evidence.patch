@@ -1,3 +1,99 @@
+diff --git a/src/tools/executors.ts b/src/tools/executors.ts
+index 72975e3..2deb781 100644
+--- a/src/tools/executors.ts
++++ b/src/tools/executors.ts
+@@ -22,6 +22,7 @@
+  * through the typed runtime seam (`runProcess`), never a shell.
+  */
+ import fs from "node:fs";
++import { PlatformRequestError } from "../platform/http.js";
+ import path from "node:path";
+ import { maskAndTruncate, maskAndTruncateSource, redactSourceText } from "../context/redact.js";
+ import { USER_AGENT } from "../platform/user-agent.js";
+@@ -114,6 +115,7 @@ export function buildTrackedIndex(lsFilesStdout: string): TrackedIndex {
+ export type ToolContext = {
+   workspaceRoot: string;
+   trackedIndex?: TrackedIndex | null;
++  prHead?: { sha: string; paths: ReadonlySet<string> };
+   allowedGhRepos?: readonly string[];
+   currentRepo?: string;
+   allowedHosts?: readonly string[];
+@@ -407,10 +409,11 @@ export async function repoContents(
+     let parentData: unknown;
+     try {
+       const res = await ghGet(ctx, contentsUrl(parentPath, ref_));
+-      if (res.status >= 400) throw new Error("preflight status");
++      if (res.status >= 400) return { error: `Repository contents file preflight failed: HTTP ${res.status}` };
+       parentData = JSON.parse(res.body);
+-    } catch {
+-      return { error: "Repository contents file preflight failed" };
++    } catch (error) {
++      const reason = error instanceof PlatformRequestError ? error.kind : "invalid-response-or-transport";
++      return { error: `Repository contents file preflight failed: ${reason}` };
+     }
+     if (!Array.isArray(parentData)) return { error: "Repository contents file preflight failed" };
+     const matches = parentData.filter(
+@@ -520,19 +523,32 @@ function decodeGhApiContentsFile(data: unknown): Obj | null {
+ }
+
+ export async function readFile(input: string, ctx: ToolContext, offset?: number | null, limit?: number | null): Promise<Obj> {
+-  const guarded = resolveWorkspacePath(input, ctx.workspaceRoot);
+-  if (guarded.error) return { error: guarded.error };
+-  if (ctx.trackedIndex && !ctx.trackedIndex.files.has(workspaceRel(guarded.path!, ctx.workspaceRoot))) {
+-    return { error: UNTRACKED_PATH_ERROR };
+-  }
++  const relative = path.relative(ctx.workspaceRoot, path.resolve(ctx.workspaceRoot, input));
++  const head = ctx.prHead?.paths.has(relative) ? ctx.prHead : undefined;
+   let content: string;
+-  try {
+-    content = fs.readFileSync(guarded.path!, "utf8");
+-  } catch (e) {
+-    return { error: String(e) };
++  if (head) {
++    if (input.split(/[\\/]/).includes("..")) return { error: "Invalid path: dot-segment" };
++    if (!/^[0-9a-f]{40}$/.test(head.sha)) return { error: "Changed-file read requires an immutable PR head SHA" };
++    const res = await repoContents(ctx.currentRepo, relative, head.sha, ctx);
++    if (res.error) return { error: res.error };
++    if (res.type !== "file" || typeof res.content !== "string") return { error: "PR head file is not readable text" };
++    // Mask the complete head text before line windows or caps can split credentials.
++    content = redactSourceText(res.content, relative);
++  } else {
++    const guarded = resolveWorkspacePath(input, ctx.workspaceRoot);
++    if (guarded.error) return { error: guarded.error };
++    if (ctx.trackedIndex && !ctx.trackedIndex.files.has(workspaceRel(guarded.path!, ctx.workspaceRoot))) {
++      return { error: UNTRACKED_PATH_ERROR };
++    }
++    try {
++      content = fs.readFileSync(guarded.path!, "utf8");
++    } catch (e) {
++      return { error: String(e) };
++    }
+   }
++  const provenance = head ? { provenance: { source: "github_pr_head", ref: head.sha, untrusted: true } } : {};
+   if (offset == null && limit == null) {
+-    return { content: codepointSlice(content, 12000) };
++    return { content: codepointSlice(content, 12000), ...provenance };
+   }
+   const lines = splitKeepEnds(content);
+   const start = Math.max((offset || 1) - 1, 0);
+@@ -541,6 +557,7 @@ export async function readFile(input: string, ctx: ToolContext, offset?: number
+   return {
+     content: codepointSlice(window, 12000),
+     range: { offset: start + 1, lines: end - start, total_lines: lines.length },
++    ...provenance,
+   };
+ }
+
+@@ -1017,6 +1034,7 @@ export async function executeToolRequest(tool: string, args: Obj, ctx: ToolConte
+         const text = boundedSource(maskAndTruncateSource(res.content, Number.MAX_SAFE_INTEGER, p).text, cap, p);
+         const payload: Obj = { content: text };
+         if (res.range) payload.range = res.range;
++        if (res.provenance) payload.provenance = res.provenance;
+         result = payload;
+         break;
+       }
+diff --git a/src/tools/harness.ts b/src/tools/harness.ts
+index 80112d5..24ad9f6 100644
 --- a/src/tools/harness.ts
 +++ b/src/tools/harness.ts
 @@ -22,6 +22,7 @@
@@ -8,7 +104,18 @@
  import path from "node:path";
  import {
    Conversation,
-@@ -1388,7 +1389,18 @@
+@@ -1381,6 +1382,10 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+   const toolCtx: ToolContext = {
+     workspaceRoot: input.workspaceRoot,
+     trackedIndex,
++    // Standalone callers read their checkout; review orchestration supplies PR_HEAD_SHA.
++    ...(env.PR_HEAD_SHA === undefined ? {} : {
++      prHead: { sha: env.PR_HEAD_SHA, paths: new Set(loadChangedFilePaths(deps.readText)) },
++    }),
+     allowedGhRepos: [...input.allowedGhApiRepos],
+     currentRepo: input.repo,
+     allowedHosts: input.allowedHosts,
+@@ -1388,7 +1393,18 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
      requestTimeout: input.requestTimeout,
      searchUrl,
      maxSearchResults,
@@ -28,7 +135,7 @@
    };
 
    const executeFn = async (toolName: string, args: Record<string, unknown>): Promise<Record<string, unknown>> => {
-@@ -1769,6 +1781,20 @@
+@@ -1769,6 +1785,20 @@ export function summarizeLoopOutcome(result: HarnessResult, outcome: LoopOutcome
   * `write_outputs`): embeds the #702 telemetry object, redacts, and writes the
   * tier-scoped artifacts 0600. */
  export function writeOutputs(summary: HarnessResult, markdown: string, deps: HarnessDeps): void {
@@ -49,28 +156,3 @@
    const telemetry = buildToolLoopTelemetry(summary);
    if (telemetry !== null) summary.tool_loop_telemetry = telemetry;
    const tier = deps.env.TOOL_HARNESS_TIER || "primary";
---- a/src/tools/executors.ts
-+++ b/src/tools/executors.ts
-@@ -22,6 +22,7 @@
-  * through the typed runtime seam (`runProcess`), never a shell.
-  */
- import fs from "node:fs";
-+import { PlatformRequestError } from "../platform/http.js";
- import path from "node:path";
- import { maskAndTruncate, maskAndTruncateSource, redactSourceText } from "../context/redact.js";
- import { USER_AGENT } from "../platform/user-agent.js";
-@@ -407,10 +408,11 @@
-     let parentData: unknown;
-     try {
-       const res = await ghGet(ctx, contentsUrl(parentPath, ref_));
--      if (res.status >= 400) throw new Error("preflight status");
-+      if (res.status >= 400) return { error: `Repository contents file preflight failed: HTTP ${res.status}` };
-       parentData = JSON.parse(res.body);
--    } catch {
--      return { error: "Repository contents file preflight failed" };
-+    } catch (error) {
-+      const reason = error instanceof PlatformRequestError ? error.kind : "invalid-response-or-transport";
-+      return { error: `Repository contents file preflight failed: ${reason}` };
-     }
-     if (!Array.isArray(parentData)) return { error: "Repository contents file preflight failed" };
-     const matches = parentData.filter(
