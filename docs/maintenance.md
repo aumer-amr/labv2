@@ -66,14 +66,14 @@ Talos minor release:
 
 1. Check the official Talos support matrix for that minor release.
 2. Add its supported Kubernetes minor range to
-   `scripts/check-talos-kubernetes-compatibility.sh`.
+   `scripts/ci/check-talos-kubernetes-compatibility.sh`.
 3. Raise the exclusive `ghcr.io/siderolabs/kubelet` `allowedVersions` ceiling
    in `.renovaterc.json5`. For a maximum supported Kubernetes version of
    `1.37`, use `<1.38.0`.
 4. Run the compatibility check:
 
     ```sh
-    bash scripts/check-talos-kubernetes-compatibility.sh
+    bash scripts/ci/check-talos-kubernetes-compatibility.sh
     ```
 
 Unknown Talos minors fail the check until this review is completed. Do not
@@ -87,7 +87,7 @@ matrix. Update `kubernetesVersion` in `talos/topf.yaml` and the version in
 run:
 
 ```sh
-bash scripts/check-talos-kubernetes-compatibility.sh
+bash scripts/ci/check-talos-kubernetes-compatibility.sh
 ```
 
 After the check passes, run:
