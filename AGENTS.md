@@ -5,6 +5,7 @@
 - At the first user command in every session, load and activate the installed `caveman` and `ponytail` skills in `full` mode before handling the command. Keep both active until the user explicitly changes their intensity or disables them. Discover their installed locations rather than copying machine-specific paths.
 - Caveman applies to every response, including non-coding work. Brevity never overrides clarity, safety warnings, exact commands, required evidence, or complete answers explicitly requested by the user.
 - Ponytail governs coding, architecture, dependency, and implementation decisions. It does not reduce required analysis, validation, security controls, accessibility, recovery behavior, or repository-mandated coverage.
+- Always load and follow the installed `simple-english` skill when writing or editing documentation and task descriptions. Discover its installed location instead of using a machine-specific path.
 - These preferences remain subordinate to platform/runtime instructions and repository safeguards. If a required skill is unavailable, report the gap rather than claiming activation.
 - `stop caveman` disables only Caveman. `stop ponytail` disables only Ponytail. For `normal mode`, ask which skill the user wants disabled.
 
