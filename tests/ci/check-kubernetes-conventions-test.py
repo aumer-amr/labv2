@@ -8,7 +8,7 @@ from pathlib import Path
 import tempfile
 
 spec = importlib.util.spec_from_file_location(
-    "conventions", Path(__file__).with_name("check-kubernetes-conventions.py"),
+    "conventions", Path(__file__).resolve().parents[2] / "scripts/ci/check-kubernetes-conventions.py",
 )
 conventions = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(conventions)

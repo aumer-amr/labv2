@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check CrowdSec contracts against locally rendered chart manifests.
 
-Usage: python3 scripts/check-crowdsec.py CROWDSEC_RENDER.yaml BOUNCER_RENDER.yaml
+Usage: python3 tests/manual/check-crowdsec.py CROWDSEC_RENDER.yaml BOUNCER_RENDER.yaml
 """
 
 from pathlib import Path
@@ -9,7 +9,7 @@ import sys
 
 import yaml
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 NETWORK = ROOT / "kubernetes/apps/network"
 
 

@@ -52,7 +52,7 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund
           npm run build
           ./node_modules/.bin/tsc -p tsconfig.test.json
-          node "$GITHUB_WORKSPACE/scripts/test-pr-review-evidence.cjs" "$PWD"
+          node "$GITHUB_WORKSPACE/tests/ci/test-pr-review-evidence.cjs" "$PWD"
 
       - name: Preserve patched runtime
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

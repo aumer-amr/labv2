@@ -2,7 +2,7 @@
 """Regress Memini JSON mode through LiteLLM, with all provider HTTP mocked.
 
 Run in the installed LiteLLM container:
-  kubectl exec -i --namespace ai <litellm-pod> -- python < scripts/check-memini-json.py
+  kubectl exec -i --namespace ai <litellm-pod> -- python < tests/manual/check-memini-json.py
 """
 
 import asyncio

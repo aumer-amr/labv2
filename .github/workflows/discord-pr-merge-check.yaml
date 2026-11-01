@@ -10,8 +10,8 @@ on:
       - kubernetes/apps/ai/hermes/app/discord-review/**
       - kubernetes/apps/ai/hermes/app/helmrelease.yaml
       - kubernetes/apps/ai/hermes/app/kustomization.yaml
-      - scripts/check-discord-pr-merge.py
-      - scripts/check-flux-rollout.py
+      - tests/ci/check-discord-pr-merge.py
+      - tests/ci/check-flux-rollout.py
 
 permissions:
   contents: read
@@ -27,5 +27,5 @@ jobs:
           persist-credentials: false
       - name: Exercise authorization and stale-commit rejection
         run: |
-          python3 scripts/check-discord-pr-merge.py
-          python3 scripts/check-flux-rollout.py
+          python3 tests/ci/check-discord-pr-merge.py
+          python3 tests/ci/check-flux-rollout.py

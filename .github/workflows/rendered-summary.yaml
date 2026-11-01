@@ -37,8 +37,8 @@ jobs:
       - name: Collect allowlisted changes
         id: render
         run: |
-          python3 scripts/check-pr-rendered-summary.py --flate
-          python3 scripts/pr-rendered-summary.py collect
+          python3 tests/ci/check-pr-rendered-summary.py --flate
+          python3 scripts/ci/pr-rendered-summary.py collect
 
   publish:
     if: ${{ always() && !cancelled() }}
@@ -58,4 +58,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RENDERED_SUMMARY: ${{ needs.render.outputs.summary }}
-        run: python3 scripts/pr-rendered-summary.py publish
+        run: python3 scripts/ci/pr-rendered-summary.py publish

@@ -12,7 +12,7 @@ import tempfile
 from unittest.mock import patch
 from urllib.error import HTTPError, URLError
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def read_yaml(path, expression="."):
@@ -68,7 +68,7 @@ assert review["tool-enable-for-forks"] == "false"
 assert review["evidence-providers-file"] == ".github/pr-review-providers.json"
 assert review["evidence-enable-for-forks"] == "false"
 providers = json.loads((ROOT / review["evidence-providers-file"]).read_text())
-assert providers["providers"][0]["command"] == ["python3", "scripts/pr-review-oci.py"]
+assert providers["providers"][0]["command"] == ["python3", "scripts/ci/pr-review-oci.py"]
 assert review["ai-base-url"].startswith("http://litellm.ai.svc.cluster.local:")
 assert "http://konflate.flux-system.svc.cluster.local:" in review["tool-mcp-servers"]
 
@@ -115,7 +115,7 @@ for value, succeeds in [("test-key", True), ("", False), ("x\ninjected=y", False
         else:
             assert not output.exists()
 
-module_spec = importlib.util.spec_from_file_location("oci", ROOT / "scripts/pr-review-oci.py")
+module_spec = importlib.util.spec_from_file_location("oci", ROOT / "scripts/ci/pr-review-oci.py")
 oci = importlib.util.module_from_spec(module_spec)
 module_spec.loader.exec_module(oci)
 spec = {"url": "oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack", "ref": {"tag": "91.7.1"}}
@@ -153,4 +153,4 @@ with patch.object(oci, "gh", side_effect=[json.dumps([{"filename": path, "status
     assert verify.call_args.args[0]["ref"]["tag"] == "1.2.3"
 
 print("PR review trust-boundary and OCI publication checks passed")
-subprocess.run([sys.executable, str(ROOT / "scripts/test-pr-review-images.py")], check=True)
+subprocess.run([sys.executable, str(ROOT / "tests/ci/test-pr-review-images.py")], check=True)

@@ -25,4 +25,4 @@ jobs:
           persist-credentials: false
 
       - name: Validate Talos and Kubernetes versions
-        run: bash scripts/check-talos-kubernetes-compatibility.sh
+        run: bash scripts/ci/check-talos-kubernetes-compatibility.sh

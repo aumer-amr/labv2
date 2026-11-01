@@ -29,18 +29,18 @@ def check(base, head):
     if workflows:
         subprocess.run(["zizmor", "--offline", *workflows], check=True)
     if any(p.startswith("kubernetes/") or p in {
-        "scripts/check-kubernetes-conventions.py", "scripts/check-kubernetes-conventions-test.py",
-        "scripts/check-pr-hygiene.py", ".github/workflows/pr-hygiene.yaml",
+        "scripts/ci/check-kubernetes-conventions.py", "tests/ci/check-kubernetes-conventions-test.py",
+        "scripts/ci/check-pr-hygiene.py", ".github/workflows/pr-hygiene.yaml",
         ".mise/config.toml", ".mise/mise.lock",
     } for p in changed):
-        subprocess.run([sys.executable, "scripts/check-kubernetes-conventions.py", base, head], check=True)
+        subprocess.run([sys.executable, "scripts/ci/check-kubernetes-conventions.py", base, head], check=True)
     if any(p in {
         ".github/workflows/ai-pr-review.yaml", ".github/workflows/pr-hygiene.yaml",
-        "scripts/check-pr-reviewer.py", "scripts/check-pr-hygiene.py",
-        "scripts/pr-review-oci.py", "scripts/test-pr-review-images.py", ".github/pr-review-providers.json",
+        "tests/ci/check-pr-reviewer.py", "scripts/ci/check-pr-hygiene.py",
+        "scripts/ci/pr-review-oci.py", "tests/ci/test-pr-review-images.py", ".github/pr-review-providers.json",
         ".lefthook.toml", ".mise.toml", ".mise/config.toml", ".mise/mise.lock",
     } or p.startswith("kubernetes/apps/actions-runners/pr-reviewer/") for p in changed):
-        subprocess.run([sys.executable, "scripts/check-pr-reviewer.py"], check=True)
+        subprocess.run([sys.executable, "tests/ci/check-pr-reviewer.py"], check=True)
     print("PR hygiene checks passed")
 
 

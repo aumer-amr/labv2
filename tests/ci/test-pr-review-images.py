@@ -11,7 +11,7 @@ from unittest.mock import patch
 from urllib.error import HTTPError, URLError
 
 
-spec = importlib.util.spec_from_file_location("oci", Path(__file__).with_name("pr-review-oci.py"))
+spec = importlib.util.spec_from_file_location("oci", Path(__file__).resolve().parents[2] / "scripts/ci/pr-review-oci.py")
 oci = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(oci)
 MANIFEST = "application/vnd.oci.image.manifest.v1+json"

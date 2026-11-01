@@ -13,8 +13,8 @@ import sys
 import tempfile
 from unittest.mock import patch
 
-ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location("hygiene", ROOT / "scripts/check-pr-hygiene.py")
+ROOT = Path(__file__).resolve().parents[2]
+spec = importlib.util.spec_from_file_location("hygiene", ROOT / "scripts/ci/check-pr-hygiene.py")
 hygiene = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(hygiene)
 
@@ -58,11 +58,11 @@ for changed, existing, tools in [
      [".mise/locks/oxfmt/0.72.0/aube-lock.yaml", ".mise/locks/oxfmt/0.72.0/package.json", "ordinary.yaml", "ordinary.json"], ["oxfmt"]),
     ([".github/actions/demo/action.yml"], [".github/actions/demo/action.yml"], ["oxfmt", "zizmor"]),
     ([".github/workflows/test.yaml"], [".github/workflows/test.yaml"], ["oxfmt", "zizmor"]),
-    (["scripts/check-pr-reviewer.py"], [], [sys.executable]),
-    (["scripts/test-pr-review-images.py"], [], [sys.executable]),
+    (["tests/ci/check-pr-reviewer.py"], [], [sys.executable]),
+    (["tests/ci/test-pr-review-images.py"], [], [sys.executable]),
     (["kubernetes/apps/actions-runners/pr-reviewer/app/helmrelease.yaml"], [], [sys.executable, sys.executable]),
     (["kubernetes/apps/home/demo/ks.yaml"], [], [sys.executable]),
-    (["scripts/check-kubernetes-conventions.py"], [], [sys.executable]),
+    (["scripts/ci/check-kubernetes-conventions.py"], [], [sys.executable]),
     ([".mise/config.toml"], [".mise/config.toml"], [sys.executable, sys.executable]),
 ]:
     output = [b"".join(p.encode() + b"\0" for p in paths) for paths in (changed, existing)]
@@ -87,7 +87,7 @@ with tempfile.TemporaryDirectory() as directory:
     for command in (["oxfmt", "--check", str(bad_json)], ["zizmor", "--offline", str(bad_workflow)]):
         assert subprocess.run(command, capture_output=True).returncode != 0, command
 
-    for name in ["scripts/check-pr-reviewer.py", ".github/workflows/ai-pr-review.yaml",
+    for name in ["tests/ci/check-pr-reviewer.py", ".github/workflows/ai-pr-review.yaml",
                  "kubernetes/apps/actions-runners/pr-reviewer/app/helmrelease.yaml"]:
         destination = root / name
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -96,7 +96,7 @@ with tempfile.TemporaryDirectory() as directory:
     reviewer["jobs"]["review"]["steps"][0]["with"]["persist-credentials"] = True
     (root / ".github/workflows/ai-pr-review.yaml").write_text(json.dumps(reviewer))
     assert subprocess.run(
-        [sys.executable, str(root / "scripts/check-pr-reviewer.py")], capture_output=True,
+        [sys.executable, str(root / "tests/ci/check-pr-reviewer.py")], capture_output=True,
     ).returncode != 0
 
 print("PR CI checks passed: gate outcomes, file selection, and negative safety fixtures")

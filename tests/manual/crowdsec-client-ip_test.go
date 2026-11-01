@@ -1,7 +1,7 @@
 package crowdsec_test
 
 // Run against the bouncer v0.8.2 source checkout, using its existing dependencies:
-// CROWDSEC_REPO="$PWD" go -C "$BOUNCER_SOURCE" test "$PWD/scripts/crowdsec-client-ip_test.go" -v
+// CROWDSEC_REPO="$PWD" go -C "$BOUNCER_SOURCE" test "$PWD/tests/manual/crowdsec-client-ip_test.go" -v
 
 import (
 	"context"

@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
 topf_file="${1:-${repo_root}/talos/topf.yaml}"
 talos_upgrade_file="${2:-${repo_root}/kubernetes/apps/system-upgrade/tuppr/upgrades/talosupgrade.yaml}"
 kubernetes_upgrade_file="${3:-${repo_root}/kubernetes/apps/system-upgrade/tuppr/upgrades/kubernetesupgrade.yaml}"

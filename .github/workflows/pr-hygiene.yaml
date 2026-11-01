@@ -41,10 +41,10 @@ jobs:
         env:
           PR_BASE: ${{ github.event.pull_request.base.sha }}
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
-        run: mise exec -- python3 scripts/check-pr-hygiene.py "$PR_BASE" "$PR_HEAD"
+        run: mise exec -- python3 scripts/ci/check-pr-hygiene.py "$PR_BASE" "$PR_HEAD"
 
       - name: Check CI gate regressions
         run: |
-          mise exec -- python3 scripts/check-pr-ci.py
-          mise exec -- python3 scripts/check-kubernetes-conventions-test.py
-          python3 scripts/check-pr-rendered-summary.py
+          mise exec -- python3 tests/ci/check-pr-ci.py
+          mise exec -- python3 tests/ci/check-kubernetes-conventions-test.py
+          python3 tests/ci/check-pr-rendered-summary.py

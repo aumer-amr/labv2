@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check rendered Flux children and preserve network-policy gates against a PR base.
 
-Run with mise exec -- python3 scripts/check-kubernetes-conventions.py BASE [HEAD].
+Run with mise exec -- python3 scripts/ci/check-kubernetes-conventions.py BASE [HEAD].
 Without HEAD, validate the working tree. No secrets are decrypted or printed.
 """
 
@@ -13,7 +13,7 @@ import sys
 import tarfile
 import tempfile
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 # Approved colocated MCP services: exact identity, path, and target, not a wildcard.
 TARGET_EXCEPTIONS = {
     ("flux-system", "konflate-mcp"): ("kubernetes/apps/flux-system/konflate/mcp", "ai"),

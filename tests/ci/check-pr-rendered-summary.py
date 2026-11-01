@@ -11,8 +11,8 @@ import sys
 import tempfile
 from unittest.mock import patch
 
-ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location("summary", ROOT / "scripts/pr-rendered-summary.py")
+ROOT = Path(__file__).resolve().parents[2]
+spec = importlib.util.spec_from_file_location("summary", ROOT / "scripts/ci/pr-rendered-summary.py")
 summary = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(summary)
 if "--flate" not in sys.argv:

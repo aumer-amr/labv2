@@ -7,7 +7,7 @@ import importlib.util
 from pathlib import Path
 from unittest.mock import patch
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location("rollout", ROOT / "kubernetes/apps/ai/hermes/app/discord-review/rollout.py")
 rollout = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(rollout)
