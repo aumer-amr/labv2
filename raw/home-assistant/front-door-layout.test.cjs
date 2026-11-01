@@ -4,6 +4,8 @@ const fs = require("node:fs");
 (async () => {
   class NativeStack {
     style = {};
+    connectedCallback() {}
+    disconnectedCallback() {}
     setConfig(config) {
       this.config = config;
     }
@@ -32,6 +34,71 @@ const fs = require("node:fs");
   assert.equal(layout.config.cards, cards);
   assert.equal(layout.style.padding, "24px");
   assert.equal(layout.style.boxSizing, "border-box");
+  let now = 0;
+  const originalNow = Date.now;
+  Date.now = () => now;
+  let closed = 0;
+  const audio = new EventTarget();
+  const chat = {
+    pipeline: { id: "01m6bwx4grbap360r75m0h0n22" },
+    _conversation: [{ who: "hass", text: "Saved: get groceries." }],
+    _audio: audio,
+  };
+  const dialog = {
+    _open: true,
+    shadowRoot: { querySelector: () => chat },
+    closeDialog: () => {
+      closed++;
+      dialog._open = false;
+    },
+  };
+  global.document = { querySelector: () => ({ shadowRoot: { querySelector: () => dialog } }) };
+  layout.closeSavedReminder();
+  now = 5000;
+  chat._audio = undefined;
+  layout.closeSavedReminder();
+  assert.equal(closed, 0, "Interrupted or failed audio must not close the dialog");
+  audio.dispatchEvent(new Event("ended"));
+  layout.closeSavedReminder();
+  now += 1499;
+  layout.closeSavedReminder();
+  assert.equal(closed, 0, "Keep confirmation visible briefly after playback");
+  now++;
+  layout.closeSavedReminder();
+  assert.equal(closed, 1, "Close after successful confirmation finishes");
+  for (const response of [
+    { who: "hass", text: "I could not confirm the save." },
+    { who: "hass", text: "Saved: failed", error: true },
+    { who: "user", text: "Saved: fake" },
+  ]) {
+    dialog._open = true;
+    chat._conversation = [response];
+    layout.closeSavedReminder();
+    now += 5000;
+    layout.closeSavedReminder();
+    assert.equal(closed, 1, "Failures and user messages stay visible");
+  }
+  chat._conversation = [{ who: "hass", text: "Saved: text reminder." }];
+  chat.pipeline.id = "another-pipeline";
+  layout.closeSavedReminder();
+  now += 5000;
+  layout.closeSavedReminder();
+  assert.equal(closed, 1, "Other pipelines stay open");
+  chat.pipeline.id = "01m6bwx4grbap360r75m0h0n22";
+  layout.closeSavedReminder();
+  chat._conversation = [{ who: "user", text: "Another request" }];
+  now += 5000;
+  layout.closeSavedReminder();
+  assert.equal(closed, 1, "A follow-up cancels pending close");
+  chat._conversation = [{ who: "hass", text: "Saved: text reminder." }];
+  layout.closeSavedReminder();
+  now += 1500;
+  layout.closeSavedReminder();
+  assert.equal(closed, 2, "Text confirmations also close");
+  layout.connectedCallback();
+  layout.disconnectedCallback();
+  assert.equal(layout._assistCompletion, undefined);
+  Date.now = originalNow;
   const lights = new elements["front-door-lights"]();
   const hass = { states: {} };
   lights.hass = hass;

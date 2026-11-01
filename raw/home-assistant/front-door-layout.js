@@ -8,6 +8,58 @@ await customElements.whenDefined("hui-vertical-stack-card");
 const NativeStack = customElements.get("hui-vertical-stack-card");
 
 class FrontDoorLayout extends NativeStack {
+  connectedCallback() {
+    super.connectedCallback();
+    this._assistTimer = setInterval(() => this.closeSavedReminder(), 250);
+  }
+
+  disconnectedCallback() {
+    clearInterval(this._assistTimer);
+    this._assistCompletion = undefined;
+    super.disconnectedCallback();
+  }
+
+  closeSavedReminder() {
+    // shortcut: HA 2026.10 has no Assist completion event; revisit on frontend upgrades.
+    const dialog = document
+      .querySelector("home-assistant")
+      ?.shadowRoot?.querySelector("ha-voice-command-dialog");
+    const chat = dialog?.shadowRoot?.querySelector("ha-assist-chat");
+    const message = chat?._conversation?.at(-1);
+    if (!dialog?._open || chat?.pipeline?.id !== "01m6bwx4grbap360r75m0h0n22") {
+      this._assistCompletion = undefined;
+      return;
+    }
+    if (this._assistCompletion?.message !== message || this._assistCompletion?.chat !== chat) {
+      this._assistCompletion = { chat, message };
+    }
+    const completion = this._assistCompletion;
+    if (chat._audio && completion.audio !== chat._audio) {
+      completion.audio = chat._audio;
+      completion.audioEnded = false;
+      chat._audio.addEventListener(
+        "ended",
+        () => {
+          completion.audioEnded = true;
+        },
+        { once: true },
+      );
+    }
+    if (
+      message?.who !== "hass" ||
+      message.error ||
+      !message.text?.startsWith("Saved: ") ||
+      chat._processing ||
+      chat._audioRecorder?.active ||
+      (completion.audio && !completion.audioEnded)
+    ) {
+      completion.readyAt = undefined;
+      return;
+    }
+    completion.readyAt ??= Date.now();
+    if (Date.now() - completion.readyAt >= 1500) dialog.closeDialog();
+  }
+
   setConfig(config) {
     super.setConfig({ ...config, type: "vertical-stack" });
     this.style.padding = "24px";

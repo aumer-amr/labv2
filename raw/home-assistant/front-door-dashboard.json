@@ -41,6 +41,75 @@
                   "type": "vertical-stack",
                   "cards": [
                     {
+                      "type": "vertical-stack",
+                      "cards": [
+                        {
+                          "type": "heading",
+                          "heading": "To-do",
+                          "icon": "mdi:format-list-checks",
+                          "heading_style": "title"
+                        },
+                        {
+                          "type": "horizontal-stack",
+                          "cards": [
+                            {
+                              "type": "tile",
+                              "entity": "todo.todo",
+                              "name": "Open list",
+                              "icon": "mdi:format-list-checks",
+                              "state_content": "state",
+                              "tap_action": {
+                                "action": "fire-dom-event",
+                                "browser_mod": {
+                                  "service": "browser_mod.popup",
+                                  "data": {
+                                    "title": "To-do",
+                                    "content": {
+                                      "type": "todo-list",
+                                      "entity": "todo.todo",
+                                      "hide_completed": true,
+                                      "hide_create": true
+                                    }
+                                  }
+                                }
+                              },
+                              "icon_tap_action": {
+                                "action": "fire-dom-event",
+                                "browser_mod": {
+                                  "service": "browser_mod.popup",
+                                  "data": {
+                                    "title": "To-do",
+                                    "content": {
+                                      "type": "todo-list",
+                                      "entity": "todo.todo",
+                                      "hide_completed": true,
+                                      "hide_create": true
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "button",
+                              "name": "Record todo",
+                              "icon": "mdi:microphone",
+                              "icon_height": "24px",
+                              "tap_action": {
+                                "action": "assist",
+                                "pipeline_id": "01m6bwx4grbap360r75m0h0n22",
+                                "start_listening": true
+                              },
+                              "hold_action": {
+                                "action": "assist",
+                                "pipeline_id": "01m6bwx4grbap360r75m0h0n22",
+                                "start_listening": true
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
                       "type": "heading",
                       "heading": "Calendar",
                       "icon": "mdi:calendar",

@@ -1,0 +1,134 @@
+{
+  "script": {
+    "alias": "Surface: Save reminder",
+    "description": "Save a personal reminder only to Todo. Validate the title and optional YYYY-MM-DD due date. Reuse an identical active reminder instead of duplicating it. Report success only after persistence is confirmed.",
+    "mode": "queued",
+    "max": 5,
+    "fields": {
+      "title": {
+        "name": "Title",
+        "description": "The reminder action, without introductory words. Keep meaningful details.",
+        "required": true,
+        "selector": {
+          "text": {}
+        }
+      },
+      "due_date": {
+        "name": "Due date",
+        "description": "Optional due date in YYYY-MM-DD format, resolved in Europe/Amsterdam.",
+        "selector": {
+          "date": {}
+        }
+      }
+    },
+    "sequence": [
+      {
+        "if": "{{ title is not defined or title is not string or not title | trim or title | length > 255 or (due_date is defined and due_date not in [none, ''] and (due_date is not string or not (due_date | regex_match('^\\\\d{4}-\\\\d{2}-\\\\d{2}$')) or strptime(due_date, '%Y-%m-%d', none) is none)) }}",
+        "then": [
+          {
+            "stop": "The reminder needs a title and a valid due date.",
+            "error": true
+          }
+        ]
+      },
+      {
+        "action": "todo.get_items",
+        "target": {
+          "entity_id": "todo.todo"
+        },
+        "data": {
+          "status": "needs_action"
+        },
+        "response_variable": "existing_reminders"
+      },
+      {
+        "variables": {
+          "reminder_exists": "{% set found = namespace(value=false) %}{% for item in existing_reminders['todo.todo']['items'] %}{% if item.summary | lower == title | trim | lower and (item.due | default('', true))[:10] == due_date | default('', true) %}{% set found.value = true %}{% endif %}{% endfor %}{{ found.value }}"
+        }
+      },
+      {
+        "if": "{{ not reminder_exists }}",
+        "then": [
+          {
+            "action": "todo.add_item",
+            "target": {
+              "entity_id": "todo.todo"
+            },
+            "data": "{{ {'item': title | trim, 'due_date': due_date} if due_date is defined and due_date else {'item': title | trim} }}"
+          }
+        ]
+      },
+      {
+        "variables": {
+          "saved_reminder": {
+            "saved": true,
+            "title": "{{ title | trim }}",
+            "due_date": "{{ due_date | default('', true) }}",
+            "already_exists": "{{ reminder_exists }}"
+          }
+        }
+      },
+      {
+        "stop": "Reminder saved",
+        "response_variable": "saved_reminder"
+      }
+    ]
+  },
+  "pipeline": {
+    "conversation_engine": "conversation.home_assistant",
+    "conversation_language": "en",
+    "prefer_local_intents": true
+  },
+  "automation": {
+    "alias": "Surface: Capture spoken reminders",
+    "description": "Save explicit reminder phrases to Todo. Resolve today and tomorrow in the Home Assistant time zone. Confirm only a verified save.",
+    "mode": "queued",
+    "max": 5,
+    "triggers": [
+      {
+        "trigger": "conversation",
+        "command": ["(I need to|Remind me (to|of|about)|Remember to) {reminder}"]
+      }
+    ],
+    "actions": [
+      {
+        "variables": {
+          "spoken_reminder": "{{ trigger.slots.reminder | trim | regex_replace('[.!?]+$', '') | trim }}"
+        }
+      },
+      {
+        "variables": {
+          "relative_day": "{{ 'tomorrow' if spoken_reminder | regex_search('(?i)\\\\btomorrow$') else 'today' if spoken_reminder | regex_search('(?i)\\\\btoday$') else '' }}"
+        }
+      },
+      {
+        "variables": {
+          "reminder_title": "{{ spoken_reminder | regex_replace('(?i)\\\\s+(today|tomorrow)$', '') | trim if relative_day else spoken_reminder }}",
+          "reminder_due": "{{ (now() + timedelta(days=1 if relative_day == 'tomorrow' else 0)).date().isoformat() if relative_day else '' }}"
+        }
+      },
+      {
+        "action": "script.surface_add_todo",
+        "data": {
+          "title": "{{ reminder_title }}",
+          "due_date": "{{ reminder_due }}"
+        },
+        "response_variable": "save_result",
+        "continue_on_error": true
+      },
+      {
+        "if": "{{ save_result is defined and save_result.saved | default(false) }}",
+        "then": [
+          {
+            "set_conversation_response": "Saved: {{ save_result.title }}{% if save_result.due_date %}, due {{ save_result.due_date }}{% endif %}."
+          }
+        ],
+        "else": [
+          {
+            "set_conversation_response": "I could not confirm the save. Check the Todo list before trying again."
+          }
+        ]
+      }
+    ]
+  }
+}
