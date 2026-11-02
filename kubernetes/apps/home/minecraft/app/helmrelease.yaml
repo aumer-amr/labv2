@@ -65,7 +65,7 @@ spec:
                 cpu: "2"
                 memory: 10Gi
               limits:
-                memory: 12Gi
+                memory: 14Gi
             securityContext:
               allowPrivilegeEscalation: false
               capabilities:
