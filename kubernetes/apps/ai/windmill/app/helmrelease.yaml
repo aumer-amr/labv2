@@ -19,7 +19,7 @@ spec:
     windmill:
       image: ghcr.io/windmill-labs/windmill
       # renovate: datasource=docker depName=ghcr.io/windmill-labs/windmill
-      tag: 1.854.2@sha256:b765d13a92e22b6ef1fef1b93cfa072696194b0c5198d087639c7ca6f2126fc6
+      tag: 1.855.1@sha256:474fceb2b81445ab9dac9383cb3884133c1ddd0a68e85dcab24a784f7d110bb5
       appReplicas: 1
       extraReplicas: 0
       multiplayerReplicas: 0
