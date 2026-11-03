@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "kubernetes/apps/database/cloudnative-pg/app/grafanadashboard.yaml"
 spec = json.loads(subprocess.check_output(["yq", "-o=json", ".spec", str(MANIFEST)], text=True))
 assert "configMapRef" not in spec

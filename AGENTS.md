@@ -78,6 +78,11 @@ kubectl get httproutes.gateway.networking.k8s.io --all-namespaces
 
 ## Repository Layout
 
+- Keep local operational commands and entry points directly in `scripts/`.
+- Place commands that perform CI operations in `scripts/ci/`.
+- Place regression tests that run in CI in `tests/ci/`.
+- Place tests that require manual invocation, local tools, or supplied inputs in `tests/manual/`.
+- When moving a script, update its repository root lookup and all callers.
 - Place applications under `kubernetes/apps/<namespace>/<app>/`.
 - Follow existing namespace roots: `namespace.yaml`, root `kustomization.yaml`, child `<app>/ks.yaml`, and `<app>/app/kustomization.yaml`.
 - Keep each Flux child `Kustomization` target namespace aligned with its directory namespace.
