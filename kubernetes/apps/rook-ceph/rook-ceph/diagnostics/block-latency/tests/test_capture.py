@@ -25,10 +25,15 @@ def records(output):
 
 class RenderTests(unittest.TestCase):
     def test_strict_render_preserves_scripts_and_workload_bounds(self):
-        for directory, name, seconds, deadline in [
+        cases = [
             (ROOT, "ceph-block-latency", "0", None),
             (ROOT.parent / "block-latency-validation", "ceph-block-latency-validation", "60", 120),
-        ]:
+        ]
+        for node in ["deathscythe", "heavyarms"]:
+            for suffix, seconds, deadline in [("", "0", None), ("-validation", "60", 120)]:
+                name = f"ceph-block-latency-{node}{suffix}"
+                cases.append((ROOT.parent / f"block-latency-{node}{suffix}", name, seconds, deadline))
+        for directory, name, seconds, deadline in cases:
             with self.subTest(directory=directory):
                 raw = subprocess.check_output(["kustomize", "build", str(directory), "--load-restrictor=LoadRestrictionsNone"])
                 escaped = subprocess.check_output(
@@ -52,7 +57,8 @@ class RenderTests(unittest.TestCase):
                 else:
                     self.assertEqual(job["spec"]["activeDeadlineSeconds"], deadline)
                 pod = job["spec"]["template"]["spec"]
-                self.assertEqual(pod["nodeSelector"], {"kubernetes.io/hostname": "epyon"})
+                node = next((node for node in ["deathscythe", "heavyarms"] if node in name), "epyon")
+                self.assertEqual(pod["nodeSelector"], {"kubernetes.io/hostname": node})
                 self.assertEqual(pod["containers"][0]["args"], ["/capture/run.sh", seconds])
                 self.assertEqual(pod["volumes"][0]["configMap"]["name"], config["metadata"]["name"])
 
