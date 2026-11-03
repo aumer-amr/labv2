@@ -10,6 +10,6 @@ spec:
     mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
     operation: copy
   ref:
-    tag: 4.0.303
-    digest: sha256:3f7c8764f7c34ac6acd89347d42ead2d2beff3b65bad2f1be0ada7d91472123f
+    tag: 4.0.307
+    digest: sha256:630420d1faf7824e627a3ae445abaf2d94636f03bed109140b0f034705212a10
   url: oci://ghcr.io/windmill-labs/charts/windmill
