@@ -21,7 +21,7 @@ spec:
           app:
             image:
               repository: docker.io/codewithcj/sparkyfitness_server
-              tag: v1.9.0@sha256:f8be8d6963d17e4e5e406a4a8462c0ca4ce5c7e54fd9cb52890f5bfb7012b365
+              tag: v1.11.0@sha256:51a2d7c19bd99b50ea17e579fe8d9d4febed895595356b1ddafe0fa808caf75e
             env:
               TZ: Europe/Amsterdam
               NODE_ENV: production
@@ -130,7 +130,7 @@ spec:
           app:
             image:
               repository: docker.io/codewithcj/sparkyfitness
-              tag: v1.9.0@sha256:35d599d80e8a06c0a4b218d6fa7c23d6d3e5818ee7db17edb6820c6deb9611b2
+              tag: v1.11.0@sha256:5eb77135ccd8e58492ee9bd19b8714ea4a73a99623b863a9287ccecb0557cd17
             env:
               NGINX_LISTEN_PORT: "8080"
               SPARKY_FITNESS_FRONTEND_URL: https://fitness.aumer.dev
