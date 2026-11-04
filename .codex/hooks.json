@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/langfuse-private.py\" session-start",
+            "timeout": 60,
+            "statusMessage": "Loading private context from Langfuse"
+          }
+        ]
+      }
+    ]
+  }
+}

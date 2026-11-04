@@ -131,6 +131,8 @@ def validate_bundle(bundle):
         digest = base64.b64encode(hashlib.sha256(content.encode()).digest()).decode()
         if digest != item.get("sha256Hash"):
             raise RuntimeError("Private context checksum mismatch")
+        if name == "AGENTS.md" and not content.strip():
+            raise RuntimeError("Private rules are empty")
         paths.add(name)
         total += len(content.encode())
     if total > 1_000_000 or not {"SKILL.md", "AGENTS.md"} <= paths:
@@ -230,6 +232,27 @@ def install_skills(destination):
         os.replace(temporary, target)
 
 
+def session_start():
+    try:
+        destination = ROOT / ".private/agent-context"
+        bundle = fetch(destination)
+        install_skills(destination)
+        current = (destination / "current").resolve()
+        rules = (current / "AGENTS.md").read_text(encoding="utf-8")
+        return {"hookSpecificOutput": {
+            "hookEventName": "SessionStart",
+            "additionalContext": (
+                f"Langfuse private context version {bundle['version']} loaded from {current}.\n\n"
+                + rules
+                + f"\n\nPrivate task skills are installed under {ROOT / '.agents/skills'}. "
+                "Use this resolved version until the next SessionStart."
+            ),
+        }}
+    except (RuntimeError, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+        return {"continue": False,
+                "stopReason": "Private context could not load. Restore Langfuse access or repair the validated cache before private work."}
+
+
 def read_state():
     record = request(f"/api/public/v2/prompts/{quote(STATE, safe='')}?label=production&resolve=false")
     state = json.loads(record["prompt"])
@@ -263,9 +286,12 @@ def main():
     command.add_argument("--install-skills", action="store_true")
     commands.add_parser("state-read")
     commands.add_parser("state-write")
+    commands.add_parser("session-start")
     args = parser.parse_args()
     try:
-        if args.command == "fetch":
+        if args.command == "session-start":
+            print(json.dumps(session_start()))
+        elif args.command == "fetch":
             bundle = fetch(args.destination)
             if args.install_skills:
                 install_skills(args.destination)

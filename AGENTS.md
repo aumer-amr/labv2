@@ -3,10 +3,12 @@
 ## Private Context
 
 - Langfuse at `https://langfuse.aumer.dev` owns the private agent context in the `labv2-private` skill, under its `production` label.
-- Before the first private task in a session, run `python3 scripts/langfuse-private.py fetch --install-skills`.
-- Read `AGENTS.md` from the version directory that the command returns.
+- The repository SessionStart hook fetches private context, installs skills, and adds the private rules to the session.
+- Review and trust this hook through Codex `/hooks` before relying on automatic loading.
+- If SessionStart does not report a loaded context version, run `python3 scripts/langfuse-private.py fetch --install-skills` before private work.
+- For manual loading, read `AGENTS.md` from the version directory that the command returns.
 - Load installed private skills when their descriptions match the task.
-- Keep that resolved version for the session.
+- Use the resolved version until the next SessionStart event.
 - The loader uses `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` when both are present. Otherwise, it uses the repository kubeconfig and the existing Langfuse pod. Keep credentials outside Git.
 - If retrieval fails, the loader can use a validated local cache. If no valid context loads, stop private work and report the failure.
 - Edit private content in Langfuse. Keep downloaded files under ignored local paths. Publish a reviewed version before moving the `production` label.

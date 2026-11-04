@@ -9,6 +9,7 @@ import io
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -204,6 +205,70 @@ class ContextTests(unittest.TestCase):
         self.assertIn(str(resolved), output.getvalue())
         self.assertNotIn("Private rules marker", output.getvalue())
         self.assertEqual((root / ".agents/skills/example").resolve(), resolved / "skills/example")
+        self.assertFalse((root / "AGENTS.override.md").exists())
+
+    def test_session_start_refreshes_context_and_loads_private_rules(self):
+        root = self.directory.parent / "repository"
+        with patch.object(context, "ROOT", root), patch.object(context, "request", side_effect=[bundle(1), bundle(2)]) as request:
+            first = context.session_start()
+            second = context.session_start()
+        self.assertEqual(request.call_count, 2)
+        self.assertEqual(first["hookSpecificOutput"]["hookEventName"], "SessionStart")
+        self.assertIn("Private rules marker", second["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("version 2", second["hookSpecificOutput"]["additionalContext"])
+        self.assertNotIn("broker fixture", json.dumps(second))
+        self.assertEqual((root / ".agents/skills/example").resolve(), root / ".private/agent-context/version-2/skills/example")
+
+    def test_session_start_uses_validated_cache_after_attempting_retrieval(self):
+        root = self.directory.parent / "repository"
+        with patch.object(context, "ROOT", root), patch.object(context, "request", return_value=bundle()):
+            context.session_start()
+        with patch.object(context, "ROOT", root), patch.object(context, "request", side_effect=context.Unavailable("offline")) as request, redirect_stderr(io.StringIO()):
+            result = context.session_start()
+        request.assert_called_once()
+        self.assertIn("version 1", result["hookSpecificOutput"]["additionalContext"])
+
+    def test_session_start_returns_stop_on_missing_invalid_or_empty_rules(self):
+        root = self.directory.parent / "repository"
+        for failure in (context.Unavailable("fake-secret"), RuntimeError("fake-secret")):
+            with patch.object(context, "ROOT", root), patch.object(context, "request", side_effect=failure):
+                result = context.session_start()
+            self.assertFalse(result["continue"])
+            self.assertNotIn("hookSpecificOutput", result)
+            self.assertNotIn("fake-secret", json.dumps(result))
+        empty = bundle()
+        rules = next(f for f in empty["files"] if f["path"] == "AGENTS.md")
+        rules.update(content="", sha256Hash=base64.b64encode(hashlib.sha256(b"").digest()).decode())
+        with patch.object(context, "ROOT", root), patch.object(context, "request", return_value=empty):
+            self.assertFalse(context.session_start()["continue"])
+
+    def test_configured_session_hook_runs_from_nested_directory_with_spaces(self):
+        config = json.loads((ROOT / ".codex/hooks.json").read_text())
+        groups = config["hooks"]["SessionStart"]
+        self.assertEqual(len(groups), 1)
+        self.assertNotIn("matcher", groups[0])
+        handler = groups[0]["hooks"][0]
+        self.assertEqual(handler["type"], "command")
+        self.assertFalse(handler.get("async", False))
+        root = self.directory.parent / "repository with spaces"
+        nested = root / "nested/directory"
+        nested.mkdir(parents=True)
+        (root / "scripts").mkdir()
+        shutil.copyfile(ROOT / "scripts/langfuse-private.py", root / "scripts/langfuse-private.py")
+        subprocess.run(["git", "init", "--quiet", str(root)], check=True, capture_output=True)
+        fixture = root / "response.json"
+        fixture.write_text(json.dumps({"status": 200, "body": bundle()}))
+        binary = root / "bin/mise"
+        binary.parent.mkdir()
+        binary.write_text(f"#!{sys.executable}\nimport os,sys\nsys.stdout.write(open(os.environ['HOOK_FIXTURE']).read())\n")
+        binary.chmod(0o700)
+        env = {key: value for key, value in os.environ.items() if not key.startswith("LANGFUSE_")}
+        env.update(PATH=str(binary.parent) + os.pathsep + env["PATH"], HOOK_FIXTURE=str(fixture))
+        result = subprocess.run(["bash", "-c", handler["command"]], cwd=nested, env=env,
+                                input=json.dumps({"hook_event_name": "SessionStart", "source": "startup", "cwd": str(nested)}),
+                                capture_output=True, text=True, check=True, timeout=handler["timeout"])
+        output = json.loads(result.stdout)
+        self.assertIn("Private rules marker", output["hookSpecificOutput"]["additionalContext"])
         self.assertFalse((root / "AGENTS.override.md").exists())
 
     def test_hermes_uses_same_snapshot_without_exposing_broker_to_agent(self):
