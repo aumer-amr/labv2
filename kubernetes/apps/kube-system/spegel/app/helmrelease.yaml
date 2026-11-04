@@ -8,18 +8,31 @@ spec:
     kind: OCIRepository
     name: spegel
   interval: 1h
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: DaemonSet
+              name: spegel
+            # Explicit zero clears a legacy field retained by Helm apply.
+            patch: |-
+              - op: test
+                path: /spec/template/spec/containers/0/name
+                value: registry
+              - op: test
+                path: /spec/template/spec/containers/0/ports/0/containerPort
+                value: 5000
+              - op: add
+                path: /spec/template/spec/containers/0/ports/0/hostPort
+                value: 0
   values:
-    grafanaDashboard:
-      enabled: true
-      mode: GrafanaOperator
-      grafanaOperator:
-        matchLabels:
-          dashboards: grafana
+    networkPolicy:
+      enabled: false
     spegel:
       containerdSock: /run/containerd/containerd.sock
       containerdRegistryConfigPath: /etc/cri/conf.d/hosts
     service:
       registry:
-        hostPort: 29999
+        nodePort: 30021
     serviceMonitor:
       enabled: true
