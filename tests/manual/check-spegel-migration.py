@@ -178,6 +178,12 @@ with tempfile.TemporaryDirectory(prefix="spegel-migration-") as directory:
                                        for bound, values in (("1", "0+600x10"), ("2", "0+1200x10"), ("+Inf", "0+1200x10"))],
                       "promql_expr_test": [{"expr": queries[panel_id], "eval_time": "10m", "exp_samples": [
                           {"labels": '{pod="spegel-new"}', "value": 1.9}]}]})
+    tests.append({"name": "last success excludes uninitialized timestamps", "interval": "1m",
+                  "input_series": [
+                      {"series": "spegel_mirror_last_success_timestamp_seconds{" + common + "}", "values": "540x10"},
+                      {"series": 'spegel_mirror_last_success_timestamp_seconds{namespace="kube-system",service="spegel",pod="spegel-idle"}', "values": "0x10"}],
+                  "promql_expr_test": [{"expr": queries[8], "eval_time": "10m", "exp_samples": [
+                      {"labels": "{" + common + "}", "value": 60}]}]})
     fixtures = directory / "dashboard-tests.json"
     fixtures.write_text(json.dumps({"rule_files": [], "evaluation_interval": "1m", "tests": tests}))
     subprocess.run(["promtool", "test", "rules", str(fixtures)], check=True)

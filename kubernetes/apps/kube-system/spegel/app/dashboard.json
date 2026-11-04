@@ -340,7 +340,7 @@
       "id": 8,
       "title": "Time since last successful mirror request",
       "type": "timeseries",
-      "description": "",
+      "description": "Registries without a successful mirror request have no sample.",
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -360,7 +360,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "time() - spegel_mirror_last_success_timestamp_seconds{namespace=\"kube-system\",service=\"spegel\",pod=~\"$pod\"}",
+          "expr": "time() - (spegel_mirror_last_success_timestamp_seconds{namespace=\"kube-system\",service=\"spegel\",pod=~\"$pod\"} > 0)",
           "legendFormat": "{{pod}}"
         }
       ],
