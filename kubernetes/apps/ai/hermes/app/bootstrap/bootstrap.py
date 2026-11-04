@@ -178,8 +178,8 @@ def prepare_workspace() -> None:
 
 def install_private_skills() -> None:
     run(sys.executable, "-I", str(BOOTSTRAP / "langfuse-private.py"), "fetch",
-        "--destination", "/run/private-context")
-    source = Path("/run/private-context/current")
+        "--destination", "/run/private-context/bundle")
+    source = Path("/run/private-context/bundle/current")
     destination = DATA / "skills/private"
     prompts = DATA / "private-prompts"
     for skill in sorted((source / "skills").iterdir()):
@@ -327,7 +327,7 @@ def prepare_merge_broker() -> None:
     shutil.copyfile(TOOLS / "gh", gh)
     gh.chmod(0o500)
     destination = Path("/run/broker/assessment.py")
-    shutil.copyfile("/run/private-context/current/hermes/broker.py", destination)
+    shutil.copyfile("/run/private-context/bundle/current/hermes/broker.py", destination)
     destination.chmod(0o500)
 
 
