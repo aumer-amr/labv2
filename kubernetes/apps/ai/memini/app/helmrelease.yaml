@@ -52,6 +52,8 @@ spec:
     persistence:
       data:
         existingClaim: memini
+      tmp:
+        type: emptyDir
     serviceMonitor:
       main:
         enabled: true
