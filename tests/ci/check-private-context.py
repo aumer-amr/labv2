@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exercise private context loading without credentials, inference, or network access."""
 import base64
-from contextlib import redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
 import hashlib
 import importlib.machinery
 import importlib.util
@@ -9,7 +9,6 @@ import io
 import json
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -30,7 +29,6 @@ def load(name, path):
 
 
 context = load("private_context_test", ROOT / "scripts/langfuse-private.py")
-launcher = load("private_launcher_test", ROOT / "scripts/codex-private")
 
 
 def bundle(version=1):
@@ -168,60 +166,45 @@ class ContextTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 context.validate_state(invalid)
 
-    def test_launcher_builds_rules_preserves_helper_access_and_cleans_up(self):
+    def test_install_skills_preserves_local_files_and_updates_version_links(self):
         self.fetch()
         root = self.directory.parent / "repository"
-        root.mkdir()
-        (root / "AGENTS.md").write_text("Public rules\n")
-        def launch(command, **kwargs):
-            self.assertIn("Private rules marker", (root / "AGENTS.override.md").read_text())
-            self.assertIn("Public rules", (root / "AGENTS.override.md").read_text())
-            self.assertEqual(kwargs["env"]["LANGFUSE_SECRET_KEY"], "fake-secret")
-            self.assertNotIn("fake-secret", (root / "AGENTS.override.md").read_text())
-            self.assertNotIn("fake-secret", " ".join(command))
-            self.assertEqual(kwargs["env"]["LABV2_PRIVATE_CONTEXT_VERSION"], "1")
-            self.assertEqual(command[-2:], ["resume", "--last"])
-            return subprocess.CompletedProcess(command, 7)
-        with patch.object(launcher, "ROOT", root), patch.object(launcher.context, "fetch", return_value=bundle()) as fetch:
-            local = root / ".private/agent-context"
-            local.parent.mkdir()
-            shutil.copytree(self.directory, local, symlinks=True)
-            with patch.dict(os.environ, {"LANGFUSE_SECRET_KEY": "fake-secret"}), patch.object(sys, "argv", ["codex-private", "resume", "--last"]), patch.object(launcher.subprocess, "run", side_effect=launch):
-                self.assertEqual(launcher.main(), 7)
-            self.assertFalse((root / "AGENTS.override.md").exists())
-            self.assertTrue((root / ".agents/skills/example").is_symlink())
-            (root / "AGENTS.override.md").write_text("Existing override")
-            with patch.object(sys, "argv", ["codex-private"]), self.assertRaises(RuntimeError):
-                launcher.main()
-            self.assertEqual((root / "AGENTS.override.md").read_text(), "Existing override")
-            self.assertEqual(fetch.call_count, 1)
+        existing = root / ".agents/skills/example"
+        existing.mkdir(parents=True)
+        (existing / "SKILL.md").write_text("Existing local skill")
+        with patch.object(context, "ROOT", root), patch.object(context.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "", "")) as run:
+            context.install_skills(self.directory)
+            self.assertEqual((self.directory / "previous-skills/example/SKILL.md").read_text(), "Existing local skill")
+            self.assertEqual(existing.resolve(), self.directory / "version-1/skills/example")
+            self.fetch(bundle(2))
+            context.install_skills(self.directory)
+            self.assertEqual(existing.resolve(), self.directory / "version-2/skills/example")
+            self.assertEqual(run.call_count, 1)
+        self.assertFalse((root / "AGENTS.override.md").exists())
 
-    def test_shell_wrapper_uses_private_launcher_only_for_this_repository(self):
+    def test_install_skills_preserves_tracked_files(self):
+        self.fetch()
         root = self.directory.parent / "repository"
-        (root / "scripts").mkdir(parents=True)
-        private = root / "scripts/codex-private"
-        private.write_text("#!/bin/sh\nprintf 'private:%s\\n' \"$*\"\n")
-        private.chmod(0o700)
-        binaries = self.directory.parent / "bin"
-        binaries.mkdir()
-        codex = binaries / "codex"
-        codex.write_text("#!/bin/sh\nprintf 'public:%s\\n' \"$*\"\n")
-        codex.chmod(0o700)
-        script = '''git() {
-          if [[ "$1" == rev-parse ]]; then printf '%s\\n' "$TEST_REPO";
-          else printf '%s\\n' "$TEST_REMOTE"; fi
-        }
-        source "$TEST_WRAPPER"
-        codex resume --last
-        '''
-        for remote, expected in [("https://github.com/aumer-amr/labv2.git", "private"),
-                                 ("git@github.com:aumer-amr/labv2.git", "private"),
-                                 ("https://github.com/other/repository.git", "public")]:
-            env = {**os.environ, "PATH": str(binaries) + ":" + os.environ["PATH"],
-                   "TEST_REPO": str(root), "TEST_REMOTE": remote,
-                   "TEST_WRAPPER": str(ROOT / "scripts/codex-shell.sh")}
-            result = subprocess.run(["bash", "-c", script], env=env, capture_output=True, text=True, check=True)
-            self.assertEqual(result.stdout, expected + ":resume --last\n")
+        existing = root / ".agents/skills/example"
+        existing.mkdir(parents=True)
+        (existing / "SKILL.md").write_text("Tracked skill")
+        tracked = subprocess.CompletedProcess([], 0, ".agents/skills/example/SKILL.md\n", "")
+        with patch.object(context, "ROOT", root), patch.object(context.subprocess, "run", return_value=tracked):
+            with self.assertRaisesRegex(RuntimeError, "tracked"):
+                context.install_skills(self.directory)
+        self.assertEqual((existing / "SKILL.md").read_text(), "Tracked skill")
+        self.assertFalse((self.directory / "previous-skills").exists())
+
+    def test_cli_fetch_installs_skills_and_returns_pinned_rules_directory(self):
+        root = self.directory.parent / "repository"
+        output = io.StringIO()
+        with patch.object(context, "ROOT", root), patch.object(context, "request", return_value=bundle()), patch.object(sys, "argv", ["langfuse-private.py", "fetch", "--install-skills"]), redirect_stdout(output):
+            context.main()
+        resolved = root / ".private/agent-context/version-1"
+        self.assertIn(str(resolved), output.getvalue())
+        self.assertNotIn("Private rules marker", output.getvalue())
+        self.assertEqual((root / ".agents/skills/example").resolve(), resolved / "skills/example")
+        self.assertFalse((root / "AGENTS.override.md").exists())
 
     def test_hermes_uses_same_snapshot_without_exposing_broker_to_agent(self):
         self.fetch()
@@ -237,6 +220,7 @@ class ContextTests(unittest.TestCase):
         with patch.object(bootstrap, "DATA", data), patch.object(bootstrap, "Path", side_effect=paths), patch.object(bootstrap, "run") as run:
             bootstrap.install_private_skills()
             self.assertIn("fetch", run.call_args.args)
+            self.assertNotIn("--install-skills", run.call_args.args)
             self.assertEqual((data / "private-prompts/example.txt").read_text(), "Private task marker\n")
             self.assertEqual((data / "skills/private/example/scripts/assessment.py").stat().st_mode & 0o777, 0o700)
             self.assertFalse((data / "skills/private/example/broker.py").exists())

@@ -201,6 +201,35 @@ def fetch(destination):
     return bundle
 
 
+def install_skills(destination):
+    current = (destination / "current").resolve()
+    skills = ROOT / ".agents/skills"
+    if skills.is_symlink():
+        raise RuntimeError("Private skill directory must not be a symlink")
+    skills.mkdir(parents=True, mode=0o700, exist_ok=True)
+    for source in sorted((current / "skills").iterdir()):
+        if not source.is_dir() or not (source / "SKILL.md").is_file():
+            raise RuntimeError("Invalid private skill directory")
+        target = skills / source.name
+        if target.exists() and not target.is_symlink():
+            tracked = subprocess.run(["git", "-C", str(ROOT), "ls-files", "--", str(target)],
+                                     capture_output=True, text=True, check=True)
+            if tracked.stdout:
+                raise RuntimeError("A private skill would replace tracked files")
+            previous = destination / "previous-skills" / source.name
+            if previous.parent.is_symlink():
+                raise RuntimeError("Private skill backup directory must not be a symlink")
+            previous.parent.mkdir(mode=0o700, exist_ok=True)
+            if previous.exists() or previous.is_symlink():
+                raise RuntimeError("A previous private skill backup already exists")
+            os.replace(target, previous)
+        temporary = skills / ("." + source.name)
+        if temporary.exists() or temporary.is_symlink():
+            raise RuntimeError("A private skill update is already pending")
+        temporary.symlink_to(source, target_is_directory=True)
+        os.replace(temporary, target)
+
+
 def read_state():
     record = request(f"/api/public/v2/prompts/{quote(STATE, safe='')}?label=production&resolve=false")
     state = json.loads(record["prompt"])
@@ -231,13 +260,16 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     command = commands.add_parser("fetch")
     command.add_argument("--destination", type=Path, default=ROOT / ".private/agent-context")
+    command.add_argument("--install-skills", action="store_true")
     commands.add_parser("state-read")
     commands.add_parser("state-write")
     args = parser.parse_args()
     try:
         if args.command == "fetch":
             bundle = fetch(args.destination)
-            print(f"Private context version {bundle['version']} ready: {args.destination / 'current'}")
+            if args.install_skills:
+                install_skills(args.destination)
+            print(f"Private context version {bundle['version']} ready: {(args.destination / 'current').resolve()}")
         elif args.command == "state-read":
             print(json.dumps(read_state()))
         else:
