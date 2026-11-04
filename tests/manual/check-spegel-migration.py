@@ -49,7 +49,8 @@ with tempfile.TemporaryDirectory(prefix="spegel-migration-") as directory:
     built = {app: documents(run("kustomize", "build", str(APPS / app / "app"),
                                "--load-restrictor=LoadRestrictionsNone"))
              for app in ("spegel", "cilium", "coredns")}
-    values = resource(built["spegel"], "HelmRelease", "spegel")["spec"]["values"]
+    release = resource(built["spegel"], "HelmRelease", "spegel")["spec"]
+    values = release["values"]
     assert "grafanaDashboard" not in values
     assert values["networkPolicy"]["enabled"] is False
     assert values["service"]["registry"] == {"nodePort": 30021}
@@ -60,6 +61,15 @@ with tempfile.TemporaryDirectory(prefix="spegel-migration-") as directory:
                                     "grafanaOperator": {"matchLabels": {"dashboards": "grafana"}}}
     old = render("spegel", "0.7.4", previous, directory)
     new = render("spegel", "0.8.0", values, directory)
+    native = resource(new, "DaemonSet", "spegel")
+    assert not any("hostPort" in port for c in native["spec"]["template"]["spec"]["containers"] for port in c["ports"])
+    # Reproduce the retained live field, then require the post-renderer to clear it.
+    native["spec"]["template"]["spec"]["containers"][0]["ports"][0]["hostPort"] = 29999
+    (directory / "rendered.json").write_text(json.dumps({"apiVersion": "v1", "kind": "List", "items": new}))
+    (directory / "kustomization.yaml").write_text(json.dumps({
+        "apiVersion": "kustomize.config.k8s.io/v1beta1", "kind": "Kustomization",
+        "resources": ["rendered.json"], "patches": release["postRenderers"][0]["kustomize"]["patches"]}))
+    new = documents(run("kustomize", "build", str(directory), "--load-restrictor=LoadRestrictionsNone"))
     old_ds = resource(old, "DaemonSet", "spegel")["spec"]
     new_ds = resource(new, "DaemonSet", "spegel")["spec"]
     assert old_ds["selector"] == new_ds["selector"] == {"matchLabels": labels("spegel")}
@@ -71,7 +81,8 @@ with tempfile.TemporaryDirectory(prefix="spegel-migration-") as directory:
         for before, after in zip(old_pod[key], new_pod[key], strict=True):
             for field in ("name", "volumeMounts", "securityContext", "resources"):
                 assert before.get(field) == after.get(field), field
-    assert not any("hostPort" in port for container in new_pod["containers"] for port in container["ports"])
+    assert not any(port.get("hostPort", 0) for container in new_pod["containers"] for port in container["ports"])
+    assert new_pod["containers"][0]["ports"][0]["hostPort"] == 0
     assert "http://$(NODE_IP):30021" in new_pod["initContainers"][0]["args"]
     assert "http://$(NODE_IP):29999" in old_pod["initContainers"][0]["args"]
     for items in (old, new):

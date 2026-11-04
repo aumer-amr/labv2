@@ -8,6 +8,26 @@ spec:
     kind: OCIRepository
     name: spegel
   interval: 1h
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: DaemonSet
+              name: spegel
+            patch: |-
+              apiVersion: apps/v1
+              kind: DaemonSet
+              metadata:
+                name: spegel
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - name: registry
+                        ports:
+                          # Clear the legacy field retained during Helm upgrades.
+                          - containerPort: 5000
+                            hostPort: 0
   values:
     networkPolicy:
       enabled: false
