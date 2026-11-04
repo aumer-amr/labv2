@@ -463,6 +463,11 @@ spec:
               app.kubernetes.io/component: spegel
               app.kubernetes.io/instance: spegel
               app.kubernetes.io/name: spegel
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: cleanup-wait
+              app.kubernetes.io/instance: spegel
+              app.kubernetes.io/name: spegel
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: network

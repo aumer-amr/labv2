@@ -120,3 +120,83 @@ spec:
           rules:
             dns:
               - matchName: spegel-bootstrap.kube-system.svc.cluster.local
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: spegel-cleanup
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: cleanup
+      app.kubernetes.io/instance: spegel
+      app.kubernetes.io/name: spegel
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: cleanup-wait
+              app.kubernetes.io/instance: spegel
+              app.kubernetes.io/name: spegel
+      ports:
+        - port: 8080
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: spegel-cleanup-wait
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: cleanup-wait
+      app.kubernetes.io/instance: spegel
+      app.kubernetes.io/name: spegel
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: cleanup
+              app.kubernetes.io/instance: spegel
+              app.kubernetes.io/name: spegel
+      ports:
+        - port: 8080
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: spegel-cleanup-wait-dns
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: cleanup-wait
+      app.kubernetes.io/instance: spegel
+      app.kubernetes.io/name: spegel
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: spegel-cleanup.kube-system.svc.cluster.local
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: spegel-cleanup.kube-system.svc.cluster.local
