@@ -25,6 +25,15 @@ spec:
           protocol: TCP
   egress:
     - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: langfuse
+              app.kubernetes.io/instance: langfuse
+              app.kubernetes.io/component: web
+      ports:
+        - port: 3000
+          protocol: TCP
+    - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: kube-system
@@ -171,6 +180,7 @@ spec:
               - matchPattern: nousresearch.github.io.*
               - matchName: idm.aumer.dev
               - matchName: litellm.ai.svc.cluster.local
+              - matchName: langfuse-web.ai.svc.cluster.local
               - matchName: memini.ai.svc.cluster.local
               - matchName: searxng.ai.svc.cluster.local
     - toEndpoints:
@@ -193,6 +203,7 @@ spec:
               - matchPattern: nousresearch.github.io.*
               - matchName: idm.aumer.dev
               - matchName: litellm.ai.svc.cluster.local
+              - matchName: langfuse-web.ai.svc.cluster.local
               - matchName: memini.ai.svc.cluster.local
               - matchName: searxng.ai.svc.cluster.local
     - toFQDNs:

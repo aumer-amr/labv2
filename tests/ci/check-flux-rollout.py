@@ -172,6 +172,10 @@ assert rollout.affected(["kubernetes/apps/network/echo/ks.yaml"], owners) == [KS
 assert rollout.affected(["kubernetes/apps/network/kustomization.yaml"], owners) == [KS]
 assert rollout.affected(["kubernetes/components/common/kustomization.yaml"], owners) == owners
 assert rollout.affected(["scripts/tool.py"], owners) == []
+hermes = deepcopy(KS)
+hermes["metadata"].update(name="hermes", namespace="ai")
+hermes["spec"]["path"] = "./kubernetes/apps/ai/hermes/app"
+assert rollout.affected(["scripts/langfuse-private.py"], [*owners, hermes]) == [hermes]
 api = API()
 api.paths = [{"filename": "scripts/tool.py"}]
 assert rollout.observe(api, Kube(), PR)["readiness"] == "not applicable"

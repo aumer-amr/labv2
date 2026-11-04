@@ -66,7 +66,9 @@ def identity(obj):
 
 
 def affected(paths, kustomizations):
-    paths = [p for p in paths if p.startswith(("kubernetes/", ".codex-private/"))]
+    paths = ["kubernetes/apps/ai/hermes/app/bootstrap/langfuse-private.py"
+             if p == "scripts/langfuse-private.py" else p for p in paths]
+    paths = [p for p in paths if p.startswith("kubernetes/")]
     if not paths:
         return []
     if any(not p.startswith("kubernetes/apps/") for p in paths):

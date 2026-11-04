@@ -1,57 +1,76 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env python3
+import importlib.util
+import os
+from pathlib import Path
+import subprocess
+import sys
+import signal
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-encrypted_instructions="$repo_root/.codex-private/AGENTS.private.sops.yaml"
-encrypted_skill="$repo_root/.codex-private/skills/assess-upstream-template/skill.sops.yaml"
-encrypted_renovate_skill="$repo_root/.codex-private/skills/assess-renovate-prs/skill.sops.yaml"
-override="$repo_root/AGENTS.override.md"
-key="$repo_root/age.key"
-temporary_override="$(mktemp)"
-temporary_skill="$(mktemp -d)"
-temporary_renovate_skill="$(mktemp -d)"
-runtime_skill="$repo_root/.agents/skills/assess-upstream-template"
-runtime_renovate_skill="$repo_root/.agents/skills/assess-renovate-prs"
+ROOT = Path(__file__).resolve().parents[1]
+spec = importlib.util.spec_from_file_location("private_context", ROOT / "scripts/langfuse-private.py")
+context = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(context)
 
-cleanup() {
-  rm -f "$temporary_skill/SKILL.md" "$temporary_skill/openai.yaml" "$temporary_skill/assessment.py"
-  rmdir "$temporary_skill" 2>/dev/null || true
-  rm -f "$temporary_renovate_skill/SKILL.md" "$temporary_renovate_skill/openai.yaml" "$temporary_renovate_skill/assessment.py"
-  rmdir "$temporary_renovate_skill" 2>/dev/null || true
-  rm -f "$temporary_override" "$override"
-}
-trap cleanup EXIT INT TERM
 
-if [[ ! -f "$key" ]]; then
-  echo "Missing SOPS age identity: $key" >&2
-  exit 1
-fi
+def main():
+    os.umask(0o077)
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
+    destination = ROOT / ".private/agent-context"
+    override = ROOT / "AGENTS.override.md"
+    fetch_only = sys.argv[1:] == ["--fetch-only"]
+    active = override.exists() or override.is_symlink()
+    if active and not fetch_only:
+        raise RuntimeError("An agent instruction override already exists; preserve it before launching")
+    bundle = context.cached_bundle(destination) if active else context.fetch(destination)
+    current = (destination / "current").resolve()
+    skills = ROOT / ".agents/skills"
+    if skills.is_symlink():
+        raise RuntimeError("Private skill directory must not be a symlink")
+    skills.mkdir(parents=True, mode=0o700, exist_ok=True)
+    for source in sorted((current / "skills").iterdir()):
+        if not source.is_dir() or not (source / "SKILL.md").is_file():
+            raise RuntimeError("Invalid private skill directory")
+        target = skills / source.name
+        if target.exists() and not target.is_symlink():
+            tracked = subprocess.run(["git", "-C", str(ROOT), "ls-files", "--", str(target)],
+                                     capture_output=True, text=True, check=True)
+            if tracked.stdout:
+                raise RuntimeError("A private skill would replace tracked files")
+            previous = destination / "previous-skills" / source.name
+            if previous.parent.is_symlink():
+                raise RuntimeError("Private skill backup directory must not be a symlink")
+            previous.parent.mkdir(mode=0o700, exist_ok=True)
+            if previous.exists() or previous.is_symlink():
+                raise RuntimeError("A previous private skill backup already exists")
+            os.replace(target, previous)
+        temporary = skills / ("." + source.name)
+        if temporary.exists() or temporary.is_symlink():
+            raise RuntimeError("A private skill update is already pending")
+        temporary.symlink_to(source, target_is_directory=True)
+        os.replace(temporary, target)
+    instructions = current / "AGENTS.md"
+    if fetch_only:
+        print(f"Private context version {bundle['version']} ready. Read {instructions}")
+        return 0
+    environment = os.environ.copy()
+    environment["LABV2_REPO_ROOT"] = str(ROOT)
+    environment["LABV2_PRIVATE_CONTEXT_VERSION"] = str(bundle["version"])
+    owned_override = False
+    try:
+        with override.open("x", encoding="utf-8") as stream:
+            owned_override = True
+            stream.write("<!-- Generated from Langfuse by scripts/codex-private; do not edit. -->\n\n")
+            stream.write((ROOT / "AGENTS.md").read_text())
+            stream.write("\n" + instructions.read_text())
+        return subprocess.run(["mise", "exec", "--", "codex", *sys.argv[1:]],
+                              cwd=ROOT, env=environment).returncode
+    finally:
+        if owned_override:
+            override.unlink(missing_ok=True)
 
-umask 077
-mkdir -p "$runtime_skill/agents" "$runtime_skill/scripts"
-SOPS_AGE_KEY_FILE="$key" mise exec -- sops --decrypt --extract '["skill_md"]' "$encrypted_skill" >"$temporary_skill/SKILL.md"
-SOPS_AGE_KEY_FILE="$key" mise exec -- sops --decrypt --extract '["openai_yaml"]' "$encrypted_skill" >"$temporary_skill/openai.yaml"
-SOPS_AGE_KEY_FILE="$key" mise exec -- sops --decrypt --extract '["helper_py"]' "$encrypted_skill" >"$temporary_skill/assessment.py"
-install -m 600 "$temporary_skill/SKILL.md" "$runtime_skill/SKILL.md"
-install -m 600 "$temporary_skill/openai.yaml" "$runtime_skill/agents/openai.yaml"
-install -m 700 "$temporary_skill/assessment.py" "$runtime_skill/scripts/assessment.py"
 
-mkdir -p "$runtime_renovate_skill/agents" "$runtime_renovate_skill/scripts"
-SOPS_AGE_KEY_FILE="$key" mise exec -- sops --decrypt --extract '["skill_md"]' "$encrypted_renovate_skill" >"$temporary_renovate_skill/SKILL.md"
-SOPS_AGE_KEY_FILE="$key" mise exec -- sops --decrypt --extract '["openai_yaml"]' "$encrypted_renovate_skill" >"$temporary_renovate_skill/openai.yaml"
-SOPS_AGE_KEY_FILE="$key" mise exec -- sops --decrypt --extract '["helper_py"]' "$encrypted_renovate_skill" >"$temporary_renovate_skill/assessment.py"
-install -m 600 "$temporary_renovate_skill/SKILL.md" "$runtime_renovate_skill/SKILL.md"
-install -m 600 "$temporary_renovate_skill/openai.yaml" "$runtime_renovate_skill/agents/openai.yaml"
-install -m 700 "$temporary_renovate_skill/assessment.py" "$runtime_renovate_skill/scripts/assessment.py"
-
-{
-  echo '<!-- Generated by scripts/codex-private; do not edit. -->'
-  echo
-  cat "$repo_root/AGENTS.md"
-  echo
-  SOPS_AGE_KEY_FILE="$key" mise exec -- sops --decrypt --extract '["instructions"]' "$encrypted_instructions"
-} >"$temporary_override"
-mv "$temporary_override" "$override"
-
-cd "$repo_root"
-mise exec -- codex "$@"
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except (RuntimeError, OSError, ValueError, KeyError, TypeError):
+        raise SystemExit("Private context failed. Restore Langfuse access or repair the validated cache. Private work must stop.") from None

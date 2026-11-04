@@ -48,3 +48,4 @@ jobs:
           mise exec -- python3 tests/ci/check-pr-ci.py
           mise exec -- python3 tests/ci/check-kubernetes-conventions-test.py
           python3 tests/ci/check-pr-rendered-summary.py
+          python3 tests/ci/check-private-context.py

@@ -23,15 +23,11 @@ configMapGenerator:
       - cron-jobs.yaml=bootstrap/cron-jobs.yaml
       - profile=bootstrap/profile
       - tools.yaml=bootstrap/tools.yaml
+      - langfuse-private.py=../../../../../scripts/langfuse-private.py
   # Vendored from eleboucher/memini-hermes@5597ca3323d58fa6d7f430630d7f66502efdc38b.
   - name: hermes-memini
     files:
       - __init__.py=plugin/__init__.py
       - plugin.yaml=plugin/plugin.yaml
-secretGenerator:
-  - name: hermes-private-skills
-    files:
-      - assess-renovate-prs.sops.yaml=../../../../../.codex-private/skills/assess-renovate-prs/skill.sops.yaml
-      - assess-upstream-template.sops.yaml=../../../../../.codex-private/skills/assess-upstream-template/skill.sops.yaml
 generatorOptions:
   disableNameSuffixHash: true

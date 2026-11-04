@@ -44,6 +44,17 @@ spec:
               - /run/bootstrap/bootstrap.py
               - initialize
             env:
+              LANGFUSE_BASE_URL: http://langfuse-web.ai.svc.cluster.local:3000
+              LANGFUSE_PUBLIC_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: langfuse-secret
+                    key: LANGFUSE_INIT_PROJECT_PUBLIC_KEY
+              LANGFUSE_SECRET_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: langfuse-secret
+                    key: LANGFUSE_INIT_PROJECT_SECRET_KEY
               DISCORD_ALERTS_CHANNEL: "1546583960329392218"
               DISCORD_REVIEWS_CHANNEL: "1546583979401154582"
               GH_TOKEN:
@@ -343,16 +354,15 @@ spec:
             verify-read-token:
               - path: /run/bootstrap
                 readOnly: true
-      private-skills:
-        type: secret
-        name: hermes-private-skills
+      private-context:
+        type: emptyDir
+        medium: Memory
         advancedMounts:
           hermes:
             bootstrap:
-              - path: /run/private-skills
-                readOnly: true
+              - path: /run/private-context
             prepare-merge-broker:
-              - path: /run/private-skills
+              - path: /run/private-context
                 readOnly: true
       merge-broker:
         type: emptyDir

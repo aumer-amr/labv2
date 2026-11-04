@@ -18,6 +18,8 @@ spec:
       namespace: kube-system
     - name: litellm
       namespace: ai
+    - name: langfuse
+      namespace: ai
     - name: memini
       namespace: ai
     - name: searxng

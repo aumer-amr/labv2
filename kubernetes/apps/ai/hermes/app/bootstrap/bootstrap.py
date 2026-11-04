@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tarfile
 from pathlib import Path
 from urllib.request import Request, urlopen
@@ -176,34 +177,26 @@ def prepare_workspace() -> None:
 
 
 def install_private_skills() -> None:
-    source = Path("/run/private-skills")
+    run(sys.executable, "-I", str(BOOTSTRAP / "langfuse-private.py"), "fetch",
+        "--destination", "/run/private-context")
+    source = Path("/run/private-context/current")
     destination = DATA / "skills/private"
     prompts = DATA / "private-prompts"
-    for bundle in sorted(source.glob("*.sops.yaml")):
-        name = bundle.name.removesuffix(".sops.yaml")
-        values = yaml.safe_load(bundle.read_text(encoding="utf-8"))
-        if not isinstance(values, dict) or not all(
-            isinstance(values.get(key), str) for key in ("skill_md", "helper_py")
-        ):
-            raise SystemExit(f"Invalid private skill bundle: {name}")
+    for skill in sorted((source / "skills").iterdir()):
+        name = skill.name
         target = destination / name
-        scripts = target / "scripts"
-        scripts.mkdir(parents=True, exist_ok=True)
-        skill = target / "SKILL.md"
-        helper = scripts / "assessment.py"
-        skill.write_text(values["skill_md"], encoding="utf-8")
-        helper.write_text(values["helper_py"], encoding="utf-8")
-        skill.chmod(0o600)
-        helper.chmod(0o700)
-        if isinstance(values.get("instructions"), str):
+        shutil.copytree(skill, target, dirs_exist_ok=True)
+        instructions = source / "hermes/prompts" / f"{name}.txt"
+        if instructions.is_file():
             prompt = prompts / f"{name}.txt"
             prompt.parent.mkdir(parents=True, exist_ok=True)
-            prompt.write_text(values["instructions"], encoding="utf-8")
+            shutil.copyfile(instructions, prompt)
             prompt.chmod(0o600)
-        if isinstance(values.get("runner_sh"), str):
+        runner_source = source / "hermes/runners" / f"{name}.sh"
+        if runner_source.is_file():
             runner = DATA / "scripts/private" / f"{name}.sh"
             runner.parent.mkdir(parents=True, exist_ok=True)
-            runner.write_text(values["runner_sh"], encoding="utf-8")
+            shutil.copyfile(runner_source, runner)
             runner.chmod(0o700)
 
 
@@ -333,14 +326,8 @@ def prepare_merge_broker() -> None:
     gh = Path("/run/broker/gh")
     shutil.copyfile(TOOLS / "gh", gh)
     gh.chmod(0o500)
-    values = yaml.safe_load(
-        Path("/run/private-skills/assess-renovate-prs.sops.yaml").read_text(encoding="utf-8")
-    )
-    helper = values.get("broker_py") if isinstance(values, dict) else None
-    if not isinstance(helper, str):
-        raise SystemExit("Invalid merge broker bundle")
     destination = Path("/run/broker/assessment.py")
-    destination.write_text(helper, encoding="utf-8")
+    shutil.copyfile("/run/private-context/current/hermes/broker.py", destination)
     destination.chmod(0o500)
 
 

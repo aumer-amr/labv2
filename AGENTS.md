@@ -1,5 +1,16 @@
 # Repository Instructions
 
+## Private Context
+
+- Langfuse at `https://langfuse.aumer.dev` owns the private agent context in the `labv2-private` skill, under its `production` label.
+- If `LABV2_PRIVATE_CONTEXT_VERSION` is absent, run `scripts/codex-private --fetch-only` before private repository work.
+- Read the private `AGENTS.md` path that the command returns.
+- Load installed private skills when their descriptions match the task.
+- If `LABV2_PRIVATE_CONTEXT_VERSION` is set, use the rules and skills that the launcher loaded for the session.
+- The loader uses `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` when both are present. Otherwise, it uses the repository kubeconfig and the existing Langfuse pod. Keep credentials outside Git.
+- If retrieval fails, the loader can use a validated local cache. If no valid context loads, stop private work and report the failure.
+- Edit private content in Langfuse. Keep downloaded files under ignored local paths. Publish a reviewed version before moving the `production` label.
+
 ## Persistent Skills
 
 - At the first user command in every session, load and activate the installed `caveman` and `ponytail` skills in `full` mode before handling the command. Keep both active until the user explicitly changes their intensity or disables them. Discover their installed locations rather than copying machine-specific paths.
