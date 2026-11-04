@@ -105,7 +105,7 @@ spec:
                   type: OnDelete
               - op: add
                 path: /spec/suspend
-                value: true
+                value: false
               - op: add
                 path: /spec/upgrade/remediation/retries
                 value: 0
