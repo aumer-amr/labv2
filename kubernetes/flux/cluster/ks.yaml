@@ -67,6 +67,13 @@ spec:
                   type: OnDelete
                   rollingUpdate: null
               - op: add
+                path: /spec/values/operator/rollOutPods
+                value: false
+              - op: add
+                path: /spec/values/operator/podAnnotations
+                value:
+                  cilium.io/cilium-configmap-checksum: ac49d7803df8177d57fea227b69769b3f3dd1d15f35142d528967248baadda75
+              - op: add
                 path: /spec/upgrade/remediation/retries
                 value: 0
               - op: add
