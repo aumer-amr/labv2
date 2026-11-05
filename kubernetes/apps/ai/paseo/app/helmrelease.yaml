@@ -92,7 +92,6 @@ spec:
                 memory: 8Gi
     service:
       app:
-        controller: main
         ports:
           http:
             port: *port

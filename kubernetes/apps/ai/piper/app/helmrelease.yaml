@@ -118,7 +118,6 @@ spec:
           type: RuntimeDefault
     service:
       app:
-        controller: piper
         ports:
           wyoming:
             port: 10200
@@ -127,9 +126,5 @@ spec:
     persistence:
       data:
         existingClaim: piper
-        globalMounts:
-          - path: /data
       tmp:
         type: emptyDir
-        globalMounts:
-          - path: /tmp
