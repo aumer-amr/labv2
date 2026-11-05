@@ -48,24 +48,33 @@ for filtered, validated, changed in itertools.product(
 assert yaml(".github/workflows/pr-hygiene.yaml")["on"] == {"pull_request": {"branches": ["main"]}}
 
 deadvalues = yaml(".github/workflows/deadvalues.yaml")
-assert deadvalues["on"] == {"pull_request": {"branches": ["main"]}}
+assert deadvalues["on"] == {"pull_request": {"branches": ["main"]}, "workflow_dispatch": None}
 assert deadvalues["permissions"] == {"contents": "read"}
 steps = deadvalues["jobs"]["validate"]["steps"]
+assert steps[0]["if"] == "github.event_name == 'pull_request'"
 assert all(step["if"] == "steps.select.outputs.changed == 'true'" for step in steps[2:])
 assert steps[2]["with"]["persist-credentials"] is False
 assert steps[3]["with"]["args"] == "scan kubernetes/apps --details --fail-on dead"
 assert steps[3]["with"]["comment"] == "false"
 assert steps[3]["with"]["version"] == "v0.2.0-rc.1"
 assert not any(step.get("continue-on-error") for step in steps)
-for changed in ["[]", '[".deadvalues.yaml"]', "", "null", "{}", "[1]"]:
+for event, changed in itertools.product(
+    ["pull_request", "workflow_dispatch", "push"],
+    ["[]", '[".deadvalues.yaml"]', "", "null", "{}", "[1]"],
+):
     with tempfile.NamedTemporaryFile() as output:
         result = subprocess.run(
             [sys.executable, "-c", steps[1]["run"]], capture_output=True,
-            env={**os.environ, "CHANGED_FILES": changed, "GITHUB_OUTPUT": output.name},
+            env={**os.environ, "EVENT_NAME": event, "CHANGED_FILES": changed,
+                 "GITHUB_OUTPUT": output.name},
         )
-        assert (result.returncode == 0) == (changed in {"[]", '[".deadvalues.yaml"]'})
+        expected = event == "workflow_dispatch" or (
+            event == "pull_request" and changed in {"[]", '[".deadvalues.yaml"]'}
+        )
+        assert (result.returncode == 0) == expected, (event, changed)
         if result.returncode == 0:
-            assert output.read().decode() == f"changed={str(changed != '[]').lower()}\n"
+            selected = event == "workflow_dispatch" or changed != "[]"
+            assert output.read().decode() == f"changed={str(selected).lower()}\n"
 
 # Git --no-renames exposes both sides of a rename, including removed safety inputs.
 for changed, existing, tools in [

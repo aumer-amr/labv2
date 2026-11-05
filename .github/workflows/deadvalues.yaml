@@ -5,6 +5,7 @@ name: Dead Values
 on:
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
@@ -21,6 +22,7 @@ jobs:
     steps:
       - name: Find relevant changes
         id: changes
+        if: github.event_name == 'pull_request'
         uses: bjw-s-labs/action-changed-files@147be9638332cf68fd60714a610509d7a9360d60 # v0.7.0
         with:
           patterns: |
@@ -32,15 +34,23 @@ jobs:
       - name: Select validation or an explicit skip
         id: select
         env:
+          EVENT_NAME: ${{ github.event_name }}
           CHANGED_FILES: ${{ steps.changes.outputs.changed_files }}
         shell: python
         run: |
           import json
           import os
 
-          changed = json.loads(os.environ["CHANGED_FILES"])
-          if not isinstance(changed, list) or not all(isinstance(path, str) for path in changed):
-              raise SystemExit("Invalid changed-file output")
+          event = os.environ["EVENT_NAME"]
+          if event == "workflow_dispatch":
+              changed = True
+          elif event == "pull_request":
+              paths = json.loads(os.environ["CHANGED_FILES"])
+              if not isinstance(paths, list) or not all(isinstance(path, str) for path in paths):
+                  raise SystemExit("Invalid changed-file output")
+              changed = bool(paths)
+          else:
+              raise SystemExit("Unsupported event")
           with open(os.environ["GITHUB_OUTPUT"], "a") as output:
               print(f"changed={str(bool(changed)).lower()}", file=output)
           if not changed:
