@@ -83,12 +83,9 @@ spec:
           type: RuntimeDefault
     service:
       app:
-        controller: atuin
         ports:
           http:
             port: *port
     persistence:
       config:
         existingClaim: atuin
-        globalMounts:
-          - path: /config
