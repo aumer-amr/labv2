@@ -84,8 +84,6 @@ spec:
         storageClass: ceph-block
         accessMode: ReadWriteOnce
         size: 1Gi
-        globalMounts:
-          - path: /config
       runtime:
         type: emptyDir
         advancedMounts:
