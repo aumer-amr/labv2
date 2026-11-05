@@ -54,6 +54,12 @@ process.stdin.on('end', async () => {
 """
 
 
+def primary_root():
+    common = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--git-common-dir"],
+                            capture_output=True, text=True)
+    return (ROOT / common.stdout.strip()).resolve().parent if common.returncode == 0 else ROOT
+
+
 def request(path, method="GET", data=None):
     public = os.environ.get("LANGFUSE_PUBLIC_KEY")
     secret = os.environ.get("LANGFUSE_SECRET_KEY")
@@ -82,14 +88,13 @@ def request(path, method="GET", data=None):
         except (URLError, TimeoutError, OSError):
             raise Unavailable("Langfuse is unavailable") from None
     environment = os.environ.copy()
-    common = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--git-common-dir"],
-                            capture_output=True, text=True)
-    if common.returncode == 0 and not Path(environment.get("KUBECONFIG", "/nonexistent")).is_file():
-        common_path = (ROOT / common.stdout.strip()).resolve()
-        environment["KUBECONFIG"] = str(common_path.parent / "kubeconfig")
+    repository = primary_root()
+    if not Path(environment.get("KUBECONFIG", "/nonexistent")).is_file():
+        environment["KUBECONFIG"] = str(repository / "kubeconfig")
     try:
         result = subprocess.run(
-            ["mise", "exec", "--", "kubectl", "exec", "-i", "--namespace", "ai",
+            ["mise", "exec", "--", "kubectl", "--kubeconfig", environment["KUBECONFIG"],
+             "exec", "-i", "--namespace", "ai",
              "deployment/langfuse-web", "--", "node", "-e", RELAY],
             input=json.dumps({"path": path, "method": method, "data": data}),
             capture_output=True, text=True, timeout=30, env=environment,
@@ -167,9 +172,18 @@ def fetch(destination):
     try:
         bundle = request(f"/api/public/skills/{SKILL}?label=production&includeContent=true")
     except Unavailable:
-        bundle = cached_bundle(destination)
+        try:
+            bundle = cached_bundle(destination)
+        except FileNotFoundError:
+            # Seed only the default worktree cache from the same repository.
+            if (destination.resolve() != (ROOT / ".private/agent-context").resolve()
+                    or (destination / "current").exists() or (destination / "current").is_symlink()):
+                raise
+            repository = primary_root()
+            if repository == ROOT:
+                raise
+            bundle = cached_bundle(repository / ".private/agent-context")
         print("Langfuse unavailable; using the validated private context cache", file=sys.stderr)
-        return bundle
     files = validate_bundle(bundle)
     target = destination / f"version-{bundle['version']}"
     if target.exists() or target.is_symlink():
