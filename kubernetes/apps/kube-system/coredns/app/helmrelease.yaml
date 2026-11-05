@@ -9,7 +9,6 @@ spec:
     name: coredns
   interval: 1h
   values:
-    fullnameOverride: coredns
     image:
       repository: mirror.gcr.io/coredns/coredns
       tag: 1.15.0@sha256:0a9d8c8ddf34347eb59aad9a8784f0710de88d6d112726d11d271f9bc6daca26
