@@ -22,7 +22,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: adapter
-          image: ghcr.io/roryeckel/wyoming_openai:0.8.0@sha256:c88a1b06e3305140a830705213977dd5ea7cd7dd970bf99e3f84abfd7e83f26e
+          image: ghcr.io/roryeckel/wyoming_openai:0.9.0@sha256:27cb450fd60f8651ef90ad3536acff70b3168fe39f2529af4e57701314385094
           env:
             - name: STT_OPENAI_URL
               value: http://whisper.ai.svc.cluster.local:8080/v1
