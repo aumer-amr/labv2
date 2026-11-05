@@ -112,7 +112,6 @@ spec:
           type: RuntimeDefault
     service:
       app:
-        controller: paperless
         ports:
           http:
             port: *port
@@ -136,7 +135,3 @@ spec:
               - path: /usr/src/paperless/consume
       tmp:
         type: emptyDir
-        advancedMounts:
-          paperless:
-            app:
-              - path: /tmp
