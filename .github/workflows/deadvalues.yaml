@@ -1,0 +1,66 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Dead Values
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Dead Values
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Find relevant changes
+        id: changes
+        uses: bjw-s-labs/action-changed-files@147be9638332cf68fd60714a610509d7a9360d60 # v0.7.0
+        with:
+          patterns: |
+            kubernetes/**/*
+            .deadvalues.yaml
+            .github/workflows/deadvalues.yaml
+            tests/ci/check-deadvalues.py
+
+      - name: Select validation or an explicit skip
+        id: select
+        env:
+          CHANGED_FILES: ${{ steps.changes.outputs.changed_files }}
+        shell: python
+        run: |
+          import json
+          import os
+
+          changed = json.loads(os.environ["CHANGED_FILES"])
+          if not isinstance(changed, list) or not all(isinstance(path, str) for path in changed):
+              raise SystemExit("Invalid changed-file output")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              print(f"changed={str(bool(changed)).lower()}", file=output)
+          if not changed:
+              print("No chart, configuration, workflow, or fixture changes; validation skipped")
+
+      - name: Checkout
+        if: steps.select.outputs.changed == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Detect dead values in configured chart versions
+        if: steps.select.outputs.changed == 'true'
+        uses: guarnz/deadvalues@feac43f3d0c03046cc84c26cbac79c697ce841bf # v0.2.0-rc.1
+        with:
+          version: v0.2.0-rc.1
+          # A full scan also covers configuration and shared component changes.
+          args: scan kubernetes/apps --details --fail-on dead
+          comment: "false"
+
+      - name: Exercise detector regression fixtures
+        if: steps.select.outputs.changed == 'true'
+        run: python3 tests/ci/check-deadvalues.py

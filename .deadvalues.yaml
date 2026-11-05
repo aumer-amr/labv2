@@ -1,0 +1,21 @@
+---
+ignore:
+  # llmkube 0.10.16 always prefers the nonempty Helm release namespace.
+  - app: llmkube
+    keys:
+      - namespace
+  # app-template 5.3.0 overwrites these keys with controller selector labels.
+  # shortcut: ? spans label dots until upstream supports literal dotted segments.
+  - app: langfuse-clickhouse
+    keys:
+      - controllers.clickhouse.pod.labels.app?kubernetes?io/name
+  - app: clickhouse
+    keys:
+      - controllers.clickhouse.pod.labels.app?kubernetes?io/name
+  # Existing inactive settings, pending investigation in Vikunja task 172.
+  - app: langfuse
+    keys:
+      - postgresql.auth.args
+  - app: windmill
+    keys:
+      - windmill.multiplayerReplicas
