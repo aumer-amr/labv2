@@ -88,16 +88,11 @@ spec:
           type: RuntimeDefault
     service:
       app:
-        controller: whisper
         ports:
           http:
             port: *port
     persistence:
       cache:
         type: emptyDir
-        globalMounts:
-          - path: /cache
       tmp:
         type: emptyDir
-        globalMounts:
-          - path: /tmp

@@ -83,7 +83,6 @@ spec:
           type: RuntimeDefault
     service:
       app:
-        controller: searxng
         ports:
           http:
             port: *port
@@ -101,5 +100,3 @@ spec:
             readOnly: true
       tmp:
         type: emptyDir
-        globalMounts:
-          - path: /tmp

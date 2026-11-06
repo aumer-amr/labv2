@@ -167,7 +167,6 @@ spec:
           type: RuntimeDefault
     service:
       app:
-        controller: open-webui
         ports:
           http:
             port: *port
