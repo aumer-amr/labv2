@@ -140,7 +140,6 @@ spec:
             ui:
               hide-hostname: true
               hide-url: true
-        controller: immich
         ports:
           http:
             port: 2283
@@ -216,7 +215,6 @@ spec:
                   - ALL
     service:
       app:
-        controller: immich-machine-learning
         ports:
           http:
             port: 3003

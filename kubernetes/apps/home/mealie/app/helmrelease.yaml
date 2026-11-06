@@ -130,7 +130,6 @@ spec:
           type: RuntimeDefault
     service:
       app:
-        controller: mealie
         ports:
           http:
             port: *port
@@ -141,5 +140,3 @@ spec:
           - path: /app/data
       tmp:
         type: emptyDir
-        globalMounts:
-          - path: /tmp

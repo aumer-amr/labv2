@@ -103,7 +103,6 @@ spec:
           type: RuntimeDefault
     service:
       app:
-        controller: zigbee2mqtt
         ports:
           http:
             port: *port
@@ -168,12 +167,6 @@ spec:
                 readOnly: true
       tmp:
         type: emptyDir
-        advancedMounts:
-          zigbee2mqtt:
-            app:
-              - path: /tmp
-            mqtt:
-              - path: /tmp
       zigbee:
         type: hostPath
         hostPath: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_7acba91b7f45ed11a7f8d18f0a86e0b4-if00-port0

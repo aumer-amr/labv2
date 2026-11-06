@@ -95,13 +95,11 @@ spec:
         network.home.arpa/from-envoy-internal: allow
     service:
       app:
-        controller: music-assistant
         ports:
           http:
             port: 8095
             appProtocol: kubernetes.io/ws
       players:
-        controller: music-assistant
         type: LoadBalancer
         annotations:
           lbipam.cilium.io/ips: 10.10.1.116
@@ -120,8 +118,6 @@ spec:
     persistence:
       data:
         existingClaim: music-assistant
-        globalMounts:
-          - path: /data
       tmp:
         type: emptyDir
     route:
