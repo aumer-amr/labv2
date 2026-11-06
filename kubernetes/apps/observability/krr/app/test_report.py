@@ -2,6 +2,7 @@ import copy
 import importlib.util
 import json
 import os
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -27,9 +28,13 @@ def fixture():
 
 
 OBSERVED = {"coverage": 1, "oom_events": 0, "peak_cpu": 0.09, "peak_memory": 90000000}
+IMAGE_VERSION = re.search(r"robustadev/krr:v([^@\s]+)@", Path(__file__).with_name("cronjob.yaml").read_text())[1]
 
 
 class Reports(unittest.TestCase):
+    def test_report_version_matches_cronjob_image(self):
+        self.assertIn(f"KRR v{IMAGE_VERSION};", report.report([], "test-time"))
+
     def test_sanitized_report_excludes_configuration_and_annotations(self):
         with patch.object(report, "evidence", return_value=OBSERVED):
             scans = report.sanitize(fixture())
@@ -155,6 +160,7 @@ class Reports(unittest.TestCase):
         def upload(task_id, payload):
             self.assertEqual(task_id, 55)
             decoded = json.loads(payload)
+            self.assertEqual(decoded["krr_version"], IMAGE_VERSION)
             self.assertEqual(decoded["history_hours"], 336)
             self.assertEqual(len(decoded["scans"]), 3)
             self.assertNotIn("do-not-publish", payload.decode())
