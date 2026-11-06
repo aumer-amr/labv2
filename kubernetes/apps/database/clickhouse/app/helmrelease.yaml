@@ -70,7 +70,6 @@ spec:
           type: RuntimeDefault
     service:
       app:
-        controller: clickhouse
         ports:
           http:
             port: 8123
@@ -87,8 +86,6 @@ spec:
           - path: /var/log/clickhouse-server
       tmp:
         type: emptyDir
-        globalMounts:
-          - path: /tmp
       run:
         type: emptyDir
         globalMounts:
