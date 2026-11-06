@@ -103,15 +103,12 @@ spec:
           type: RuntimeDefault
     service:
       app:
-        controller: vikunja
         ports:
           http:
             port: *port
     persistence:
       data:
         existingClaim: vikunja
-        globalMounts:
-          - path: /data
       config:
         type: secret
         name: vikunja-secret
@@ -122,5 +119,3 @@ spec:
             readOnly: true
       tmp:
         type: emptyDir
-        globalMounts:
-          - path: /tmp
