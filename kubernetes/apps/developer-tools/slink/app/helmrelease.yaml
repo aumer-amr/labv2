@@ -1,0 +1,125 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: slink
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: slink
+  interval: 1h
+  values:
+    global:
+      createDefaultServiceAccount: false
+    controllers:
+      slink:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        replicas: 1
+        strategy: Recreate
+        containers:
+          app:
+            image: &image
+              repository: docker.io/anirdev/slink
+              tag: v1.14.5@sha256:776093d7c3a4ff3b7e09c37e073ad9c0e34f2768404191fb577f4e957ddccb5a
+            env:
+              TZ: Europe/Amsterdam
+              ORIGIN: https://screenshots.aumer.dev
+              REQUIRE_SSL: "true"
+              USER_ALLOW_REGISTRATION: "false"
+              IMAGE_ALLOW_GUEST_UPLOADS: "false"
+              USER_ALLOW_UNAUTHENTICATED_ACCESS: "true"
+              USER_REQUIRE_AUTH_FOR_MEDIA_SHARES: "false"
+              IMAGE_MAX_SIZE: 15M
+              IMAGE_STRIP_EXIF_METADATA: "true"
+              STORAGE_PROVIDER: s3
+              AMAZON_S3_BUCKET: pg-slink
+              AMAZON_S3_REGION: auto
+              AMAZON_S3_ENDPOINT: https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+              AMAZON_S3_USE_CUSTOM_PROVIDER: "true"
+              AMAZON_S3_FORCE_PATH_STYLE: "true"
+              ADMIN_USERNAME: admin
+            envFrom:
+              - secretRef:
+                  name: slink-secret
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: &port 3000
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 100m
+                memory: 384Mi
+              limits:
+                memory: 1Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              # Startup writes dotenv, JWT configuration, and Symfony caches into the image.
+              readOnlyRootFilesystem: false
+              capabilities:
+                drop: ["ALL"]
+                # The upstream FrankenPHP binary has this file capability, even on port 8080.
+                add: ["NET_BIND_SERVICE"]
+        initContainers:
+          runtime-directories:
+            image: *image
+            command: ["/bin/sh", "-ec", "mkdir -p /data/redis /data/caddy"]
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: ["ALL"]
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+    service:
+      app:
+        controller: slink
+        ports:
+          http:
+            port: *port
+    persistence:
+      data:
+        existingClaim: slink
+        # One recovery point covers SQLite, signing keys, and the bundled Redis queue.
+        globalMounts:
+          - path: /app/var/data
+          - path: /data

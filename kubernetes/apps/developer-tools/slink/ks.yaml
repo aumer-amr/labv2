@@ -1,0 +1,36 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: slink
+spec:
+  components:
+    - ../../../../components/kopiur/backup
+  dependsOn:
+    - name: coredns
+      namespace: kube-system
+    - name: envoy-gateway
+      namespace: network
+    - name: onepassword-connect
+      namespace: external-secrets
+    - name: kopiur
+      namespace: kube-system
+    - name: rook-ceph-cluster
+      namespace: rook-ceph
+  interval: 1h
+  path: ./kubernetes/apps/developer-tools/slink/app
+  postBuild:
+    substituteFrom:
+      - name: cluster-secrets
+        kind: Secret
+    substitute:
+      APP: slink
+      NAMESPACE: developer-tools
+      KOPIUR_CAPACITY: 5Gi
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: developer-tools
+  wait: true

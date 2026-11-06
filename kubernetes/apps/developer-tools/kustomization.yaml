@@ -12,5 +12,6 @@ resources:
   - ./namespace.yaml
   - ./network-policies/networkpolicy.yaml
   - ./atuin/ks.yaml
+  - ./slink/ks.yaml
   - ./vikunja/ks.yaml
   - ./network-policies/ks.yaml

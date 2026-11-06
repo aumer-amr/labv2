@@ -1,0 +1,92 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: slink
+  annotations:
+    gatus.home-operations.com/endpoint: |-
+      url: https://screenshots.aumer.dev/api/health
+      conditions: ["[STATUS] == 200"]
+spec:
+  hostnames:
+    - screenshots.aumer.dev
+  parentRefs:
+    - name: envoy-internal
+      namespace: network
+  rules:
+    - backendRefs:
+        - name: slink
+          port: 3000
+      timeouts:
+        request: 60s
+        backendRequest: 60s
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: slink-share
+  labels:
+    # k8s-gateway must resolve this hostname to envoy-internal only.
+    k8s-gateway.dns/ignore: "true"
+  annotations:
+    external-dns.kubernetes.io/gateway-hostname-source: annotation-only
+    gatus.home-operations.com/endpoint: |-
+      url: https://screenshots.aumer.dev/image/unavailable
+      conditions: ["[STATUS] == 200"]
+spec:
+  hostnames:
+    - screenshots.aumer.dev
+  parentRefs:
+    - name: envoy-external
+      namespace: network
+  rules:
+    # Slink v1.14.5 image shares, password prompts, and their static assets only.
+    - matches:
+        - path:
+            type: RegularExpression
+            value: "^/i/[A-Za-z0-9]{8}$"
+          method: GET
+        - path:
+            type: RegularExpression
+            value: "^/i/[A-Za-z0-9]{8}$"
+          method: HEAD
+        - path:
+            type: RegularExpression
+            value: '^/image/[0-9a-fA-F-]{36}\.[A-Za-z0-9]+$'
+          method: GET
+        - path:
+            type: RegularExpression
+            value: '^/image/[0-9a-fA-F-]{36}\.[A-Za-z0-9]+$'
+          method: HEAD
+        - path:
+            type: RegularExpression
+            value: '^/share/locked/[0-9a-fA-F-]{36}(/__data\.json)?$'
+          method: GET
+        - path:
+            type: Exact
+            value: /image/unavailable
+          method: GET
+        - path:
+            type: PathPrefix
+            value: /_app
+          method: GET
+        - path:
+            type: PathPrefix
+            value: /icons
+          method: GET
+        - path:
+            type: RegularExpression
+            value: '^/(favicon\.(png|svg)|manifest\.webmanifest)$'
+          method: GET
+      backendRefs:
+        - name: slink
+          port: 3000
+    # Unlocking a share is the only public write. Uploads and management have no route.
+    - matches:
+        - path:
+            type: RegularExpression
+            value: "^/api/share/[0-9a-fA-F-]{36}/unlock$"
+          method: POST
+      backendRefs:
+        - name: slink
+          port: 3000

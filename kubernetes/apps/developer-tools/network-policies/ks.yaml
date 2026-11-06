@@ -7,6 +7,7 @@ metadata:
 spec:
   dependsOn:
     - name: atuin
+    - name: slink
     - name: vikunja
     - name: kopiur
       namespace: kube-system

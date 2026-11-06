@@ -1,0 +1,12 @@
+---
+# Public DNS is explicit because both internal DNS controllers must ignore the external route.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: slink
+spec:
+  endpoints:
+    - dnsName: screenshots.aumer.dev
+      recordType: CNAME
+      targets:
+        - external.aumer.dev
