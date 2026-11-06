@@ -27,7 +27,7 @@ spec:
   runtime: llamacpp
   mode: embedding
   # renovate: datasource=docker depName=ghcr.io/ggml-org/llama.cpp
-  image: ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:1359b4e1b3896bc922563a1bb4391afaaf41f4607dfd556627187fd689778853
+  image: ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:b5f99c093094d54c51e5bb9d79a87f7da28ca7021a7995ce62f769d7e47cc4b9
   replicas: 1
   nodeSelector:
     kubernetes.io/hostname: heavyarms
