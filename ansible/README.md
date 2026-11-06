@@ -25,11 +25,12 @@ Galaxy collections, PXE, disk partitioning, or automatic reboots.
     hostname -I
     ```
 
-4. From WSL, install Ansible in a virtual environment using Python 3.12–3.14:
+4. From WSL, create the Ansible virtual environment with an installed Python 3.14 interpreter.
+   Ansible 2.22 requires Python 3.13 or newer on the controller:
 
     ```bash
     cd /mnt/e/code/private/labv2
-    python3 -m venv ansible/.venv
+    python3.14 -m venv ansible/.venv
     ansible/.venv/bin/python -m pip install -r ansible/requirements.txt
     cp ansible/inventory.example.yaml ansible/inventory.yaml
     ```
