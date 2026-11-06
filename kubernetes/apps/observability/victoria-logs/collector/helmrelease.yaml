@@ -43,7 +43,6 @@ spec:
                           - name: vl-collector-data
                             mountPath: /var/lib/vl-collector
   values:
-    fullnameOverride: victoria-logs-collector
     global:
       image:
         registry: quay.io
