@@ -21,6 +21,7 @@ WORKLOADS = {"mealie", "sendspin", "zigbee2mqtt"}
 HOURS = 336
 EXPECTED_POINTS = HOURS * 4
 MAX_BYTES = 8_000_000
+KRR_VERSION = "1.31.3"
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -160,7 +161,7 @@ def quantity(value, resource):
 
 def report(scans, stamp):
     lines = ["Weekly Kubernetes resource review — " + stamp, "",
-             "Scope: home/mealie, home/sendspin, home/zigbee2mqtt. KRR v1.31.1; 14-day history; "
+             f"Scope: home/mealie, home/sendspin, home/zigbee2mqtt. KRR v{KRR_VERSION}; 14-day history; "
              "CPU p95; memory peak +15%; experimental OOM-limit headroom +25%; CPU floor 10m; memory floor 100Mi. "
              "HPA overrides are disabled. Coverage and peaks below use 15-minute samples; short peaks may be missed.", "",
              "Requests reserve scheduler capacity. Limits cap usage. Values below are proposals, not changes.", "",
@@ -229,7 +230,7 @@ def run():
     if path.stat().st_size > MAX_BYTES:
         raise ValueError("KRR report exceeds size limit")
     scans = sanitize(json.loads(path.read_text()))
-    payload = json.dumps({"generated_at": stamp, "krr_version": "1.31.1", "history_hours": HOURS,
+    payload = json.dumps({"generated_at": stamp, "krr_version": KRR_VERSION, "history_hours": HOURS,
                           "scans": scans}, allow_nan=False, indent=2).encode()
     task = vikunja("tasks_create", {"project": matches[0]["id"], "title": "KRR resource report " + stamp,
                                     "description": report(scans, stamp), "format": "markdown", "done": False})
