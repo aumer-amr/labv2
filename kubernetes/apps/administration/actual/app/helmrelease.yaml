@@ -95,20 +95,11 @@ spec:
           type: RuntimeDefault
     service:
       app:
-        controller: actual
         ports:
           http:
             port: *port
     persistence:
       data:
         existingClaim: actual
-        advancedMounts:
-          actual:
-            app:
-              - path: /data
       tmp:
         type: emptyDir
-        advancedMounts:
-          actual:
-            app:
-              - path: /tmp
