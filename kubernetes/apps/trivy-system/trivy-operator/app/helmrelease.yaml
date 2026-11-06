@@ -52,7 +52,6 @@ spec:
   values:
     compliance:
       specs: []
-    fullnameOverride: trivy-operator
     operator:
       accessGlobalSecretsAndServiceAccount: false
       clusterComplianceEnabled: false
