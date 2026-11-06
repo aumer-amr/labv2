@@ -167,6 +167,97 @@ class ContextTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 context.validate_state(invalid)
 
+    def test_cluster_transport_passes_kubeconfig_past_mise_environment(self):
+        root = self.directory.parent / "main checkout"
+        root.mkdir()
+        explicit = root / "custom kubeconfig"
+        explicit.touch()
+        for configured, expected in ((str(explicit), explicit), ("/missing", root / "kubeconfig")):
+            with self.subTest(configured=configured), patch.dict(os.environ, {"KUBECONFIG": configured}, clear=True), patch.object(context.subprocess, "run", side_effect=[
+                subprocess.CompletedProcess([], 0, str(root / ".git") + "\n", ""),
+                subprocess.CompletedProcess([], 0, json.dumps({"status": 200, "body": {}}), ""),
+            ]) as run:
+                context.request("/api/public/skills")
+                command = run.call_args.args[0]
+                self.assertIn("--kubeconfig", command)
+                self.assertEqual(command[command.index("--kubeconfig") + 1], str(expected))
+
+    def linked_worktree(self):
+        root = self.directory.parent / "main checkout"
+        root.mkdir()
+        (root / "scripts").mkdir()
+        shutil.copyfile(ROOT / "scripts/langfuse-private.py", root / "scripts/langfuse-private.py")
+        subprocess.run(["git", "init", "--quiet", str(root)], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(root), "add", "scripts"], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(root), "-c", "user.name=Test", "-c", "user.email=test@example.test", "commit", "--quiet", "-m", "fixture"], check=True, capture_output=True)
+        linked = self.directory.parent / "linked worktree"
+        subprocess.run(["git", "-C", str(root), "worktree", "add", "--quiet", "--detach", str(linked)], check=True, capture_output=True)
+        return root, linked
+
+    def test_linked_worktree_seeds_validated_cache_and_installs_local_skills(self):
+        root, linked = self.linked_worktree()
+        with patch.object(context, "ROOT", root), patch.object(context, "request", return_value=bundle()):
+            context.session_start()
+        with patch.object(context, "ROOT", linked), patch.object(context, "request", side_effect=context.Unavailable("offline")), redirect_stderr(io.StringIO()):
+            result = context.session_start()
+        self.assertIn("version 1", result["hookSpecificOutput"]["additionalContext"])
+        self.assertEqual((linked / ".agents/skills/example").resolve(), linked / ".private/agent-context/version-1/skills/example")
+        self.assertEqual(context.cached_bundle(linked / ".private/agent-context"), bundle())
+
+    def test_linked_worktree_rejects_invalid_shared_cache_and_authentication_failure(self):
+        root, linked = self.linked_worktree()
+        with patch.object(context, "ROOT", root), patch.object(context, "request", return_value=bundle()):
+            context.session_start()
+        with patch.object(context, "ROOT", linked), patch.object(context, "request", side_effect=RuntimeError("HTTP 401")):
+            self.assertFalse(context.session_start()["continue"])
+        (root / ".private/agent-context/current/AGENTS.md").write_text("tampered")
+        with patch.object(context, "ROOT", linked), patch.object(context, "request", side_effect=context.Unavailable("offline")):
+            self.assertFalse(context.session_start()["continue"])
+
+    def test_linked_worktree_does_not_replace_damaged_local_cache_or_custom_destination(self):
+        root, linked = self.linked_worktree()
+        for repository in (root, linked):
+            with patch.object(context, "ROOT", repository), patch.object(context, "request", return_value=bundle()):
+                context.session_start()
+        (linked / ".private/agent-context/current/AGENTS.md").unlink()
+        with patch.object(context, "ROOT", linked), patch.object(context, "request", side_effect=context.Unavailable("offline")):
+            self.assertFalse(context.session_start()["continue"])
+            with self.assertRaises(FileNotFoundError):
+                context.fetch(self.directory)
+
+    def test_configured_hook_runs_online_and_offline_in_linked_worktree(self):
+        root, linked = self.linked_worktree()
+        with patch.object(context, "ROOT", root), patch.object(context, "request", return_value=bundle()):
+            context.session_start()
+        nested = linked / "nested directory"
+        nested.mkdir()
+        binary = self.directory.parent / "bin/mise"
+        binary.parent.mkdir()
+        binary.write_text(
+            f"#!{sys.executable}\nimport json,os,sys\n"
+            "os.environ['KUBECONFIG'] = '/missing/worktree/kubeconfig'\n"
+            "assert sys.argv[sys.argv.index('--kubeconfig') + 1] == os.environ['EXPECTED_KUBECONFIG']\n"
+            "if os.environ['HOOK_OFFLINE'] == 'yes': sys.exit(1)\n"
+            "sys.stdout.write(open(os.environ['HOOK_FIXTURE']).read())\n"
+        )
+        binary.chmod(0o700)
+        fixture = self.directory.parent / "response.json"
+        fixture.write_text(json.dumps({"status": 200, "body": bundle(2)}))
+        env = {key: value for key, value in os.environ.items() if not key.startswith("LANGFUSE_")}
+        env.update(PATH=str(binary.parent) + os.pathsep + env["PATH"], HOOK_FIXTURE=str(fixture),
+                   KUBECONFIG="/missing", EXPECTED_KUBECONFIG=str(root / "kubeconfig"))
+        handler = json.loads((ROOT / ".codex/hooks.json").read_text())["hooks"]["SessionStart"][0]["hooks"][0]
+        for offline, version in (("yes", 1), ("no", 2)):
+            env["HOOK_OFFLINE"] = offline
+            result = subprocess.run(["bash", "-c", handler["command"]], cwd=nested, env=env,
+                                    input=json.dumps({"cwd": str(nested)}), capture_output=True,
+                                    text=True, check=True, timeout=handler["timeout"])
+            output = json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
+            self.assertIn(f"version {version}", output)
+            self.assertIn("Private rules marker", output)
+            self.assertEqual((linked / ".agents/skills/example").resolve(),
+                             linked / f".private/agent-context/version-{version}/skills/example")
+
     def test_install_skills_preserves_local_files_and_updates_version_links(self):
         self.fetch()
         root = self.directory.parent / "repository"
