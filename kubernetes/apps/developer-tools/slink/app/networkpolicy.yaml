@@ -50,6 +50,10 @@ spec:
               - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com.developer-tools.svc.cluster.local
               - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com.svc.cluster.local
               - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com.cluster.local
+              - matchName: idm.aumer.dev
+              - matchName: idm.aumer.dev.developer-tools.svc.cluster.local
+              - matchName: idm.aumer.dev.svc.cluster.local
+              - matchName: idm.aumer.dev.cluster.local
     - toEndpoints: *dns
       toPorts:
         - ports:
@@ -61,8 +65,18 @@ spec:
               - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com.developer-tools.svc.cluster.local
               - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com.svc.cluster.local
               - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com.cluster.local
+              - matchName: idm.aumer.dev
+              - matchName: idm.aumer.dev.developer-tools.svc.cluster.local
+              - matchName: idm.aumer.dev.svc.cluster.local
+              - matchName: idm.aumer.dev.cluster.local
     - toFQDNs:
         - matchName: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    - toFQDNs:
+        - matchName: idm.aumer.dev
       toPorts:
         - ports:
             - port: "443"

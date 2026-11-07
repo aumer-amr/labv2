@@ -65,6 +65,8 @@ class SlinkContract(unittest.TestCase):
         paths = [
             "/", "/history", "/admin", "/admin/settings", "/profile/login",
             "/profile/signup", "/upload", "/integrations", "/preferences",
+            "/profile/sso/login/kanidm", "/profile/sso/callback",
+            "/api/auth/sso/providers", "/api/auth/sso/authorize", "/api/auth/sso/token",
             "/api/health", "/api/upload", "/api/upload/chunked",
             "/api/external/upload", "/api/auth/login", "/api/auth/signup",
             "/api/user/api-keys", "/api/settings", "/api/images/history",
@@ -130,6 +132,9 @@ class SlinkContract(unittest.TestCase):
         names = [host] + [host + "." + suffix for suffix in [
             "developer-tools.svc.cluster.local", "svc.cluster.local", "cluster.local",
         ]]
+        names += ["idm.aumer.dev"] + ["idm.aumer.dev." + suffix for suffix in [
+            "developer-tools.svc.cluster.local", "svc.cluster.local", "cluster.local",
+        ]]
         for rule, protocol in zip(rules[:2], ["UDP", "TCP"]):
             self.assertEqual(rule["toEndpoints"], [{"matchLabels": {
                 "k8s:io.kubernetes.pod.namespace": "kube-system", "k8s:k8s-app": "kube-dns",
@@ -138,7 +143,19 @@ class SlinkContract(unittest.TestCase):
                 "rules": {"dns": [{"matchName": name} for name in names]}}])
         self.assertEqual(rules[2], {"toFQDNs": [{"matchName": host}],
             "toPorts": [{"ports": [{"port": "443", "protocol": "TCP"}]}]})
-        self.assertEqual(len(rules), 3)
+        self.assertEqual(rules[3], {"toFQDNs": [{"matchName": "idm.aumer.dev"}],
+            "toPorts": [{"ports": [{"port": "443", "protocol": "TCP"}]}]})
+        self.assertEqual(len(rules), 4)
+
+    def test_kanidm_secret_and_gateway_path(self):
+        self.assertEqual(self.values["defaultPodOptions"]["labels"], {
+            "network.home.arpa/to-envoy-external": "allow",
+        })
+        secret = documents(APP / "externalsecret.yaml")[0]["spec"]
+        field = next(f for f in secret["data"] if f["secretKey"] == "KANIDM_CLIENT_SECRET")
+        self.assertEqual(field["remoteRef"], {"key": "slink", "property": "KANIDM_CLIENT_SECRET"})
+        dependencies = documents(APP.parent / "ks.yaml")[0]["spec"]["dependsOn"]
+        self.assertIn({"name": "kanidm", "namespace": "security"}, dependencies)
 
 
 if __name__ == "__main__":
