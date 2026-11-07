@@ -19,6 +19,31 @@ def run(*args):
     return subprocess.check_output(args, text=True)
 
 
+
+def test_projected_policies(agent):
+    mount = next(m for m in agent["volumeMounts"] if m["name"] == "tetragon-policies")
+    argument = next(a for a in agent["args"] if a.startswith("--tracing-policy-dir="))
+    relative = Path(argument.split("=", 1)[1]).relative_to(mount["mountPath"])
+    expected = {p.name for p in (APP / "policies").glob("*.yaml")}
+    with tempfile.TemporaryDirectory() as directory:
+        volume = Path(directory)
+        snapshot = volume / "..2026_01"
+        snapshot.mkdir()
+        for name in expected:
+            (snapshot / name).write_text((APP / "policies" / name).read_text())
+            (volume / name).symlink_to("..data/" + name)
+        (volume / "..data").symlink_to(snapshot.name, target_is_directory=True)
+        # Tetragon 1.8 walks one subdirectory and follows file symlinks with os.Stat.
+        candidates = []
+        for entry in (volume / relative).iterdir():
+            if entry.is_dir() and not entry.is_symlink():
+                candidates.extend(p for p in entry.iterdir() if p.is_file())
+            elif entry.is_file():
+                candidates.append(entry)
+        assert len(candidates) == len(expected), "ConfigMap projection loads static policies more than once"
+        assert {p.name for p in candidates} == expected
+
+
 def test_alerts(work):
     rules = yaml_docs(APP / "prometheusrule.yaml")[0]["spec"]
     (work / "tetragon-rules.yaml").write_text(json.dumps(rules))
@@ -84,6 +109,7 @@ def main(chart):
         assert container["resources"]["requests"] and container["resources"]["limits"]
         assert not container["securityContext"].get("privileged", False)
     agent = next(c for c in pod["containers"] if c["name"] == "tetragon")
+    test_projected_policies(agent)
     assert next(m for m in agent["volumeMounts"] if m["name"] == "host-proc")["readOnly"]
     assert next(m for m in agent["volumeMounts"] if m["name"] == "sys-kernel-tracing")["readOnly"]
     sidecar = next(c for c in pod["containers"] if c["name"] == "export-stdout")

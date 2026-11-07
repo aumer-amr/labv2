@@ -97,7 +97,8 @@ spec:
             - DAC_OVERRIDE
             - SYSLOG
       extraArgs:
-        tracing-policy-dir: /etc/tetragon/policies
+        # Skip projection metadata so each static policy loads once.
+        tracing-policy-dir: /etc/tetragon/policies/..data
       processCacheSize: 8192
       debug: false
       enableKeepSensorsOnExit: false
