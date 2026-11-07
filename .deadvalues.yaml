@@ -12,10 +12,3 @@ ignore:
   - app: clickhouse
     keys:
       - controllers.clickhouse.pod.labels.app?kubernetes?io/name
-  # Existing inactive settings, pending investigation in Vikunja task 172.
-  - app: langfuse
-    keys:
-      - postgresql.auth.args
-  - app: windmill
-    keys:
-      - windmill.multiplayerReplicas

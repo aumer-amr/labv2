@@ -22,7 +22,6 @@ spec:
       tag: 1.869.0@sha256:84e6ecdfaa7c675472d8e1ad346feda28d746bcd39261ee19f04b4561fd8782b
       appReplicas: 1
       extraReplicas: 0
-      multiplayerReplicas: 0
       databaseUrlSecretName: windmill-secret
       baseDomain: windmill.aumer.dev
       baseProtocol: https

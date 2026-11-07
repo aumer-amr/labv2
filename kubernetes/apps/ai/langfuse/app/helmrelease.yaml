@@ -120,13 +120,13 @@ spec:
       deploy: false
       host: langfuse-rw.ai.svc.cluster.local
       port: 5432
+      args: sslmode=require
       auth:
         username: langfuse
         database: langfuse
         existingSecret: langfuse-postgres
         secretKeys:
           userPasswordKey: password
-        args: sslmode=require
     redis:
       deploy: false
       host: langfuse-valkey.ai.svc.cluster.local
