@@ -1,0 +1,199 @@
+{
+  "uid": "tetragon-pilot",
+  "title": "Tetragon pilot",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": ["security", "tetragon"],
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "refresh": "1m",
+  "links": [
+    {
+      "title": "Pilot evidence and budgets",
+      "url": "https://vikunja.aumer.dev/tasks/163"
+    },
+    {
+      "title": "Sanitized events in VictoriaLogs",
+      "url": "https://logs.aumer.dev"
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "title": "CPU cores",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"security\",pod=~\"tetragon-.*\",container!=\"\",container!=\"POD\"}[5m]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cores"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "Memory",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"security\",pod=~\"tetragon-.*\",container!=\"\",container!=\"POD\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Exported bytes over 24 hours",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(tetragon_events_exported_bytes_total{job=\"tetragon\"}[24h]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Lost events over 5 minutes",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase({job=\"tetragon\",__name__=~\"tetragon_observer_ringbuf_events_lost_total|tetragon_observer_ringbuf_queue_events_lost_total|tetragon_observer_ringbuf_errors_total|tetragon_export_ratelimit_events_dropped_total|tetragon_events_export_failed_total\"}[5m]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "Policy matches",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (policy) (increase(tetragon_tracingpolicy_selector_actions_total{job=\"tetragon\",action=\"post\"}[5m]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "Agent and policies",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "up{job=\"tetragon\"}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {
+          "text": "prometheus",
+          "value": "prometheus"
+        }
+      }
+    ]
+  }
+}

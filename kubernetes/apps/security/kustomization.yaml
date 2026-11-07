@@ -13,3 +13,4 @@ resources:
   - ./network-policies/networkpolicy.yaml
   - ./kanidm/ks.yaml
   - ./network-policies/ks.yaml
+  - ./tetragon/ks.yaml

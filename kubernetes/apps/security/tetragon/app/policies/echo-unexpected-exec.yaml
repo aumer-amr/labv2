@@ -1,0 +1,37 @@
+---
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicyNamespaced
+metadata:
+  name: echo-unexpected-exec
+  namespace: network
+spec:
+  options:
+    - name: policy-mode
+      value: monitor
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: echo
+      app.kubernetes.io/instance: echo
+  kprobes:
+    - call: security_bprm_check
+      syscall: false
+      args:
+        - index: 0
+          type: linux_binprm
+      selectors:
+        - matchArgs:
+            - index: 0
+              operator: Equal
+              values:
+                - /bin/sh
+                - /bin/bash
+                - /bin/dash
+                - /bin/busybox
+                - /usr/bin/sh
+                - /usr/bin/bash
+                - /usr/bin/curl
+                - /usr/bin/wget
+                - /usr/bin/python3
+                - /usr/bin/nc
+          matchActions:
+            - action: Post
