@@ -98,6 +98,7 @@
       matchDatasources: ["docker"],
       matchPackageNames: ["ghcr.io/siderolabs/kubelet"],
       allowedVersions: "<1.38.0",
+      separateMinorPatch: true,
     },
     {
       description: "Flux Operator Group",
