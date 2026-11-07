@@ -5,9 +5,35 @@ const path = require("node:path");
 const fs = require("node:fs");
 const os = require("node:os");
 const { execFileSync } = require("node:child_process");
-const { runToolHarness } = require(
+const { runToolHarness, resolveLoopLimits } = require(
   path.resolve(process.argv[2], ".test-build/src/tools/harness.js"),
 );
+const { resolveToolMaxRequests } = require(
+  path.resolve(process.argv[2], ".test-build/src/tools/budget.js"),
+);
+const { adaptiveLoopBudgets } = require(
+  path.resolve(process.argv[2], ".test-build/src/tools/loop.js"),
+);
+
+for (const [changedFiles, changedLines, requests, rounds] of [
+  [3, 120, 24, 24],
+  [16, 2000, 24, 24],
+  [54, 4527, 26, 26],
+  [400, 40000, 50, 32],
+]) {
+  const size = { changedFiles, changedLines, specialistLeads: 0 };
+  const env = { TOOL_LOOP_WALL_CLOCK_SEC: "1200" };
+  const resolved = resolveToolMaxRequests("primary", env, size);
+  const [configuredRounds, wallClock, explicit] = resolveLoopLimits(env, "primary");
+  const limits = adaptiveLoopBudgets(configuredRounds, resolved.budget, wallClock, explicit);
+  assert.equal(resolved.budget, requests);
+  assert.equal(resolved.configured, null);
+  assert.equal(limits.maxRounds, rounds);
+  assert.equal(limits.wallClockSec, 900);
+  // The old override blocks scaling even when a PR needs 16 reads plus another call.
+  assert.equal(resolveToolMaxRequests("primary", { TOOL_MAX_REQUESTS: "16" }, size).budget, 16);
+}
+assert.equal(adaptiveLoopBudgets(4, 24, 900, true).maxRounds, 8);
 
 const head = "8d566e01e5f8cc98562f29d430f27ce47bd29e95";
 const file = "kubernetes/apps/ai/llmkube/models/qwen3-5-9b.yaml";

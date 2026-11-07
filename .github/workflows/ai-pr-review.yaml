@@ -171,8 +171,7 @@ jobs:
           tool-mode: native_loop
           tool-mcp-servers: konflate=http://konflate.flux-system.svc.cluster.local:8080/mcp
           tool-allowed-gh-api-repos: aumer-amr/labv2
-          tool-max-rounds: "4"
-          tool-max-requests: "16"
+          # Use the pinned runtime's PR-size request and round budgets.
           tool-failure-enforcement: "true"
           tool-min-successful-requests: "1"
           tool-loop-wall-clock-sec: "1200"
