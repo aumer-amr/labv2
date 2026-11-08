@@ -17,6 +17,7 @@ This repository contains rendered cluster configuration. Initial template setup 
 - [Application databases](docs/database.md) — add, connect, verify, upgrade, and recover per-application PostgreSQL clusters.
 - [Application Valkey caches](docs/valkey.md) — add, connect, verify, and upgrade isolated per-application Valkey instances.
 - [Proactive AI monitoring](docs/ai-cluster-monitoring.md) — Windmill scheduling, Qwen investigation, Langfuse tracing, and the planned GitHub issue workflow.
+- [Windmill functions](docs/windmill.md): Develop scripts locally, deploy with the CLI, and invoke authenticated HTTP endpoints.
 - [Reset](docs/reset.md) — return one or all Talos nodes to maintenance mode.
 - [Maintenance](docs/maintenance.md) — apply and upgrade Talos, add nodes, maintain Kubernetes, and troubleshoot failures.
 - [Cluster power](docs/power.md) — safely shut down and restart the full Talos and Rook Ceph cluster.
