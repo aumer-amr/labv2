@@ -13,6 +13,20 @@ spec:
     disableSchemaValidation: true
   upgrade:
     disableSchemaValidation: true
+  postRenderers:
+    - kustomize:
+        patches:
+          # Avoid autopath search-suffix answers that bypass exact FQDN allowances.
+          - target:
+              kind: Deployment
+              name: crowdsec-(agent|lapi)
+            patch: |
+              - op: add
+                path: /spec/template/spec/dnsConfig
+                value:
+                  options:
+                    - name: ndots
+                      value: "1"
   values:
     container_runtime: containerd
     image:
