@@ -58,7 +58,7 @@ def main():
         pods[name] = template["metadata"]["labels"]
         spec = template["spec"]
         if name in ("crowdsec-agent", "crowdsec-lapi"):
-            assert {"name": "ndots", "value": "1"} in spec.get("dnsConfig", {}).get("options", []), "External DNS must populate exact FQDN policy entries"
+            assert {"name": "ndots", "value": "2"} in spec.get("dnsConfig", {}).get("options", []), "Resolve external FQDNs directly and search for service.namespace names"
         assert not spec.get("hostNetwork")
         assert all("hostPath" not in volume for volume in spec["volumes"])
         assert spec["securityContext"]["seccompProfile"]["type"] == "RuntimeDefault"
