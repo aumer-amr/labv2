@@ -1,0 +1,65 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kopia-verify
+  namespace: kube-system
+spec:
+  activeDeadlineSeconds: 604800
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kopia-verify
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: verify
+          image: ghcr.io/aumer-amr/kopia-verify:sha-32da758@sha256:3a4cf9072f19f75b2e4288ee18456f15d2fda012292a0b816b33c99a1d6efa0b
+          env:
+            - name: KOPIA_VERIFY_BUCKET
+              value: kopiur
+            - name: KOPIA_VERIFY_ENDPOINT
+              value: ${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+            - name: KOPIA_VERIFY_REGION
+              value: WEUR
+            - name: KOPIA_VERIFY_MAX_DOWNLOAD_BYTES_PER_SECOND
+              value: "8388608"
+            - name: KOPIA_VERIFY_TERMINATION_PATH
+              value: /dev/termination-log
+          envFrom:
+            - secretRef:
+                name: kopiur-repository-secret
+          resources:
+            requests:
+              cpu: 100m
+              memory: 3Gi
+              ephemeral-storage: 64Mi
+            limits:
+              cpu: "1"
+              memory: 3Gi
+              ephemeral-storage: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          terminationMessagePolicy: FallbackToLogsOnError
+          volumeMounts:
+            - name: scratch
+              mountPath: /scratch
+      volumes:
+        - name: scratch
+          emptyDir:
+            medium: Memory
+            sizeLimit: 2Gi

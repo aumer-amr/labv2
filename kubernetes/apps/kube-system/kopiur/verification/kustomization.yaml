@@ -1,0 +1,8 @@
+---
+# This on-demand Job is intentionally not referenced by the Flux Kustomizations.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kube-system
+resources:
+  - ./job.yaml
+  - ./networkpolicy.yaml
