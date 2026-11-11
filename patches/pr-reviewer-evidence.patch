@@ -93,7 +93,7 @@ index 72975e3..2deb781 100644
          break;
        }
 diff --git a/src/tools/harness.ts b/src/tools/harness.ts
-index 80112d5..24ad9f6 100644
+index 80112d5..0ef758e 100644
 --- a/src/tools/harness.ts
 +++ b/src/tools/harness.ts
 @@ -22,6 +22,7 @@
@@ -104,7 +104,81 @@ index 80112d5..24ad9f6 100644
  import path from "node:path";
  import {
    Conversation,
-@@ -1381,6 +1382,10 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+@@ -252,7 +253,7 @@ export function loopContextLimits(env: EnvLike, tier: string): LoopContextLimits
+  * the smart tier, SMART_TOOL_MAX_ROUNDS) was explicitly set (#895). */
+ export function resolveLoopLimits(env: EnvLike, tier: string): [number, number, boolean] {
+   let maxRounds = envIntBounded(env, "TOOL_MAX_ROUNDS", 4, 1, 6);
+-  let wallClock = envIntBounded(env, "TOOL_LOOP_WALL_CLOCK_SEC", 600, 10, 900);
++  let wallClock = envIntBounded(env, "TOOL_LOOP_WALL_CLOCK_SEC", 600, 10, 1200);
+   let roundsExplicit = envIntIsSet(env, "TOOL_MAX_ROUNDS");
+   if (tier === "smart") {
+     roundsExplicit = roundsExplicit || envIntIsSet(env, "SMART_TOOL_MAX_ROUNDS");
+@@ -441,7 +442,7 @@ export async function produceNativeVerdict(input: ProduceVerdictInput): Promise<
+       let timeout = input.turnTimeout;
+       if (input.deadline !== null) {
+         const remaining = input.deadline - timeFn();
+-        if (remaining <= 0) throw new Error("smart tool-loop wall-clock budget exhausted");
++        if (remaining <= 0) throw new Error("model review deadline exceeded");
+         timeout = Math.min(input.turnTimeout, Math.max(1, Math.trunc(remaining)));
+       }
+       return { response: await transport(input.baseUrl, input.apiFormat, payload, input.apiKey, timeout), transportError: null };
+@@ -1247,7 +1248,27 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+     ...adaptiveLoopBudgets(maxRounds, input.maxRequests, wallClock, roundsExplicit),
+     maxConversationTokens: loopContextLimits(env, limitsProfile).maxConversationTokens,
+   };
+-  const deadline = input.tier === "smart" ? timeFn() + wallClock : null;
++  const deadline = timeFn() + wallClock;
++  const secrets = [env.GH_TOKEN, env.GITHUB_TOKEN, env.AI_API_KEY, env.SMART_API_KEY, env.TOOL_MCP_TOKEN];
++  let requestStage = "loop";
++  const transport: HarnessTransport = async (baseUrl, apiFormat, payload, apiKey, timeout) => {
++    const started = timeFn();
++    let error = "";
++    try {
++      return await deps.transport(baseUrl, apiFormat, payload, apiKey, timeout);
++    } catch (exc) {
++      error = maskDiagnostic(exc instanceof Error ? exc.message : String(exc), secrets, 300);
++      throw new Error(error);
++    } finally {
++      log(`  native_loop request: ${JSON.stringify({
++        stage: requestStage,
++        request_bytes: Buffer.byteLength(JSON.stringify(payload), "utf8"),
++        timeout_sec: timeout,
++        elapsed_sec: Math.round((timeFn() - started) * 1000) / 1000,
++        ...(error ? { error } : {}),
++      })}`);
++    }
++  };
+
+   // Read-only MCP tools (#245), allowlisted via TOOL_MCP_SERVERS. Fork-gating
+   // happens upstream, so reaching here means MCP is permitted. A server that
+@@ -1329,7 +1350,7 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+     const remainingCheck = (): number => {
+       if (deadline === null) return input.turnTimeout;
+       const remaining = deadline - timeFn();
+-      if (remaining <= 0) throw new Error("smart tool-loop wall-clock budget exhausted");
++      if (remaining <= 0) throw new Error(`${input.tier} tool-loop wall-clock budget exhausted`);
+       return Math.min(input.turnTimeout, Math.max(1, Math.trunc(remaining)));
+     };
+     let timeout = remainingCheck();
+@@ -1339,7 +1360,7 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+     let response: unknown = null;
+     let usable = false;
+     try {
+-      response = await deps.transport(input.baseUrl, input.apiFormat, payload, input.apiKey, timeout);
++      response = await transport(input.baseUrl, input.apiFormat, payload, input.apiKey, timeout);
+       usable = !(payload.stream === true && (response as Record<string, unknown>)?.error);
+     } catch (exc) {
+       if (payload.stream !== true) throw exc;
+@@ -1353,7 +1374,7 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+       }
+       fallback.stream = false;
+       const retryTimeout = remainingCheck();
+-      response = await deps.transport(input.baseUrl, input.apiFormat, fallback, input.apiKey, retryTimeout);
++      response = await transport(input.baseUrl, input.apiFormat, fallback, input.apiKey, retryTimeout);
+     }
+     accumulateUsage(usageAcc, response, input.apiFormat);
+     return response;
+@@ -1381,6 +1402,10 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
    const toolCtx: ToolContext = {
      workspaceRoot: input.workspaceRoot,
      trackedIndex,
@@ -115,7 +189,7 @@ index 80112d5..24ad9f6 100644
      allowedGhRepos: [...input.allowedGhApiRepos],
      currentRepo: input.repo,
      allowedHosts: input.allowedHosts,
-@@ -1388,7 +1393,18 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+@@ -1388,12 +1413,23 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
      requestTimeout: input.requestTimeout,
      searchUrl,
      maxSearchResults,
@@ -135,7 +209,120 @@ index 80112d5..24ad9f6 100644
    };
 
    const executeFn = async (toolName: string, args: Record<string, unknown>): Promise<Record<string, unknown>> => {
-@@ -1769,6 +1785,20 @@ export function summarizeLoopOutcome(result: HarnessResult, outcome: LoopOutcome
+     if (deadline !== null && timeFn() >= deadline) {
+-      return { tool: toolName, status: "error", result: { error: "smart tool-loop deadline exceeded" } };
++      return { tool: toolName, status: "error", result: { error: `${input.tier} tool-loop deadline exceeded` } };
+     }
+     // Route mcp__server__tool to the MCP client; everything else falls through
+     // to the built-in read-only executor. A separator-mangled variant of an
+@@ -1415,7 +1451,7 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+       if (deadline !== null) {
+         const remaining = deadline - timeFn();
+         if (remaining <= 0) {
+-          return { tool: toolName, status: "error", result: { error: "smart tool-loop deadline exceeded" } };
++          return { tool: toolName, status: "error", result: { error: `${input.tier} tool-loop deadline exceeded` } };
+         }
+         toolset.timeoutSec = Math.min(input.requestTimeout, Math.max(1, Math.trunc(remaining)));
+       }
+@@ -1432,7 +1468,7 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+     if (deadline !== null) {
+       const remaining = deadline - timeFn();
+       if (remaining <= 0) {
+-        return { tool: toolName, status: "error", result: { error: "smart tool-loop deadline exceeded" } };
++        return { tool: toolName, status: "error", result: { error: `${input.tier} tool-loop deadline exceeded` } };
+       }
+       toolTimeout = Math.min(input.requestTimeout, Math.max(1, Math.trunc(remaining)));
+     }
+@@ -1483,6 +1519,8 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+     },
+   );
+
++  if (timeFn() >= deadline) outcome.stopReason = "wall-clock-exceeded";
++
+   // One always-printed outcome line.
+   log(
+     `  native_loop: ${outcome.executed.length} tool call(s) executed in ` +
+@@ -1580,6 +1618,9 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+   }
+
+   // ── In-conversation verdict (#205, Option 1) ─────────────────────────────
++  // The primary review has its own deadline; the smart tier shares its loop deadline.
++  const reviewTimeout = envIntBounded(env, "AI_REQUEST_TIMEOUT_SEC", input.turnTimeout, 1, 1800);
++  const verdictDeadline = input.tier === "smart" ? deadline : timeFn() + reviewTimeout;
+   // On the Anthropic format the closing instruction rides in the same user
+   // message as the trailing tool_result blocks (adjacent user turns are a
+   // 400). Skipped when no reviewer prompt resolved.
+@@ -1622,12 +1663,35 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+           tokensParam,
+           cachePrefix: true,
+         }) as Record<string, unknown>;
+-        let verdictTimeout = input.turnTimeout;
+-        if (deadline !== null) {
+-          const remaining = deadline - timeFn();
+-          if (remaining <= 0) throw new Error("smart tool-loop wall-clock budget exhausted");
+-          verdictTimeout = Math.min(input.turnTimeout, Math.max(1, Math.trunc(remaining)));
++        const requestBytes = Buffer.byteLength(JSON.stringify(verdictPayload), "utf8");
++        const window = declaredWindowTokens(env, limitsProfile);
++        const outputTokens = Number(verdictPayload.max_tokens ?? verdictPayload.max_completion_tokens);
++        // Match corpus budgeting's conservative byte estimate, including the rendered history.
++        const inputTokenBudget = window === null ? null : window - outputTokens - LOOP_FRAMING_TOKENS;
++        input.result.native_loop_verdict_context = {
++          request_bytes: requestBytes,
++          estimated_input_tokens: Math.ceil(requestBytes / 3),
++          input_token_budget: inputTokenBudget,
++          output_tokens: outputTokens,
++        };
++        log(`  native_loop verdict context: ${JSON.stringify(input.result.native_loop_verdict_context)}`);
++        if (inputTokenBudget !== null && requestBytes > inputTokenBudget * 3) {
++          // Standard synthesis reassembles the corpus with these tool findings and its existing bounds.
++          input.result.native_loop_verdict_status = "fallback";
++          input.result.native_loop_verdict_reason = "context-budget";
++          input.result.usage = usageWithCacheRatio(usageAcc);
++          deps.deleteArtifact?.(`ai-response.${input.tier}.json`);
++          log("  native_loop: verdict exceeds context-budget; using standard synthesis with gathered evidence");
++          writeOutputs(input.result, harnessMarkdown, deps);
++          return true;
++        }
++        let verdictTimeout = reviewTimeout;
++        if (verdictDeadline !== null) {
++          const remaining = verdictDeadline - timeFn();
++          if (remaining <= 0) throw new Error("model review deadline exceeded");
++          verdictTimeout = Math.min(verdictTimeout, Math.max(1, Math.trunc(remaining)));
+         }
++        requestStage = "verdict";
+         const verdict = await produceNativeVerdict({
+           verdictPayload,
+           baseUrl: input.baseUrl,
+@@ -1635,8 +1699,8 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+           apiKey: input.apiKey,
+           turnTimeout: verdictTimeout,
+           usageAcc,
+-          deadline,
+-          transport: deps.transport,
++          deadline: verdictDeadline,
++          transport,
+           timeFn,
+         });
+         input.result.native_loop_verdict_attempts = verdict.attempts;
+@@ -1656,7 +1720,7 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+         } else {
+           deps.deleteArtifact?.(`ai-response.${input.tier}.json`);
+         }
+-        if (verdict.ok && (deadline === null || timeFn() < deadline)) {
++        if (verdict.ok && (verdictDeadline === null || timeFn() < verdictDeadline)) {
+           input.result.native_loop_verdict_produced = true;
+           input.result.native_loop_verdict_status = "accepted";
+           input.result.native_loop_verdict_transport = verdict.transport;
+@@ -1667,7 +1731,7 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+         } else {
+           input.result.native_loop_verdict_status = "fallback";
+           input.result.native_loop_verdict_reason =
+-            deadline !== null && timeFn() >= deadline ? "deadline" : verdict.reason;
++            verdictDeadline !== null && timeFn() >= verdictDeadline ? "deadline" : verdict.reason;
+           input.result.native_loop_verdict_error = verdict.detail;
+           log(
+             `  native_loop: no reusable in-conversation verdict [${verdict.reason}] ${verdict.detail} — the standard review call will synthesize the verdict`,
+@@ -1769,6 +1833,24 @@ export function summarizeLoopOutcome(result: HarnessResult, outcome: LoopOutcome
   * `write_outputs`): embeds the #702 telemetry object, redacts, and writes the
   * tier-scoped artifacts 0600. */
  export function writeOutputs(summary: HarnessResult, markdown: string, deps: HarnessDeps): void {
@@ -147,6 +334,10 @@ index 80112d5..24ad9f6 100644
 +    succeeded: calls.filter((call) => call.status === "ok").length,
 +    failed: calls.filter((call) => call.status !== "ok").length,
 +    rounds: summary.rounds,
++    stop_reason: summary.stop_reason,
++    ...(summary.loop_error || summary.native_loop_error ? {
++      error: maskDiagnostic(String(summary.loop_error || summary.native_loop_error), secrets, 300),
++    } : {}),
 +    calls: calls.map((call) => ({
 +      tool: maskDiagnostic(String(call.tool ?? "unknown"), secrets, 100),
 +      status: call.status === "ok" ? "ok" : "error",
@@ -156,3 +347,16 @@ index 80112d5..24ad9f6 100644
    const telemetry = buildToolLoopTelemetry(summary);
    if (telemetry !== null) summary.tool_loop_telemetry = telemetry;
    const tier = deps.env.TOOL_HARNESS_TIER || "primary";
+diff --git a/tests-v3/tools-harness.test.ts b/tests-v3/tools-harness.test.ts
+index 65bf744..8df033c 100644
+--- a/tests-v3/tools-harness.test.ts
++++ b/tests-v3/tools-harness.test.ts
+@@ -446,7 +446,7 @@ test("loopLimitsProfile: first-pass defaults to primary; smart profile and escal
+
+ test("resolveLoopLimits: defaults are 4 rounds / 600s; smart overrides; bounds clamp", () => {
+   assert.deepEqual(resolveLoopLimits({}, "primary"), [4, 600, false]);
+-  assert.deepEqual(resolveLoopLimits({ TOOL_MAX_ROUNDS: "9", TOOL_LOOP_WALL_CLOCK_SEC: "5000" }, "primary"), [6, 900, true]);
++  assert.deepEqual(resolveLoopLimits({ TOOL_MAX_ROUNDS: "9", TOOL_LOOP_WALL_CLOCK_SEC: "5000" }, "primary"), [6, 1200, true]);
+   assert.deepEqual(resolveLoopLimits({ SMART_TOOL_MAX_ROUNDS: "5", SMART_TOOL_LOOP_WALL_CLOCK_SEC: "300" }, "smart"), [5, 300, true]);
+   assert.deepEqual(resolveLoopLimits({ SMART_TOOL_MAX_ROUNDS: "5" }, "primary"), [4, 600, false]);
+ });

@@ -29,7 +29,7 @@ for (const [changedFiles, changedLines, requests, rounds] of [
   assert.equal(resolved.budget, requests);
   assert.equal(resolved.configured, null);
   assert.equal(limits.maxRounds, rounds);
-  assert.equal(limits.wallClockSec, 900);
+  assert.equal(limits.wallClockSec, 1200);
   // The old override blocks scaling even when a PR needs 16 reads plus another call.
   assert.equal(resolveToolMaxRequests("primary", { TOOL_MAX_REQUESTS: "16" }, size).budget, 16);
 }
@@ -144,6 +144,7 @@ async function check(mode) {
   try {
     for (const mode of ["ok", "redirect", "forbidden"]) await check(mode);
     await checkHeadReads();
+    await checkRuntimeLimits();
     console.log(
       "Evidence transport, exact-head reads, security boundaries, and diagnostics passed",
     );
@@ -154,6 +155,269 @@ async function check(mode) {
   console.error(error);
   process.exitCode = 1;
 });
+
+async function checkRuntimeLimits() {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "review-limits-"));
+  fs.writeFileSync(path.join(cwd, "evidence.txt"), "preserved evidence\n");
+  const call = (id) => ({
+    choices: [
+      {
+        message: {
+          tool_calls: [
+            {
+              id,
+              type: "function",
+              function: {
+                name: "read_file",
+                arguments: JSON.stringify({ path: "evidence.txt" }),
+              },
+            },
+          ],
+        },
+      },
+    ],
+  });
+  const verdict = text(
+    JSON.stringify({ verdict: "approve", review_markdown: "Fixture", findings: [] }),
+  );
+  async function run({
+    env = {},
+    corpus = "# PR Diff\n+ change\n",
+    respond,
+    tier = "primary",
+    staleResponse = false,
+    files,
+  } = {}) {
+    let clock = 0;
+    const logs = [];
+    const requests = [];
+    const artifacts = new Map([
+      [`review-corpus${tier === "smart" ? ".smart" : ""}.truncated.md`, corpus],
+    ]);
+    if (staleResponse) artifacts.set(`ai-response.${tier}.json`, "stale verdict");
+    if (files)
+      artifacts.set(
+        "pr-files.json",
+        JSON.stringify(files.map((filename) => ({ filename, status: "modified" }))),
+      );
+    const { result } = await runToolHarness({
+      env: {
+        REPO: repo,
+        AI_BASE_URL: "http://model.test/v1",
+        AI_MODEL: "fixture",
+        AI_API_KEY: secret,
+        GH_TOKEN: secret,
+        AI_STREAM: "false",
+        SYSTEM_PROMPT: "Review fixture",
+        MODEL_CONTEXT_TOKENS: "32768",
+        AI_MAX_TOKENS: "4096",
+        TOOL_MAX_TOKENS_PER_TURN: "1024",
+        TOOL_LOOP_WALL_CLOCK_SEC: "1200",
+        TOOL_TURN_TIMEOUT_SEC: "600",
+        AI_REQUEST_TIMEOUT_SEC: "1800",
+        TOOL_HARNESS_TIER: tier,
+        SMART_BASE_URL: "http://model.test/v1",
+        SMART_MODEL: "fixture",
+        SMART_API_KEY: secret,
+        ...env,
+      },
+      cwd,
+      readText: (name) => artifacts.get(name) ?? null,
+      exists: (name) => artifacts.has(name),
+      writeArtifact: (name, value) => artifacts.set(name, value),
+      deleteArtifact: (name) => artifacts.delete(name),
+      timeFn: () => clock,
+      log: (line) => logs.push(line),
+      transport: async (_base, _format, payload, _key, timeout) => {
+        requests.push({ payload, timeout });
+        const n = requests.length;
+        if (respond)
+          return respond({
+            n,
+            payload,
+            timeout,
+            advance: (seconds) => {
+              clock += seconds;
+            },
+          });
+        return [call("c1"), text("done"), verdict][n - 1];
+      },
+    });
+    return { result, requests, artifacts, logs };
+  }
+  try {
+    const normal = await run();
+    assert.deepEqual(
+      normal.requests.map((r) => r.timeout),
+      [600, 600, 1800],
+    );
+    assert.equal(normal.result.native_loop_verdict_produced, true);
+    assert.equal(normal.result.executed_request_count, 1);
+    const context = normal.result.native_loop_verdict_context;
+    assert.equal(
+      context.request_bytes,
+      Buffer.byteLength(JSON.stringify(normal.requests[2].payload)),
+    );
+    assert.equal(context.input_token_budget, 32768 - 4096 - 2000);
+    assert.ok(normal.logs.some((line) => line.includes('"stage":"verdict"')));
+    assert.ok(!normal.logs.join("\n").includes("preserved evidence"));
+
+    const alternateTokens = await run({ env: { AI_TOKENS_PARAM: "max_completion_tokens" } });
+    assert.equal(alternateTokens.requests[2].payload.max_completion_tokens, 4096);
+    assert.equal(alternateTokens.result.native_loop_verdict_context.output_tokens, 4096);
+    const undeclared = await run({ env: { MODEL_CONTEXT_TOKENS: "" } });
+    assert.equal(undeclared.result.native_loop_verdict_produced, true);
+    assert.equal(undeclared.result.native_loop_verdict_context.input_token_budget, null);
+
+    // Budget the rendered request, including system text and multibyte content.
+    for (const options of [
+      { corpus: "# PR Diff\n" + "界".repeat(40000) },
+      { env: { SYSTEM_PROMPT: "界".repeat(30000) } },
+      { env: { PRIMARY_MODEL_CONTEXT_TOKENS: "11000", AI_MAX_TOKENS: "8192" } },
+    ]) {
+      const oversized = await run({ ...options, staleResponse: true });
+      assert.equal(oversized.requests.length, 2, "Do not send an oversized native verdict");
+      assert.equal(oversized.result.native_loop_verdict_reason, "context-budget");
+      assert.equal(oversized.result.native_loop_verdict_produced, undefined);
+      assert.equal(oversized.result.executed_request_count, 1);
+      assert.match(oversized.artifacts.get("tool-harness.md"), /preserved evidence/);
+      assert.equal(oversized.artifacts.has("ai-response.primary.json"), false);
+      assert.ok(oversized.logs.some((line) => line.includes("context-budget")));
+    }
+
+    const boundaryEnv = { SYSTEM_PROMPT: "Review fixture " + "x".repeat(24000) };
+    const measured = await run({ env: boundaryEnv });
+    const window =
+      Math.ceil(measured.result.native_loop_verdict_context.request_bytes / 3) + 4096 + 2000;
+    const atBoundary = await run({ env: { ...boundaryEnv, MODEL_CONTEXT_TOKENS: String(window) } });
+    assert.equal(atBoundary.result.native_loop_verdict_produced, true);
+    const overBoundary = await run({
+      env: { ...boundaryEnv, MODEL_CONTEXT_TOKENS: String(window - 1) },
+    });
+    assert.equal(overBoundary.result.native_loop_verdict_reason, "context-budget");
+
+    const exhausted = await run({
+      files: ["evidence.txt", "unread.txt"],
+      respond: ({ n, timeout, advance }) => {
+        if (n === 1) {
+          advance(590);
+          return call("c1");
+        }
+        if (n === 2) {
+          advance(590);
+          return call("c2");
+        }
+        if (n === 3) {
+          assert.equal(timeout, 20);
+          advance(20);
+          throw new Error("model request timed out");
+        }
+        assert.equal(n, 4, "The evidence loop must stop at its deadline");
+        assert.equal(timeout, 1800, "Primary synthesis gets its own review deadline");
+        advance(700);
+        return verdict;
+      },
+    });
+    assert.equal(exhausted.result.stop_reason, "wall-clock-exceeded");
+    assert.equal(exhausted.result.native_loop_verdict_produced, true);
+    assert.deepEqual(exhausted.result.partial_coverage.unread_files, ["unread.txt"]);
+    assert.ok(exhausted.logs.some((line) => line.includes("model request timed out")));
+    assert.ok(exhausted.logs.some((line) => line.includes('"timeout_sec":20')));
+
+    // A response arriving at the deadline cannot start another evidence request.
+    const late = await run({
+      env: { TOOL_LOOP_WALL_CLOCK_SEC: "10" },
+      respond: ({ n, advance }) => {
+        if (n === 1) {
+          advance(10);
+          return call("c1");
+        }
+        return verdict;
+      },
+    });
+    assert.equal(late.result.stop_reason, "wall-clock-exceeded");
+    assert.equal(late.result.executed_request_count, 0);
+
+    const failed = await run({
+      respond: ({ n }) => {
+        if (n === 1) return call("c1");
+        if (n === 2) throw new Error(`transport failed ${secret}`);
+        return verdict;
+      },
+    });
+    assert.equal(failed.result.stop_reason, "request-error");
+    assert.ok(failed.logs.some((line) => line.includes("transport failed")));
+    assert.ok(!JSON.stringify(failed.logs).includes(secret));
+    assert.ok(!JSON.stringify(failed.result).includes(secret));
+    assert.ok(![...failed.artifacts.values()].join("\n").includes(secret));
+
+    const smart = await run({
+      tier: "smart",
+      env: { SMART_TOOL_LOOP_WALL_CLOCK_SEC: "10" },
+      respond: ({ timeout, advance }) => {
+        assert.equal(timeout, 10);
+        advance(10);
+        throw new Error("model request timed out");
+      },
+    });
+    assert.equal(smart.requests.length, 1, "Smart tier must retain its total deadline");
+    assert.equal(smart.result.stop_reason, "wall-clock-exceeded");
+    assert.equal(smart.result.native_loop_verdict_produced, undefined);
+
+    const streamed = await run({
+      env: { AI_STREAM: "true" },
+      respond: ({ n, timeout, payload, advance }) => {
+        if (n === 1) return call("c1");
+        if (n === 2) return text("done");
+        if (n === 3) {
+          assert.equal(timeout, 1800);
+          assert.equal(payload.stream, true);
+          advance(1700);
+          throw new Error(`stream failed ${secret}`);
+        }
+        assert.equal(n, 4);
+        assert.equal(timeout, 100, "The verdict retry shares the review deadline");
+        assert.equal(payload.stream, false);
+        return verdict;
+      },
+    });
+    assert.equal(streamed.result.native_loop_verdict_produced, true);
+    assert.equal(streamed.result.native_loop_verdict_retried, true);
+    assert.ok(!streamed.logs.join("\n").includes(secret));
+
+    const anthropic = await run({
+      env: { AI_API_FORMAT: "anthropic" },
+      respond: ({ n, payload, timeout }) => {
+        if (n === 1)
+          return {
+            content: [
+              { type: "tool_use", id: "c1", name: "read_file", input: { path: "evidence.txt" } },
+            ],
+          };
+        if (n === 2) return { content: [{ type: "text", text: "done" }] };
+        assert.equal(timeout, 1800);
+        assert.equal(payload.max_tokens, 4096);
+        assert.equal(payload.tools, undefined);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                verdict: "approve",
+                review_markdown: "Fixture",
+                findings: [],
+              }),
+            },
+          ],
+        };
+      },
+    });
+    assert.equal(anthropic.result.native_loop_verdict_produced, true);
+    assert.equal(anthropic.result.executed_request_count, 1);
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+}
 
 async function checkHeadReads() {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "review-base-"));
