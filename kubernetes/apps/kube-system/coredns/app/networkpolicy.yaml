@@ -97,12 +97,6 @@ spec:
               app.kubernetes.io/name: langfuse
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: ai
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/instance: langfuse-clickhouse
-        - namespaceSelector:
-            matchLabels:
               kubernetes.io/metadata.name: database
           podSelector:
             matchLabels:
