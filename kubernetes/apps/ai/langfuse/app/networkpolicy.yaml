@@ -55,9 +55,6 @@ spec:
         - port: 10443
           protocol: TCP
     - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/instance: langfuse-clickhouse
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: database
