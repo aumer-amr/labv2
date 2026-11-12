@@ -15,9 +15,6 @@ spec:
       imageRegistry: mirror.gcr.io
     config:
       envoyGateway:
-        runtimeFlags:
-          disabled:
-            - OIDCTokenCookieChunking
         provider:
           type: Kubernetes
           kubernetes:
