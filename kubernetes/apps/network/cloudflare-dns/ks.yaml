@@ -4,6 +4,14 @@ kind: Kustomization
 metadata:
   name: cloudflare-dns
 spec:
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: cloudflare-dns
+      namespace: network
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: dnsendpoints.externaldns.k8s.io
   interval: 1h
   path: ./kubernetes/apps/network/cloudflare-dns/app
   prune: true
@@ -12,4 +20,4 @@ spec:
     name: flux-system
     namespace: flux-system
   targetNamespace: network
-  wait: true
+  wait: false

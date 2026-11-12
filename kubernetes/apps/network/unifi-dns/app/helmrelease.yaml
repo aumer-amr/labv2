@@ -35,12 +35,16 @@ spec:
     triggerLoopOnEvent: true
     policy: sync
     sources:
+      - crd
       - gateway-httproute
       - service
     txtOwnerId: main
     txtPrefix: k8s.main.%{record_type}-
     domainFilters:
+      - resolver.arpa
       - "aumer.dev"
+    # The filter covers every source and excludes Cloudflare-only records.
+    labelFilter: external-dns.home-operations.com/provider notin (cloudflare)
     serviceMonitor:
       enabled: true
     podAnnotations:

@@ -6,6 +6,8 @@ metadata:
   name: unifi-dns
 spec:
   dependsOn:
+    - name: cloudflare-dns
+    - name: cloudflare-tunnel
     - name: onepassword-connect
       namespace: external-secrets
   interval: 1h
