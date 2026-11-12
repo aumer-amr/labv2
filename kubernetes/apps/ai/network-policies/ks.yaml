@@ -6,6 +6,7 @@ metadata:
   name: network-policies
 spec:
   dependsOn:
+    - name: codex-proxy
     - name: ha-mcp
       namespace: home
     - name: litellm

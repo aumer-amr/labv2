@@ -6,6 +6,8 @@ metadata:
   name: litellm
 spec:
   dependsOn:
+    - name: codex-proxy
+      namespace: ai
     - name: langfuse
       namespace: ai
     - name: barman-cloud

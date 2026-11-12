@@ -84,6 +84,14 @@ spec:
     - to:
         - podSelector:
             matchLabels:
+              app.kubernetes.io/instance: codex-proxy
+              app.kubernetes.io/name: codex-proxy
+      ports:
+        - port: 3466
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
               app.kubernetes.io/name: langfuse
               app.kubernetes.io/component: web
       ports:
@@ -253,6 +261,7 @@ spec:
               - matchName: truenas-mcp.ai.svc.cluster.local
               - matchName: victorialogs-mcp.ai.svc.cluster.local
               - matchName: whisper.ai.svc.cluster.local
+              - matchName: codex-proxy.ai.svc.cluster.local
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -285,6 +294,7 @@ spec:
               - matchName: truenas-mcp.ai.svc.cluster.local
               - matchName: victorialogs-mcp.ai.svc.cluster.local
               - matchName: whisper.ai.svc.cluster.local
+              - matchName: codex-proxy.ai.svc.cluster.local
     - toFQDNs:
         - matchName: api.openai.com
         - matchName: idm.aumer.dev

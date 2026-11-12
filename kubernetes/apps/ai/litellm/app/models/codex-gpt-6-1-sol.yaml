@@ -1,0 +1,18 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/litellm.home-operations.com/litellmmodel_v1alpha1.json
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMModel
+metadata:
+  name: codex-gpt-6-1-sol
+spec:
+  modelName: codex-gpt-6.1-sol
+  params:
+    model: openai/gpt-6.1-sol
+    apiBase: http://codex-proxy.ai.svc.cluster.local:3466/v1
+    apiKey: none
+  info:
+    mode: chat
+    supportsFunctionCalling: true
+    supportsVision: false
+    extra:
+      supports_parallel_function_calling: false
