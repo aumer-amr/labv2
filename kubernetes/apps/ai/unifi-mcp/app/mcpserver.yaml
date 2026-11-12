@@ -34,7 +34,7 @@ spec:
         drop: ["ALL"]
       readOnlyRootFilesystem: true
     # renovate: datasource=docker depName=ghcr.io/sirkirby/unifi-network-mcp
-    image: ghcr.io/sirkirby/unifi-network-mcp:0.44.0@sha256:de690e741b5713f45c811defd443964bdb6f02ba3c44e6777dbc5fe093e28a92
+    image: ghcr.io/sirkirby/unifi-network-mcp:0.45.1@sha256:17e8d34e871d1869b43663922e172a91904154a1f3d27e99fd681321eb17ddd9
     port: 3000
     env:
       - name: HOME
