@@ -88,6 +88,13 @@ spec:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
+              app.kubernetes.io/instance: codex-proxy
+              app.kubernetes.io/name: codex-proxy
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ai
+          podSelector:
+            matchLabels:
               app.kubernetes.io/name: kubernetes-mcp
         - namespaceSelector:
             matchLabels:

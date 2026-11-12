@@ -81,6 +81,15 @@ for protocol in ("TCP", "UDP"):
     assert any({"port": "53", "protocol": protocol} in port.get("ports", [])
                and {"matchName": "codex-proxy.ai.svc.cluster.local"} in port.get("rules", {}).get("dns", [])
                for rule in dns for port in rule.get("toPorts", []))
+coredns = one(documents(ROOT / "kubernetes/apps/kube-system/coredns/app/networkpolicy.yaml"), "NetworkPolicy", "coredns")["spec"]
+dns_peer = {
+    "namespaceSelector": {"matchLabels": {"kubernetes.io/metadata.name": "ai"}},
+    "podSelector": {"matchLabels": policy["podSelector"]["matchLabels"]},
+}
+for protocol in ("TCP", "UDP"):
+    assert any(dns_peer in rule.get("from", [])
+               and {"port": 53, "protocol": protocol} in rule.get("ports", [])
+               for rule in coredns["ingress"]), f"CoreDNS must accept {protocol} DNS from the proxy"
 model = documents(LITELLM / "models/codex-gpt-6-1-sol.yaml")[0]["spec"]
 assert model["modelName"] == "codex-gpt-6.1-sol"
 assert model["params"] == {"model": "openai/gpt-6.1-sol", "apiBase": "http://codex-proxy.ai.svc.cluster.local:3466/v1", "apiKey": "none"}
