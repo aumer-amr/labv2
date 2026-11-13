@@ -1,0 +1,253 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: zeroclaw
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: zeroclaw
+  interval: 1h
+  values:
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: ghcr.io/zeroclaw-labs/zeroclaw
+              tag: default-features-v0.9.0@sha256:f63c01339d69187af86d3ec9df0d30e9b325c81bb1f558ef0be0bbf683c6ec4f
+            command:
+              - zeroclaw
+            args:
+              - --config-dir
+              - /data/.zeroclaw
+              - daemon
+            env:
+              HOME: /data
+              TZ: Europe/Amsterdam
+              ZEROCLAW_DATA_DIR: /data/.zeroclaw/data
+              LITELLM_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: zeroclaw-litellm
+                    key: key
+              MONITOR_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: zeroclaw-monitor-litellm
+                    key: key
+              HOOK_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: zeroclaw-secret
+                    key: HOOK_TOKEN
+              ZEROCLAW_gateway__webhook_secret: Bearer $(HOOK_TOKEN)
+              ZEROCLAW_providers__models__openai__assistant__api_key: $(LITELLM_API_KEY)
+              ZEROCLAW_providers__models__openai__gpt_5_6_terra__api_key: $(LITELLM_API_KEY)
+              ZEROCLAW_providers__models__openai__gpt_5_6_luna__api_key: $(LITELLM_API_KEY)
+              ZEROCLAW_providers__models__openai__gpt_5_6_sol__api_key: $(LITELLM_API_KEY)
+              ZEROCLAW_providers__models__openai__gpt_6_luna__api_key: $(LITELLM_API_KEY)
+              ZEROCLAW_providers__models__openai__gpt_6_1_sol__api_key: $(LITELLM_API_KEY)
+              ZEROCLAW_providers__models__openai__gpt_6_astra__api_key: $(LITELLM_API_KEY)
+              ZEROCLAW_providers__models__openai__monitor__api_key: $(MONITOR_API_KEY)
+              ZEROCLAW_mcp__servers__litellm__headers__authorization: Bearer $(LITELLM_API_KEY)
+              ZEROCLAW_mcp__servers__monitor__headers__authorization: Bearer $(MONITOR_API_KEY)
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
+            probes:
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 42617
+                  periodSeconds: 10
+                  failureThreshold: 60
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 42617
+                  periodSeconds: 10
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 42617
+                  periodSeconds: 10
+          automation:
+            image:
+              repository: docker.io/python
+              tag: 3.15.2-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928
+            command:
+              - python3
+              - /workflow/server.py
+            env:
+              HOME: /data
+              TZ: Europe/Amsterdam
+              PYTHONDONTWRITEBYTECODE: "1"
+              PUBLICATION_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: windmill-github-hooks-litellm
+                    key: key
+              CLOUDFLARE_WAF_API_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: windmill-cloudflare-secret
+                    key: token
+              LANGFUSE_PUBLIC_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: langfuse-secret
+                    key: LANGFUSE_INIT_PROJECT_PUBLIC_KEY
+              LANGFUSE_SECRET_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: langfuse-secret
+                    key: LANGFUSE_INIT_PROJECT_SECRET_KEY
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 256Mi
+            probes:
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - python3
+                      - -c
+                      - from urllib.request import urlopen; urlopen("http://127.0.0.1:42618/health", timeout=2).close()
+                  periodSeconds: 10
+                  failureThreshold: 6
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - python3
+                      - -c
+                      - from urllib.request import urlopen; urlopen("http://127.0.0.1:42618/health", timeout=2).close()
+                  periodSeconds: 10
+                  failureThreshold: 6
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - python3
+                      - -c
+                      - from urllib.request import urlopen; urlopen("http://127.0.0.1:42618/health", timeout=2).close()
+                  periodSeconds: 10
+                  failureThreshold: 6
+        initContainers:
+          config:
+            image:
+              repository: docker.io/python
+              tag: 3.15.2-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928
+            command:
+              - python3
+              - -c
+              - from pathlib import Path; import shutil; root=Path("/bootstrap"); [(root/d).mkdir(parents=True,exist_ok=True) for d in ("agent/.zeroclaw", "automation/state")]; shutil.copyfile("/config/config.toml", root/"agent/.zeroclaw/config.toml")
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                memory: 128Mi
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      runtimeClassName: gvisor
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 60
+    service:
+      app:
+        ports:
+          http:
+            port: 42617
+    persistence:
+      data:
+        existingClaim: zeroclaw
+        advancedMounts:
+          main:
+            app:
+              - path: /data
+                subPath: agent
+            automation:
+              - path: /data
+                subPath: automation
+            config:
+              - path: /bootstrap
+      config:
+        type: configMap
+        name: zeroclaw-config
+        globalMounts:
+          - path: /config
+            readOnly: true
+      tmp:
+        type: emptyDir
+      sops:
+        type: configMap
+        name: zeroclaw-alert-sop
+        advancedMounts:
+          main:
+            app:
+              - path: /sops/alertmanager
+                readOnly: true
+      workflow:
+        type: configMap
+        name: zeroclaw-workflow
+        advancedMounts:
+          main:
+            automation:
+              - path: /workflow
+                readOnly: true
+      github-hooks:
+        type: secret
+        name: windmill-github-hooks-config
+        advancedMounts:
+          main:
+            automation:
+              - path: /etc/github-hooks
+                readOnly: true

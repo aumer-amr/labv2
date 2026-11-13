@@ -1,33 +1,5 @@
 ---
-# yaml-language-server: $schema=https://json.schemastore.org/kustomization
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ./configmap.yaml
-  - ./externalsecret.yaml
-  - ./helmrelease.yaml
-  - ./httproute.yaml
-  - ./litellmvirtualkey.yaml
   - ./merge-broker-pvc.yaml
-  - ./networkpolicy.yaml
-  - ./ocirepository.yaml
-  - ./rbac.yaml
-configMapGenerator:
-  - name: hermes-discord-review
-    files:
-      - bridge.py=discord-review/bridge.py
-      - rollout.py=discord-review/rollout.py
-  - name: hermes-bootstrap
-    files:
-      - bootstrap.py=bootstrap/bootstrap.py
-      - cron-jobs.yaml=bootstrap/cron-jobs.yaml
-      - profile=bootstrap/profile
-      - tools.yaml=bootstrap/tools.yaml
-      - langfuse-private.py=../../../../../scripts/langfuse-private.py
-  # Vendored from eleboucher/memini-hermes@5597ca3323d58fa6d7f430630d7f66502efdc38b.
-  - name: hermes-memini
-    files:
-      - __init__.py=plugin/__init__.py
-      - plugin.yaml=plugin/plugin.yaml
-generatorOptions:
-  disableNameSuffixHash: true

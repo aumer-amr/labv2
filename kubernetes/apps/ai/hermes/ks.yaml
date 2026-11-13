@@ -1,33 +1,15 @@
 ---
-# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: hermes
 spec:
+  # Retained storage owner. Runtime services are retired; data remains recoverable.
   components:
     - ../../../../components/kopiur/backup
   dependsOn:
-    - name: onepassword-connect
-      namespace: external-secrets
-    - name: envoy-gateway
-      namespace: network
-    - name: gvisor
-      namespace: kube-system
     - name: kopiur
       namespace: kube-system
-    - name: litellm
-      namespace: ai
-    - name: langfuse
-      namespace: ai
-    - name: memini
-      namespace: ai
-    - name: searxng
-      namespace: ai
-    - name: victoria-logs-mcp
-      namespace: observability
-    - name: prometheus-mcp
-      namespace: ai
     - name: rook-ceph-cluster
       namespace: rook-ceph
   interval: 1h
@@ -45,33 +27,3 @@ spec:
     name: flux-system
     namespace: flux-system
   targetNamespace: ai
----
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: hermes-monitor
-spec:
-  dependsOn:
-    - name: gvisor
-      namespace: kube-system
-    - name: litellm
-      namespace: ai
-    - name: prometheus-mcp
-      namespace: ai
-    - name: victoria-logs-mcp
-      namespace: observability
-    - name: onepassword-connect
-      namespace: external-secrets
-  interval: 1h
-  path: ./kubernetes/apps/ai/hermes/agents/monitor
-  postBuild:
-    substituteFrom:
-      - name: cluster-secrets
-        kind: Secret
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
-    namespace: flux-system
-  targetNamespace: ai
-  wait: true

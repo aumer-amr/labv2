@@ -1,0 +1,22 @@
+---
+name: ZeroClaw automation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/zeroclaw-check.yaml
+      - kubernetes/apps/ai/zeroclaw/**
+      - tests/ci/zeroclaw/**
+permissions:
+  contents: read
+jobs:
+  check:
+    name: ZeroClaw automation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Exercise evidence, publication, recovery, and credential boundaries
+        run: python3 -m unittest discover -s tests/ci/zeroclaw -p 'test_*.py'

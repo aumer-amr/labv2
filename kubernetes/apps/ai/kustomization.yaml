@@ -16,6 +16,7 @@ resources:
   - ./llmkube/ks.yaml
   - ./pr-reviewer/ks.yaml
   - ./hermes/ks.yaml
+  - ./zeroclaw/ks.yaml
   - ./paseo/ks.yaml
   - ./paseo-automation/ks.yaml
   - ./langfuse/ks.yaml

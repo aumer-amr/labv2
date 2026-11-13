@@ -1,0 +1,47 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: zeroclaw
+spec:
+  components:
+    - ../../../../components/kopiur/backup
+  dependsOn:
+    - name: windmill
+      namespace: ai
+    - name: network-policies
+      namespace: ai
+    - name: onepassword-connect
+      namespace: external-secrets
+    - name: gvisor
+      namespace: kube-system
+    - name: kopiur
+      namespace: kube-system
+    - name: rook-ceph-cluster
+      namespace: rook-ceph
+    - name: litellm
+      namespace: ai
+    - name: langfuse
+      namespace: ai
+    - name: prometheus-mcp
+      namespace: ai
+    - name: victoria-logs-mcp
+      namespace: observability
+    - name: envoy-gateway
+      namespace: network
+  interval: 1h
+  path: ./kubernetes/apps/ai/zeroclaw/app
+  postBuild:
+    substitute:
+      APP: zeroclaw
+      NAMESPACE: ai
+      KOPIUR_CAPACITY: 5Gi
+      KOPIUR_PUID: "1000"
+      KOPIUR_PGID: "1000"
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: ai
+  wait: true

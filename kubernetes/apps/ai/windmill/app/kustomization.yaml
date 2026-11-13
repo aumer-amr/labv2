@@ -5,12 +5,6 @@ components:
   - ../../../../components/cnpg
 resources:
   - ./externalsecret.yaml
-  - ./ocirepository.yaml
-  - ./helmrelease.yaml
-  - ./networkpolicy.yaml
-  - ./bootstrap.yaml
-  - ./httproute.yaml
-  - ./bootstrap-service.yaml
   - ./github-hooks-config.sops.yaml
   - ./litellmvirtualkey.sops.yaml
 patches:
@@ -41,30 +35,17 @@ patches:
         inRoles:
           - windmill_admin
   - target:
-      kind: NetworkPolicy
-      name: \$\{APP\}-postgres
+      kind: Cluster
+      name: \$\{APP\}
     patch: |
-      - op: replace
-        path: /spec/ingress/0/from/0/podSelector/matchLabels
+      - op: add
+        path: /metadata/annotations
         value:
-          release: windmill
+          cnpg.io/hibernation: "on"
   - target:
-      kind: NetworkPolicy
-      name: \$\{APP\}-postgres-client
+      kind: ScheduledBackup
+      name: \$\{APP\}
     patch: |
-      - op: replace
-        path: /spec/podSelector/matchLabels
-        value:
-          release: windmill
-configMapGenerator:
-  - name: windmill-monitor
-    files:
-      - monitor.py=workflow/monitor.py
-      - bootstrap.py=workflow/bootstrap.py
-      - ready.py=workflow/ready.py
-      - github_hooks.py=workflow/github_hooks.py
-      - monitor-review.js=workflow/monitor-review.js
-generatorOptions:
-  disableNameSuffixHash: true
-  annotations:
-    kustomize.toolkit.fluxcd.io/substitute: disabled
+      - op: add
+        path: /spec/suspend
+        value: true

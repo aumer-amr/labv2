@@ -14,14 +14,6 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/name: hermes
-              app.kubernetes.io/instance: hermes
-      ports:
-        - port: 3000
-          protocol: TCP
-    - from:
-        - podSelector:
-            matchLabels:
               app.kubernetes.io/name: litellm
       ports:
         - port: 3000
@@ -35,11 +27,7 @@ spec:
               kubernetes.io/metadata.name: network
         - podSelector:
             matchLabels:
-              release: windmill
-              app: windmill-workers
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: windmill-bootstrap
+              app.kubernetes.io/name: zeroclaw
       ports:
         - port: 3000
           protocol: TCP
