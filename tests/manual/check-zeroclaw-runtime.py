@@ -153,6 +153,9 @@ try:
             environment = dict(os.environ, HOME=directory)
             environment.update({
                 'ZEROCLAW_gateway__port': str(port),
+                # Keep the configured channel in schema validation without contacting Discord.
+                'ZEROCLAW_channels__discord__main__enabled': 'false',
+                'ZEROCLAW_channels__discord__main__bot_token': 'fixture-discord-token',
                 'ZEROCLAW_providers__models__openai__monitor__api_key': 'fixture-key',
                 'ZEROCLAW_mcp__servers__litellm__headers__authorization': 'Bearer fixture-key',
             })
@@ -179,6 +182,15 @@ try:
                         raise RuntimeError('Pinned runtime failed readiness')
                     drift = monitor.http(monitor.ZEROCLAW + '/api/config/drift')
                     assert drift['drifted'] == [], drift
+                    loaded = monitor.http(monitor.ZEROCLAW + '/api/config')
+                    discord = loaded['channels']['discord']['main']
+                    assert discord['enabled'] is False
+                    assert discord['mention_only'] is True
+                    assert discord['guild_ids'] == ['759169385658056705']
+                    assert discord['channel_ids'] == ['1570863482142851103', '1570865870538932226']
+                    assert discord['bot_token'] and discord['bot_token'] != 'fixture-discord-token'
+                    assert loaded['agents']['main']['channels'] == ['discord.main']
+                    assert loaded['peer_groups']['discord_main']['external_peers'] == ['110811348274810880']
                     subprocess.run(['zeroclaw', '--config-dir', directory, 'status', '--format=exit-code'], check=True, env=environment, stdout=subprocess.DEVNULL, stderr=output)
                     if mode == 'alerts':
                         subprocess.run(['zeroclaw', '--config-dir', directory, 'sop', 'validate', 'alertmanager'], check=True, env=environment, stdout=subprocess.DEVNULL, stderr=output)
