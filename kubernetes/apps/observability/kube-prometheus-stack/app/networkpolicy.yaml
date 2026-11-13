@@ -139,10 +139,13 @@ spec:
       toPorts:
         - ports:
             - port: "53"
-              protocol: ANY
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
           rules:
             dns:
               - matchName: api.pushover.net
+              - matchName: zeroclaw.aumer.dev
     - toFQDNs:
         - matchName: api.pushover.net
       toPorts:
