@@ -610,7 +610,7 @@ def publication_mcp(name, arguments):
     return result
 
 
-def publish_draft(draft):
+def publish_draft(draft, state):
     projects = publication_mcp("projects_list", {"q": "LabV2", "format": "markdown"})
     matches = [p for p in projects["items"] if p["title"] == "LabV2" and not p.get("is_archived")]
     if len(matches) != 1 or projects.get("total_pages", 1) != 1:
@@ -630,16 +630,21 @@ def publish_draft(draft):
         board = next((v for v in project.get("views", []) if v.get("view_kind") == "kanban"), {})
         if board.get("default_bucket_id"):
             payload["bucket_id"] = board["default_bucket_id"]
+        # Lookups and intent persistence can consume the remaining evidence lifetime.
+        item = state.get("observations", {}).get(draft["id"])
+        if item is None or draft_for(state, item, time.time()) != draft:
+            raise ValueError("Draft is no longer eligible for publication")
         result = publication_mcp("tasks_create", payload)
     if type(result.get("id")) is not int or result["id"] <= 0 or result.get("project_id") != project["id"]:
         raise ValueError("Invalid published task")
     return result["id"]
 
 
-def publish_ready(state, now):
+def publish_ready(state):
     audit = state.setdefault("publication_audit", {})
     published = 0
     for item in state.get("observations", {}).values():
+        now = time.time()
         draft = draft_for(state, item, now)
         if draft is None or audit.get(draft["hash"], {}).get("status") in ("published", "rejected"):
             continue
@@ -650,7 +655,7 @@ def publish_ready(state, now):
         # Read back intent before writing externally. Retry recovers by observation identity.
         if load_state().get("publication_audit", {}).get(draft["hash"]) != record:
             raise ValueError("Publication intent was not persisted")
-        record["task_id"] = publish_draft(draft)
+        record["task_id"] = publish_draft(draft, state)
         record["status"] = "published"
         save(state)
         published += 1
@@ -669,7 +674,7 @@ def main():
         require_idle_investigator()
         prune_evidence(time.time())
         result = collect_main("automatic")
-        result["issues_created"] = publish_ready(load_state(), time.time())
+        result["issues_created"] = publish_ready(load_state())
         return result
 
 

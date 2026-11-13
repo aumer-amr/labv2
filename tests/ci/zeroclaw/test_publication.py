@@ -69,22 +69,48 @@ class PublicationTests(unittest.TestCase):
     def test_existing_open_or_done_task_is_reused_without_changes(self):
         for done in (False, True):
             with self.subTest(done=done), patch.object(monitor, 'publication_mcp', side_effect=[{'items': [{'id': 2, 'title': 'LabV2'}]}, {'items': [{'id': 101, 'project_id': 2, 'done': done, 'title': 'Existing [monitor:observation]'}]}]) as mcp:
-                self.assertEqual(monitor.publish_draft(self.draft), 101)
+                self.assertEqual(monitor.publish_draft(self.draft, self.state), 101)
                 self.assertEqual([c.args[0] for c in mcp.call_args_list], ['projects_list', 'tasks_list'])
 
     def test_new_task_uses_resolved_project_and_default_board_bucket(self):
-        with patch.object(monitor, 'publication_mcp', side_effect=[{'items': [{'id': 2, 'title': 'LabV2', 'views': [{'view_kind': 'kanban', 'default_bucket_id': 4}]}]}, {'items': [], 'page': 1, 'per_page': 50, 'total': 0, 'total_pages': 0}, {'id': 101, 'project_id': 2}]) as mcp:
-            self.assertEqual(monitor.publish_draft(self.draft), 101)
+        with patch.object(monitor.time, "time", return_value=self.now), patch.object(monitor, 'publication_mcp', side_effect=[{'items': [{'id': 2, 'title': 'LabV2', 'views': [{'view_kind': 'kanban', 'default_bucket_id': 4}]}]}, {'items': [], 'page': 1, 'per_page': 50, 'total': 0, 'total_pages': 0}, {'id': 101, 'project_id': 2}]) as mcp:
+            self.assertEqual(monitor.publish_draft(self.draft, self.state), 101)
         payload = mcp.call_args.args[1]
         self.assertEqual(payload['project'], 2)
         self.assertEqual(payload['bucket_id'], 4)
         self.assertFalse(payload['done'])
         self.assertEqual(payload['description'], self.draft['payload']['description'])
 
+    def test_eligibility_is_refreshed_after_slow_project_and_task_lookups(self):
+        for expiry in ('collection', 'observation', 'assessment'):
+            with self.subTest(expiry=expiry):
+                item = copy.deepcopy(self.item)
+                state = copy.deepcopy(self.state)
+                state['observations'][item['id']] = item
+                if expiry == 'collection':
+                    state['last_run']['at'] = self.now - 1799
+                elif expiry == 'observation':
+                    item['last_seen'] = self.now - 1799
+                else:
+                    item.update(first_seen=self.now - 25000, last_investigated=self.now - 21600 + 1)
+                    item['assessment']['tool_activity'][0]['query_arguments'].update(end_time=str(item['last_investigated']), start_time=str(item['last_investigated'] - 21600))
+                draft = monitor.draft_for(state, item, self.now)
+                self.assertIsNotNone(draft)
+                with patch.object(monitor.time, 'time', return_value=self.now) as clock:
+                    def mcp(name, arguments):
+                        if name == 'projects_list':
+                            return {'items': [{'id': 2, 'title': 'LabV2'}]}
+                        if name == 'tasks_list':
+                            clock.return_value = self.now + 2
+                            return {'items': []}
+                        self.fail('Expired evidence reached tasks_create')
+                    with patch.object(monitor, 'publication_mcp', side_effect=mcp), self.assertRaisesRegex(ValueError, 'eligible'):
+                        monitor.publish_draft(draft, state)
+
     def test_ambiguous_lookup_never_creates(self):
         for response in ({'items': [], 'total_pages': 2}, {'items': [{'id': 1, 'project_id': 2, 'title': '[monitor:observation]'}, {'id': 2, 'project_id': 2, 'title': '[monitor:observation]'}]}):
             with patch.object(monitor, 'publication_mcp', side_effect=[{'items': [{'id': 2, 'title': 'LabV2'}]}, response]) as mcp, self.assertRaisesRegex(ValueError, 'Ambiguous'):
-                monitor.publish_draft(self.draft)
+                monitor.publish_draft(self.draft, self.state)
             self.assertEqual(mcp.call_count, 2)
 
 if __name__ == '__main__':

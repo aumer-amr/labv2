@@ -134,16 +134,19 @@ class AutomaticPublicationTests(unittest.TestCase):
         fixture.setUp()
         self.state, self.now, self.draft = fixture.state, fixture.now, fixture.draft
         self.stored = copy.deepcopy(self.state)
+        clock = patch.object(monitor.time, 'time', return_value=self.now)
+        self.clock = clock.start()
+        self.addCleanup(clock.stop)
 
     def save(self, value):
         self.stored = copy.deepcopy(value)
 
     def run_publication(self):
         with patch.object(monitor, 'save', side_effect=self.save), patch.object(monitor, 'load_state', side_effect=lambda: copy.deepcopy(self.stored)):
-            return monitor.publish_ready(self.state, self.now)
+            return monitor.publish_ready(self.state)
 
     def test_persisted_intent_precedes_automatic_write_and_repeat_is_noop(self):
-        def publish(draft):
+        def publish(draft, state):
             record = self.stored['publication_audit'][draft['hash']]
             self.assertEqual(record['status'], 'pending')
             self.assertEqual(record['payload'], draft['payload'])
@@ -156,10 +159,11 @@ class AutomaticPublicationTests(unittest.TestCase):
 
     def test_persistence_failure_and_expired_evidence_prevent_external_write(self):
         with patch.object(monitor, 'save', side_effect=OSError), patch.object(monitor, 'publish_draft') as publish, self.assertRaises(OSError):
-            monitor.publish_ready(self.state, self.now)
+            monitor.publish_ready(self.state)
         publish.assert_not_called()
+        self.clock.return_value = self.now + 22000
         with patch.object(monitor, 'publish_draft') as publish:
-            self.assertEqual(monitor.publish_ready(self.state, self.now + 22000), 0)
+            self.assertEqual(monitor.publish_ready(self.state), 0)
         publish.assert_not_called()
 
     def test_lost_write_response_retains_intent_and_retries_same_identity(self):
@@ -169,6 +173,32 @@ class AutomaticPublicationTests(unittest.TestCase):
             self.assertEqual(self.stored['publication_audit'][self.draft['hash']]['status'], 'pending')
             self.assertEqual(self.run_publication(), 1)
             self.assertEqual(publish.call_args_list[0], publish.call_args_list[1])
+
+    def test_later_draft_expires_while_earlier_task_is_published(self):
+        later = copy.deepcopy(self.state['observations']['observation'])
+        later.update(id='later', first_seen=self.now - 25000, last_investigated=self.now - 21600 + 1)
+        query = later['assessment']['tool_activity'][0]['query_arguments']
+        query.update(end_time=str(later['last_investigated']), start_time=str(later['last_investigated'] - 21600))
+        self.state['observations']['later'] = later
+        self.assertIsNotNone(monitor.draft_for(self.state, later, self.now))
+        with patch.object(monitor.time, 'time', return_value=self.now) as clock:
+            def publish(draft, state):
+                clock.return_value = self.now + 2
+                return 75
+            with patch.object(monitor, 'publish_draft', side_effect=publish) as publish:
+                self.assertEqual(self.run_publication(), 1)
+            self.assertEqual(publish.call_count, 1)
+
+    def test_expiry_during_intent_persistence_blocks_creation(self):
+        def save(value):
+            self.save(value)
+            self.clock.return_value = self.now + 1801
+        replies = [{'items': [{'id': 2, 'title': 'LabV2'}]}, {'items': []}]
+        with patch.object(monitor, 'save', side_effect=save), patch.object(monitor, 'load_state', side_effect=lambda: copy.deepcopy(self.stored)), patch.object(monitor, 'publication_mcp', side_effect=replies) as mcp:
+            with self.assertRaisesRegex(ValueError, 'eligible'):
+                monitor.publish_ready(self.state)
+        self.assertEqual([call.args[0] for call in mcp.call_args_list], ['projects_list', 'tasks_list'])
+        self.assertEqual(self.stored['publication_audit'][self.draft['hash']]['status'], 'pending')
 
     def test_existing_human_rejection_survives_migration(self):
         self.state['publication_audit'] = {self.draft['hash']: {'status': 'rejected'}}
