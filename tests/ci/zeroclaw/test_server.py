@@ -150,6 +150,24 @@ class BoundaryTests(unittest.TestCase):
             risk = config['risk_profiles'][config['agents'][name]['risk_profile']]
             self.assertEqual(risk['allowed_tools'], [expected[name] + '__run'])
 
+    def test_discord_restricts_sender_and_locations_without_binding_automation_agents(self):
+        config = tomllib.loads((WORKFLOW.parent / 'app/config/config.toml').read_text())
+        self.assertEqual(set(config['channels']), {'discord'})
+        self.assertEqual(set(config['channels']['discord']), {'main'})
+        discord = config['channels']['discord']['main']
+        self.assertTrue(discord['enabled'])
+        self.assertTrue(discord['mention_only'])
+        self.assertEqual(discord['guild_ids'], ['759169385658056705'])
+        self.assertEqual(discord['channel_ids'], ['1570863482142851103', '1570865870538932226'])
+        self.assertFalse(discord.get('bot_token'))
+        for feature in ('archive', 'listen_to_bots', 'slash_commands'):
+            self.assertFalse(discord.get(feature, False))
+        self.assertEqual(config['peer_groups'], {'discord_main': {
+            'channel': 'discord.main', 'agents': ['main'], 'external_peers': ['110811348274810880'],
+        }})
+        bindings = {name: agent['channels'] for name, agent in config['agents'].items() if agent.get('channels')}
+        self.assertEqual(bindings, {'main': ['discord.main']})
+
 
 if __name__ == '__main__':
     unittest.main()

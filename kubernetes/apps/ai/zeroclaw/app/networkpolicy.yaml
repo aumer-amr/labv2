@@ -98,3 +98,12 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
+    - toFQDNs:
+        - matchName: discord.com
+        - matchName: gateway.discord.gg
+        # Discord assigns a regional gateway hostname for session resume.
+        - matchPattern: gateway-*.discord.gg
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

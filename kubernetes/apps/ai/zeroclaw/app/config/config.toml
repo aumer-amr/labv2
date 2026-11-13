@@ -20,6 +20,18 @@ auto_save = true
 [heartbeat]
 enabled = false
 
+[channels.discord.main]
+enabled = true
+guild_ids = ["759169385658056705"]
+# The channel filter also applies to DMs. Keep the operator's DM ID explicit.
+channel_ids = ["1570863482142851103", "1570865870538932226"]
+mention_only = true
+
+[peer_groups.discord_main]
+channel = "discord.main"
+agents = ["main"]
+external_peers = ["110811348274810880"]
+
 [mcp]
 enabled = true
 deferred_loading = false
@@ -41,6 +53,7 @@ allowed_commands = []
 block_high_risk_commands = true
 
 [agents.main]
+channels = ["discord.main"]
 model_provider = "openai.assistant"
 risk_profile = "default"
 runtime_profile = "default"

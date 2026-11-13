@@ -44,6 +44,11 @@ spec:
                     name: zeroclaw-secret
                     key: HOOK_TOKEN
               ZEROCLAW_gateway__webhook_secret: Bearer $(HOOK_TOKEN)
+              ZEROCLAW_channels__discord__main__bot_token:
+                valueFrom:
+                  secretKeyRef:
+                    name: zeroclaw-secret
+                    key: DISCORD_BOT_TOKEN
               ZEROCLAW_providers__models__openai__assistant__api_key: $(LITELLM_API_KEY)
               ZEROCLAW_providers__models__openai__gpt_5_6_terra__api_key: $(LITELLM_API_KEY)
               ZEROCLAW_providers__models__openai__gpt_5_6_luna__api_key: $(LITELLM_API_KEY)

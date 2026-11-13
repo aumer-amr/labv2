@@ -18,3 +18,32 @@ spec:
   proxyRef: litellm
   secretKey: key
   secretName: zeroclaw-litellm
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMVirtualKey
+metadata:
+  name: zeroclaw-monitor
+spec:
+  keyAlias: zeroclaw-monitor
+  mcpToolsets:
+    - b01ebc5e-ff79-47c2-8af0-1ad72635f8aa
+  models:
+    - qwen3.5-9b
+  proxyRef: litellm
+  secretKey: key
+  secretName: zeroclaw-monitor-litellm
+  rpmLimit: 20
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMVirtualKey
+metadata:
+  name: zeroclaw-github-hooks
+spec:
+  keyAlias: zeroclaw-github-hooks
+  mcpToolsets:
+    - 4dec5505-8bfc-4ecf-9f9d-a367cbd7f085
+  models:
+    - no-model-access
+  proxyRef: litellm
+  secretKey: key
+  secretName: zeroclaw-github-hooks-litellm
