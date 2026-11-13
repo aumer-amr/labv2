@@ -28,6 +28,8 @@ spec:
               HOME: /data
               TZ: Europe/Amsterdam
               ZEROCLAW_DATA_DIR: /data/.zeroclaw/data
+              # Local IPC locks must not survive PVC remounts and fsGroup changes.
+              ZEROCLAW_SOCKET: /tmp/zeroclaw/daemon.sock
               LITELLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
@@ -198,6 +200,10 @@ spec:
     defaultPodOptions:
       automountServiceAccountToken: false
       runtimeClassName: gvisor
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000

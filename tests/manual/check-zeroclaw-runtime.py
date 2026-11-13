@@ -141,6 +141,10 @@ try:
                 section = re.sub(r'schedule = \{[^\n]+\}', 'schedule = { kind = "at", at = "' + at + '" }', section, count=1)
                 config = before + section
             Path(directory, 'config.toml').write_text(config)
+            stale_lock = Path(directory, 'data/daemon.sock.lock')
+            stale_lock.parent.mkdir(parents=True, exist_ok=True)
+            stale_lock.touch()
+            stale_lock.chmod(0o660)
             automation.CONFIG = Path(directory, 'config.toml')
             automation.WORKFLOW = Path(directory, 'tools')
             automation.WORKFLOW.mkdir()
@@ -153,6 +157,7 @@ try:
             environment = dict(os.environ, HOME=directory)
             environment.update({
                 'ZEROCLAW_gateway__port': str(port),
+                'ZEROCLAW_SOCKET': directory + '/runtime/daemon.sock',
                 # Keep the configured channel in schema validation without contacting Discord.
                 'ZEROCLAW_channels__discord__main__enabled': 'false',
                 'ZEROCLAW_channels__discord__main__bot_token': 'fixture-discord-token',
@@ -180,6 +185,11 @@ try:
                             time.sleep(0.25)
                     else:
                         raise RuntimeError('Pinned runtime failed readiness')
+                    health = monitor.http(monitor.ZEROCLAW + '/health')
+                    assert health['runtime']['components']['socket']['status'] == 'ok', health['runtime']['components']['socket']
+                    assert stale_lock.stat().st_mode & 0o777 == 0o660
+                    assert Path(environment['ZEROCLAW_SOCKET']).is_socket()
+                    assert Path(environment['ZEROCLAW_SOCKET'] + '.lock').stat().st_mode & 0o777 == 0o600
                     drift = monitor.http(monitor.ZEROCLAW + '/api/config/drift')
                     assert drift['drifted'] == [], drift
                     loaded = monitor.http(monitor.ZEROCLAW + '/api/config')
