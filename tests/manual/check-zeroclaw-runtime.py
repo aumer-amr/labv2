@@ -177,6 +177,8 @@ try:
                             time.sleep(0.25)
                     else:
                         raise RuntimeError('Pinned runtime failed readiness')
+                    drift = monitor.http(monitor.ZEROCLAW + '/api/config/drift')
+                    assert drift['drifted'] == [], drift
                     subprocess.run(['zeroclaw', '--config-dir', directory, 'status', '--format=exit-code'], check=True, env=environment, stdout=subprocess.DEVNULL, stderr=output)
                     if mode == 'alerts':
                         subprocess.run(['zeroclaw', '--config-dir', directory, 'sop', 'validate', 'alertmanager'], check=True, env=environment, stdout=subprocess.DEVNULL, stderr=output)

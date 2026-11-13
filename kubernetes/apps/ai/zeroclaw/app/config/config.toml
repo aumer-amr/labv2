@@ -97,6 +97,8 @@ servers = ["litellm"]
 name = "litellm"
 transport = "http"
 url = "http://litellm.ai.svc.cluster.local:4000/mcp/proxy"
+# Declare the key so v0.9.0 does not report the environment-only value as map drift.
+headers = { authorization = "" }
 tool_timeout_secs = 45
 max_response_bytes = 2000000
 
@@ -107,6 +109,7 @@ servers = ["monitor"]
 name = "monitor"
 transport = "http"
 url = "http://litellm.ai.svc.cluster.local:4000/mcp/proxy"
+headers = { authorization = "" }
 tool_timeout_secs = 45
 max_response_bytes = 2000000
 
