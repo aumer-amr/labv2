@@ -110,32 +110,6 @@ spec:
               app.kubernetes.io/instance: clickhouse
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: ai
-          podSelector:
-            matchLabels:
-              release: windmill
-              app: windmill-app
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: ai
-          podSelector:
-            matchLabels:
-              release: windmill
-              app: windmill-workers
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: ai
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: windmill-bootstrap
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: ai
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: hermes-monitor
-        - namespaceSelector:
-            matchLabels:
               kubernetes.io/metadata.name: home
           podSelector:
             matchLabels:
@@ -233,7 +207,7 @@ spec:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
-              app.kubernetes.io/name: hermes
+              app.kubernetes.io/name: zeroclaw
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: ai
