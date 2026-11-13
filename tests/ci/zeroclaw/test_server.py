@@ -55,12 +55,22 @@ class ToolsTests(unittest.TestCase):
             self.assertNotIn('LITELLM_API_KEY', environment)
         self.assertEqual(state.read('dispatch-cluster_monitor')['status'], 'completed')
 
-    def test_retries_and_disabled_schedules_cannot_reexecute(self):
+    def test_manual_monitor_runs_with_schedule_disabled_and_keeps_retry_guard(self):
+        self.config.write_text('[cron.cluster_monitor]\nenabled=false\n')
+        result = self.call()
+        self.assertFalse(result['isError'])
+        self.assertEqual(state.read('dispatch-cluster_monitor')['status'], 'completed')
+        self.assertFalse(tomllib.loads(self.config.read_text())['cron']['cluster_monitor']['enabled'])
+        with patch.object(server.subprocess, 'Popen') as spawn:
+            self.assertEqual(self.call()['structuredContent']['status'], 'skipped')
+        spawn.assert_not_called()
+
+    def test_retries_and_disabled_github_schedule_cannot_reexecute(self):
         self.call()
         with patch.object(server.subprocess, 'Popen') as spawn:
             self.assertEqual(self.call()['structuredContent']['status'], 'skipped')
-            self.config.write_text('[cron.cluster_monitor]\nenabled=false\n')
-            self.assertTrue(self.call()['isError'])
+            self.config.write_text('[cron.github_hooks]\nenabled=false\n')
+            self.assertTrue(self.call('/github-hooks')['isError'])
         spawn.assert_not_called()
 
     def test_concurrent_run_is_rejected(self):
@@ -132,6 +142,7 @@ class BoundaryTests(unittest.TestCase):
 
     def test_profiles_grant_only_their_work_and_jobs_have_one_owner(self):
         config = tomllib.loads((WORKFLOW.parent / 'app/config/config.toml').read_text())
+        self.assertFalse(config['cron']['cluster_monitor']['enabled'])
         expected = {'main': 'litellm', 'alerts': 'monitor', 'investigator': 'monitor',
                     'monitor': 'monitor_cycle', 'github_hooks': 'github_hooks'}
         self.assertEqual(set(config['agents']), set(expected))
