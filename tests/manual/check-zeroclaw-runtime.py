@@ -91,6 +91,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.wfile.write(data)
                 return
         else:
+            assert self.path == '/mcp/proxy', self.path
             method = body.get('method')
             if 'id' not in body:
                 self.send_response(202)

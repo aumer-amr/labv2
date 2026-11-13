@@ -64,7 +64,7 @@ After credential setup and retirement, enable `cron.cluster_monitor` and `cron.g
 
 If `active-investigation.json` contains a session identifier, inspect the retained session and request cancellation. Confirm that the turn stopped, or restart the ZeroClaw daemon. Only then remove the marker from the automation state directory. Removing the marker before the turn stops can allow overlapping investigations. A completed stream clears the marker automatically. An uncertain stream never permits task publication.
 
-Provision a dedicated Kanidm client named `zeroclaw`. Store `OIDC_CLIENT_SECRET` and `HOOK_TOKEN` in the existing 1Password provider's `zeroclaw` item. Grant the intended user group access to this client. Set `mcp_tool_search_enabled` on both new LiteLLM keys before enabling automation. The operator does not expose this field. Confirm that each key exposes `search_tools`, `get_tool_schema`, and `call_tool` with its intended toolset.
+Provision a dedicated Kanidm client named `zeroclaw`. Store `OIDC_CLIENT_SECRET` and `HOOK_TOKEN` in the existing 1Password provider's `zeroclaw` item. Grant the intended user group access to this client. Use `/mcp/proxy` for both LiteLLM connections. This endpoint exposes `search_tools`, `get_tool_schema`, and `call_tool` without the legacy `mcp_tool_search_enabled` setting. Make sure that each new key has only its intended toolset before enabling automation.
 
 ZeroClaw uses SQLite on backed-up volumes. Its v0.9.0 PostgreSQL backend cannot use TLS, which the shared database component requires. No new PostgreSQL instance is created.
 

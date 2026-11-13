@@ -4,7 +4,6 @@ kind: LiteLLMVirtualKey
 metadata:
   name: zeroclaw
 spec:
-  # shortcut: the operator cannot set mcp_tool_search_enabled; enable it on this key before rollout.
   keyAlias: zeroclaw
   mcpToolsets:
     - 2144065e-cc91-4615-9626-f5e3b3aa7de3
