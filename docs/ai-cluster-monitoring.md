@@ -66,7 +66,7 @@ Provision a dedicated Kanidm client named `zeroclaw`. Store `OIDC_CLIENT_SECRET`
 
 ZeroClaw uses SQLite on backed-up volumes. Its v0.9.0 PostgreSQL backend cannot use TLS, which the shared database component requires. No new PostgreSQL instance is created.
 
-The old Hermes volumes remain managed by their original Flux owner. The Windmill database remains managed and hibernated. Its scheduled database backups are suspended during hibernation. The Cloudflare and publication credentials retain their existing resource names.
+The main Hermes volume remains managed by its original Flux owner. Flux removes the retired merge-broker PVC when this change is merged and reconciled. This migration does not preserve its Discord review and merge-broker state. The Windmill database remains managed and hibernated. Its scheduled database backups are suspended during hibernation. The Cloudflare and publication credentials retain their existing resource names.
 
 Rollback uses the previous manifests and retained volumes. Restore the old schedule state only after stopping the replacement schedules. Never run both publishers or Cloudflare updaters concurrently.
 
