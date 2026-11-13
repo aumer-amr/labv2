@@ -209,7 +209,7 @@ max_run_history = 100
 [cron.cluster_monitor]
 name = "Cluster monitoring"
 job_type = "agent"
-# Import retained Windmill state before enabling this job.
+# Verify credentials and stop the retired schedulers before enabling this job.
 enabled = false
 prompt = "Call monitor_cycle__run exactly once with no arguments. Report its result. Never claim that monitoring succeeded unless the tool reports success. Do not retry a failed or skipped run."
 allowed_tools = ["monitor_cycle__run"]
@@ -220,7 +220,7 @@ schedule = { kind = "cron", expr = "*/15 * * * *", tz = "Europe/Amsterdam" }
 [cron.github_hooks]
 name = "GitHub webhook ranges"
 job_type = "agent"
-# Import retained Windmill state before enabling this job.
+# Verify credentials and stop the retired schedulers before enabling this job.
 enabled = false
 prompt = "Call github_hooks__run exactly once with no arguments. Report its result. The tool alone validates and applies the scoped Cloudflare update. Do not retry a failed or skipped run."
 allowed_tools = ["github_hooks__run"]

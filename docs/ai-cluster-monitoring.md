@@ -54,11 +54,13 @@ Alertmanager uses the exact `POST /sop/alertmanager` route with a separate beare
 
 This branch prepares the migration. It does not record a completed rollout.
 
-Before deploying the retirement, pause the old Windmill schedules and wait for active runs to finish. Export `f/cluster/monitor-state` and `f/cluster/github-hooks-state` from the `cluster` workspace. Retain the exports and the old schedule state for rollback. Do not print credentials or state contents in logs.
+Before enabling ZeroClaw schedules, stop the old Windmill schedules and wait for active runs to finish. Do not run both publishers or Cloudflare updaters concurrently.
 
-Import both exports through `state.py` into `/data/state` in the `automation` container. This path uses the `automation` directory on the shared backed-up volume. The ZeroClaw container mounts the separate `agent` directory on that volume. The import refuses to overwrite existing state. Both workflows refuse to start without imported state.
+The automation server creates fresh state on its first start. It preserves existing ZeroClaw state on later starts and rejects corrupt state. No old observations, rejections, pending notifications, or schedule history are imported. New metric findings must pass the normal observation thresholds.
 
-After the imports, enable `cron.cluster_monitor` and `cron.github_hooks` in the configuration. Both jobs remain disabled in Git until this step is complete. The local tools also enforce that switch, including manual requests. The native scheduler runs one job at a time and skips missed runs after startup.
+State lives in `/data/state` in the `automation` container, under the `automation` directory on the backed-up volume. ZeroClaw mounts the separate `agent` directory.
+
+After credential setup and retirement, enable `cron.cluster_monitor` and `cron.github_hooks` in the configuration. Both jobs remain disabled in Git until this step is complete. The local tools also enforce that switch, including manual requests. The native scheduler runs one job at a time and skips missed runs after startup.
 
 If `active-investigation.json` contains a session identifier, inspect the retained session and request cancellation. Confirm that the turn stopped, or restart the ZeroClaw daemon. Only then remove the marker from the automation state directory. Removing the marker before the turn stops can allow overlapping investigations. A completed stream clears the marker automatically. An uncertain stream never permits task publication.
 
@@ -66,9 +68,11 @@ Provision a dedicated Kanidm client named `zeroclaw`. Store `OIDC_CLIENT_SECRET`
 
 ZeroClaw uses SQLite on backed-up volumes. Its v0.9.0 PostgreSQL backend cannot use TLS, which the shared database component requires. No new PostgreSQL instance is created.
 
-The main Hermes volume remains managed by its original Flux owner. Flux removes the retired merge-broker PVC when this change is merged and reconciled. This migration does not preserve its Discord review and merge-broker state. The Windmill database remains managed and hibernated. Its scheduled database backups are suspended during hibernation. The Cloudflare and publication credentials retain their existing resource names.
+The Hermes and Windmill application trees are removed, including their storage, database, backup schedules, and obsolete credentials. Flux prunes their managed resources after merge and reconciliation. No historical data is retained for rollback. Storage or backup retention policies can leave physical data for separate cleanup during the authorized rollout.
 
-Rollback uses the previous manifests and retained volumes. Restore the old schedule state only after stopping the replacement schedules. Never run both publishers or Cloudflare updaters concurrently.
+ZeroClaw owns the Cloudflare ExternalSecret, encrypted webhook configuration, and restricted LiteLLM publication key. Their resource names and all consumers use the `zeroclaw-` prefix. Credential payloads and tool restrictions remain unchanged.
+
+Reverting manifests cannot recover deleted historical state. Reinstalling the old applications requires fresh state or an independently available backup.
 
 ## Verification
 
@@ -80,12 +84,12 @@ python3 -m unittest discover -s tests/ci/zeroclaw -p 'test_*.py'
 
 Run `python3 tests/manual/check-zeroclaw-runtime.py` with Docker available. It builds a local test image containing the pinned binary and Python fixtures. Container networking is disabled. It exercises native schedules, profile tool grants, the gateway, and persisted query evidence without real provider calls.
 
-Live authentication, webhook delivery, storage import, policy enforcement, and model behavior still require deployment verification.
+Live authentication, webhook delivery, fresh state initialization, policy enforcement, and model behavior still require deployment verification.
 
 ## Repository sources
 
 - [Monitoring workflow](../kubernetes/apps/ai/zeroclaw/workflow/monitor.py)
-- [Durable state and import](../kubernetes/apps/ai/zeroclaw/workflow/state.py)
+- [Durable state](../kubernetes/apps/ai/zeroclaw/workflow/state.py)
 - [Profiles and schedules](../kubernetes/apps/ai/zeroclaw/app/config/config.toml)
 - [Pinned runtime test](../tests/manual/check-zeroclaw-runtime.py)
 - [Langfuse deployment](../kubernetes/apps/ai/langfuse/app/helmrelease.yaml)

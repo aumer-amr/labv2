@@ -52,13 +52,13 @@ class PublicationTests(unittest.TestCase):
     def test_query_history_matches_successful_call_id_and_discards_other_arguments(self):
         arguments = {'tool_id': 'query-tool', 'arguments': {'query': 'sum(up)', 'end_time': '50000', 'start_time': '28400', 'private': 'excluded'}}
         messages = [{'role': 'assistant', 'tool_calls': [{'id': 'call-1', 'function': {'arguments': json.dumps(arguments)}}]}, {'role': 'tool', 'tool_call_id': 'call-1', 'tool_name': 'monitor__call_tool', 'content': '{"result":"samples"}'}]
-        with patch.object(monitor, 'session_messages', return_value=messages), patch.dict(os.environ, {'HERMES_API_KEY': 'test'}):
+        with patch.object(monitor, 'session_messages', return_value=messages):
             activity = monitor.investigation_tools('session')
         self.assertTrue(activity[0]['query_success'])
         self.assertEqual(activity[0]['query_arguments'], {'query': 'sum(up)', 'end_time': '50000', 'start_time': '28400'})
 
     def test_all_metric_histories_scope_the_observed_resource(self):
-        cases = {'restarts': {'namespace': 'home', 'pod': 'pod', 'container': 'app'}, 'storage_growth': {'namespace': 'home', 'persistentvolumeclaim': 'minecraft'}, 'flux_not_ready': {'exported_namespace': 'ai', 'name': 'windmill', 'customresource_kind': 'Kustomization'}, 'unavailable_replicas': {'namespace': 'ai', 'deployment': 'windmill-app'}, 'failed_scrapes': {'job': 'prometheus', 'instance': 'host:9090'}}
+        cases = {'restarts': {'namespace': 'home', 'pod': 'pod', 'container': 'app'}, 'storage_growth': {'namespace': 'home', 'persistentvolumeclaim': 'minecraft'}, 'flux_not_ready': {'exported_namespace': 'ai', 'name': 'zeroclaw', 'customresource_kind': 'Kustomization'}, 'unavailable_replicas': {'namespace': 'ai', 'deployment': 'zeroclaw'}, 'failed_scrapes': {'job': 'prometheus', 'instance': 'host:9090'}}
         for check, labels in cases.items():
             with self.subTest(check=check):
                 expression = monitor.metric_history({'check': check, 'query': monitor.QUERIES[check], 'labels': labels})

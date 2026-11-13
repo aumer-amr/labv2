@@ -7,8 +7,6 @@ spec:
   components:
     - ../../../../components/kopiur/backup
   dependsOn:
-    - name: windmill
-      namespace: ai
     - name: network-policies
       namespace: ai
     - name: onepassword-connect

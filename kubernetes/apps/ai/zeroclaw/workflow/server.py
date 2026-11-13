@@ -28,7 +28,7 @@ JOB_ENV = {
 def run_job(path):
     job, script, timeout, interval = JOBS[path]
     if not tomllib.loads(CONFIG.read_text())['cron'][job]['enabled']:
-        raise ValueError('Import state and enable the native schedule first')
+        raise ValueError('Enable the native schedule first')
     # The lock and persisted attempt also cover model retries and daemon restarts.
     with state.lock('dispatch-' + job):
         name = 'dispatch-' + job
@@ -126,4 +126,5 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == '__main__':
+    state.initialize()
     ThreadingHTTPServer(('127.0.0.1', 42618), Handler).serve_forever()

@@ -25,7 +25,7 @@ class StateTests(unittest.TestCase):
         self.addCleanup(env.stop)
 
     def test_missing_or_corrupt_state_never_silently_resets(self):
-        with self.assertRaisesRegex(ValueError, 'Import'):
+        with self.assertRaisesRegex(ValueError, 'missing'):
             state.read('monitor')
         state.write('monitor', {'version': 2})
         with self.assertRaisesRegex(ValueError, 'Unsupported'):
@@ -53,15 +53,22 @@ class StateTests(unittest.TestCase):
         with state.lock('monitor'):
             pass
 
-    def test_import_preserves_pending_notifications_and_refuses_overwrite(self):
-        data = json.dumps({'version': 1, 'pending': {'id': 'notification', 'until': 123}})
-        command = [sys.executable, str(WORKFLOW / 'state.py'), 'github-hooks']
-        result = subprocess.run(command, input=data, text=True, capture_output=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(state.read('github-hooks')['pending']['id'], 'notification')
-        result = subprocess.run(command, input=data, text=True, capture_output=True)
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn('already exists', result.stderr)
+    def test_initialize_creates_fresh_state_and_preserves_pending_notifications(self):
+        state.initialize()
+        for name in ('monitor', 'github-hooks'):
+            self.assertEqual(state.read(name), {'version': 1})
+        data = {'version': 1, 'pending': {'id': 'notification', 'until': 123}}
+        state.write('github-hooks', data)
+        state.initialize()
+        self.assertEqual(state.read('github-hooks'), data)
+
+    def test_initialize_refuses_corrupt_state(self):
+        path = state.root() / 'monitor.json'
+        for value in ('broken', '{"version": 2}'):
+            path.write_text(value)
+            with self.assertRaises(ValueError):
+                state.initialize()
+            self.assertEqual(path.read_text(), value)
 
 
 class LocalRunTests(unittest.TestCase):

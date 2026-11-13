@@ -1,6 +1,7 @@
 """Native scheduling tools preserve bounds, credentials, and retry safety."""
 import json
 import os
+import runpy
 from pathlib import Path
 import subprocess
 import sys
@@ -9,7 +10,7 @@ import threading
 import tomllib
 from http.client import HTTPConnection
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 WORKFLOW = Path(__file__).resolve().parents[3] / 'kubernetes/apps/ai/zeroclaw/workflow'
 sys.path.insert(0, str(WORKFLOW))
@@ -94,7 +95,7 @@ class ToolsTests(unittest.TestCase):
         result = server.rpc('/monitor', {'jsonrpc': '2.0', 'id': 1, 'method': 'tools/list'})
         self.assertEqual([tool['name'] for tool in result['result']['tools']], ['run'])
 
-    def test_missing_imported_state_fails_without_writes(self):
+    def test_uninitialized_state_fails_without_writes(self):
         # Exercise the real workflow against an empty state directory.
         with patch.object(server, 'WORKFLOW', WORKFLOW):
             self.assertTrue(self.call('/github-hooks')['isError'])
@@ -102,6 +103,15 @@ class ToolsTests(unittest.TestCase):
 
 
 class BoundaryTests(unittest.TestCase):
+    def test_server_initializes_state_before_listening(self):
+        with patch.object(state, 'initialize') as initialize, patch('http.server.ThreadingHTTPServer') as http:
+            def listen(*args):
+                initialize.assert_called_once()
+                return Mock()
+            http.side_effect = listen
+            runpy.run_path(str(WORKFLOW / 'server.py'), run_name='__main__')
+            http.assert_called_once()
+
     def test_browser_origin_wrong_host_and_chunked_requests_are_rejected(self):
         http = server.ThreadingHTTPServer(('127.0.0.1', 0), server.Handler)
         thread = threading.Thread(target=http.serve_forever, daemon=True)
@@ -134,7 +144,7 @@ class BoundaryTests(unittest.TestCase):
         for job in config['cron']:
             owners = [name for name, agent in config['agents'].items() if job in agent.get('cron_jobs', [])]
             self.assertEqual(len(owners), 1)
-            self.assertFalse(config['cron'][job]['enabled'], 'Import state before enabling native jobs')
+            self.assertFalse(config['cron'][job]['enabled'], 'Verify credentials before enabling native jobs')
             self.assertFalse(config['cron'][job]['uses_memory'])
         for name in ('monitor', 'github_hooks'):
             risk = config['risk_profiles'][config['agents'][name]['risk_profile']]

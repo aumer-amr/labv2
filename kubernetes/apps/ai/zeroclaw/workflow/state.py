@@ -15,7 +15,7 @@ def root():
 def read(name):
     path = root() / (name + ".json")
     if not path.exists():
-        raise ValueError("Import the retained Windmill state before enabling this schedule")
+        raise ValueError("Automation state is missing; initialize it before running this workflow")
     value = json.loads(path.read_text())
     if not isinstance(value, dict) or value.get("version") != 1:
         raise ValueError("Unsupported automation state")
@@ -50,16 +50,10 @@ def lock(name):
         yield
 
 
-if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) != 2 or sys.argv[1] not in ("monitor", "github-hooks"):
-        raise SystemExit("Usage: state.py monitor|github-hooks < exported-state.json")
-    value = json.load(sys.stdin)
-    if not isinstance(value, dict) or value.get("version") != 1:
-        raise SystemExit("Unsupported exported state")
-    with lock(sys.argv[1]):
-        if (root() / (sys.argv[1] + ".json")).exists():
-            raise SystemExit("State already exists; import refused")
-        write(sys.argv[1], value)
-    print("State imported")
+def initialize():
+    for name in ("monitor", "github-hooks"):
+        with lock(name):
+            if (root() / (name + ".json")).exists():
+                read(name)
+            else:
+                write(name, {"version": 1})

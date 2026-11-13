@@ -5,6 +5,9 @@ resources:
   - ./helmrelease.yaml
   - ./ocirepository.yaml
   - ./externalsecret.yaml
+  - ./cloudflare-externalsecret.yaml
+  - ./config/github-hooks-config.sops.yaml
+  - ./github-hooks-litellmvirtualkey.sops.yaml
   - ./litellmvirtualkey.yaml
   - ./monitor-litellmvirtualkey.yaml
   - ./httproute.yaml

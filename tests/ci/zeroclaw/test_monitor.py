@@ -185,14 +185,14 @@ class MonitoringTests(unittest.TestCase):
 
     def test_untrusted_agent_output_rejected(self):
         response = {'choices': [{'message': {'content': '{"verdict":"delete-cluster"}'}}]}
-        with patch.object(monitor, 'zeroclaw_run', return_value=response), patch.dict(os.environ, {'HERMES_API_KEY': 'test'}):
+        with patch.object(monitor, 'zeroclaw_run', return_value=response):
             with self.assertRaisesRegex(ValueError, 'verdict'):
                 monitor.investigate(self.evidence()[0])
 
     def test_investigation_supplies_current_window_and_requires_tool_queries(self):
         assessment = {'verdict': 'expected', 'summary': 'Stable', 'evidence': ['query: last six hours'], 'next_step': 'Observe'}
         response = {'choices': [{'message': {'content': json.dumps(assessment)}}]}
-        with patch.object(monitor, 'zeroclaw_run', return_value=response) as run, patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': 'monitor__call_tool', 'content': '{"result":"value=1","warnings":null}'}]) as http, patch.object(monitor.time, 'time', return_value=50000), patch.dict(os.environ, {'HERMES_API_KEY': 'test'}):
+        with patch.object(monitor, 'zeroclaw_run', return_value=response) as run, patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': 'monitor__call_tool', 'content': '{"result":"value=1","warnings":null}'}]) as http, patch.object(monitor.time, 'time', return_value=50000):
             self.assertEqual({k: v for k, v in monitor.investigate(self.evidence()[0]).items() if k in assessment}, assessment)
         messages = run.call_args.args[0]['messages']
         self.assertEqual([message['role'] for message in messages], ['system', 'user'])
@@ -210,7 +210,7 @@ class MonitoringTests(unittest.TestCase):
     def test_memory_history_is_scoped_and_bounded_without_threshold_filter(self):
         item = {'check': 'memory_pressure', 'query': monitor.QUERIES['memory_pressure'], 'labels': {'namespace': 'rook-ceph', 'pod': 'mgr-pod', 'container': 'mgr'}}
         assessment = {'verdict': 'uncertain', 'summary': 'Review', 'evidence': [], 'next_step': 'Observe'}
-        with patch.object(monitor, 'zeroclaw_run', return_value={'choices': [{'message': {'content': json.dumps(assessment)}}]}) as run, patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': 'monitor__call_tool', 'content': '{"result":"counts"}'}]), patch.object(monitor.time, 'time', return_value=50000), patch.dict(os.environ, {'HERMES_API_KEY': 'test'}):
+        with patch.object(monitor, 'zeroclaw_run', return_value={'choices': [{'message': {'content': json.dumps(assessment)}}]}) as run, patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': 'monitor__call_tool', 'content': '{"result":"counts"}'}]), patch.object(monitor.time, 'time', return_value=50000):
             monitor.investigate(item)
         prompt = run.call_args.args[0]['messages'][1]['content']
         arguments, _ = json.JSONDecoder().raw_decode(prompt.split('Use this bounded metric history: ', 1)[1])
@@ -222,7 +222,7 @@ class MonitoringTests(unittest.TestCase):
     def test_log_review_supplies_validated_logsql_and_required_time(self):
         item = {'check': 'scheduled_log_review', 'review_start': 40000, 'review_end': 50000}
         assessment = {'verdict': 'uncertain', 'summary': 'Review', 'evidence': [], 'next_step': 'Observe'}
-        with patch.object(monitor, 'zeroclaw_run', return_value={'choices': [{'message': {'content': json.dumps(assessment)}}]}) as run, patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': 'monitor__call_tool', 'content': '{"result":"counts"}'}]), patch.dict(os.environ, {'HERMES_API_KEY': 'test'}):
+        with patch.object(monitor, 'zeroclaw_run', return_value={'choices': [{'message': {'content': json.dumps(assessment)}}]}) as run, patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': 'monitor__call_tool', 'content': '{"result":"counts"}'}]):
             monitor.investigate(item)
         prompt = run.call_args.args[0]['messages'][1]['content']
         arguments, _ = json.JSONDecoder().raw_decode(prompt.split('per-stream comparison: ', 1)[1])
@@ -234,14 +234,14 @@ class MonitoringTests(unittest.TestCase):
     def test_formatting_shares_the_investigation_deadline(self):
         assessment = {'verdict': 'expected', 'summary': 'Stable', 'evidence': [], 'next_step': 'Observe'}
         responses = [{'choices': [{'message': {'content': 'Plain text'}}]}, {'choices': [{'message': {'content': json.dumps(assessment)}}]}]
-        with patch.object(monitor.time, 'monotonic', side_effect=[0, 1, 359]), patch.object(monitor, 'zeroclaw_run', side_effect=responses) as run, patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': 'monitor__call_tool', 'content': '{"result":"counts"}'}]), patch.dict(os.environ, {'HERMES_API_KEY': 'test'}):
+        with patch.object(monitor.time, 'monotonic', side_effect=[0, 1, 359]), patch.object(monitor, 'zeroclaw_run', side_effect=responses) as run, patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': 'monitor__call_tool', 'content': '{"result":"counts"}'}]):
             monitor.investigate(self.evidence()[0])
         self.assertEqual([call.kwargs['timeout'] for call in run.call_args_list], [359, 1])
 
     def test_assessment_without_actual_tool_execution_rejected(self):
         assessment = {'verdict': 'actionable', 'summary': 'Claim', 'evidence': ['Unverified query'], 'next_step': 'Check'}
         response = {'choices': [{'message': {'content': json.dumps(assessment)}}]}
-        with patch.object(monitor, 'zeroclaw_run', return_value=response), patch.object(monitor, 'session_messages', return_value=[]), patch.dict(os.environ, {'HERMES_API_KEY': 'test'}):
+        with patch.object(monitor, 'zeroclaw_run', return_value=response), patch.object(monitor, 'session_messages', return_value=[]):
             with self.assertRaisesRegex(ValueError, 'recorded MCP'):
                 monitor.investigate(self.evidence()[0])
 
@@ -249,7 +249,7 @@ class MonitoringTests(unittest.TestCase):
         assessment = {'verdict': 'expected', 'summary': 'Claim', 'evidence': [], 'next_step': 'Observe'}
         response = {'choices': [{'message': {'content': json.dumps(assessment)}}]}
         for name in ('monitor__search_tools', 'monitor__get_tool_schema', 'tool_call', 'mcp__unifi__query', 'mcp__prometheus__range_query'):
-            with self.subTest(tool=name), patch.object(monitor, 'zeroclaw_run', return_value=response), patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': name}]), patch.dict(os.environ, {'HERMES_API_KEY': 'test'}):
+            with self.subTest(tool=name), patch.object(monitor, 'zeroclaw_run', return_value=response), patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': name}]):
                 with self.assertRaisesRegex(ValueError, 'recorded MCP'):
                     monitor.investigate(self.evidence()[0])
 
@@ -267,7 +267,7 @@ class MonitoringTests(unittest.TestCase):
         plain = {'choices': [{'message': {'content': 'The targets are stable.'}}]}
         formatted = {'choices': [{'message': {'content': json.dumps(assessment)}}]}
         for content, success in (('{"result":"110"}', True), ('{"error":"query failed"}', False)):
-            with self.subTest(content=content), patch.object(monitor, 'zeroclaw_run', side_effect=[plain, formatted]) as run, patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': 'monitor__call_tool', 'content': content}]), patch.dict(os.environ, {'HERMES_API_KEY': 'test'}):
+            with self.subTest(content=content), patch.object(monitor, 'zeroclaw_run', side_effect=[plain, formatted]) as run, patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': 'monitor__call_tool', 'content': content}]):
                 if success:
                     self.assertEqual({k: v for k, v in monitor.investigate(self.evidence()[0]).items() if k in assessment}, assessment)
                 else:
@@ -282,7 +282,7 @@ class MonitoringTests(unittest.TestCase):
         response = {'choices': [{'message': {'content': 'Intro\n```json\n' + json.dumps(assessment) + '\n```'}}]}
         for content in ('{"error":"Invalid arguments: query is required"}', '{"error":"upstream failed","result":"partial"}', '{"result":"partial","warnings":["incomplete"]}', json.dumps({'result': json.dumps({'status': 'error', 'error': 'bad query'})}), json.dumps({'result': json.dumps({'result': 'Warning: The result was truncated', 'warnings': None})}), '{}', 'not json'):
             message = {'role': 'tool', 'tool_name': 'monitor__call_tool', 'content': content}
-            with self.subTest(content=content), patch.object(monitor, 'zeroclaw_run', return_value=response), patch.object(monitor, 'session_messages', return_value=[message, message]), patch.dict(os.environ, {'HERMES_API_KEY': 'test'}), self.assertRaisesRegex(ValueError, 'query success'):
+            with self.subTest(content=content), patch.object(monitor, 'zeroclaw_run', return_value=response), patch.object(monitor, 'session_messages', return_value=[message, message]), self.assertRaisesRegex(ValueError, 'query success'):
                 monitor.investigate(self.evidence()[0])
 
     def test_trace_exports_assessment_and_tool_events_without_credentials(self):
@@ -309,7 +309,7 @@ class MonitoringTests(unittest.TestCase):
         messages = [{'role': 'tool', 'tool_name': 'monitor__call_tool', 'content': '{"result":"counts"}'}]
         failures = [TimeoutError('private-secret'), monitor.ZeroClawRunNotStopped('private-secret')]
         for failure in failures:
-            with self.subTest(error=type(failure).__name__), patch.object(monitor, 'zeroclaw_run', side_effect=failure), patch.object(monitor, 'session_messages', return_value=messages), patch.dict(os.environ, {'HERMES_API_KEY': 'test'}):
+            with self.subTest(error=type(failure).__name__), patch.object(monitor, 'zeroclaw_run', side_effect=failure), patch.object(monitor, 'session_messages', return_value=messages):
                 with self.assertRaises(type(failure)) as caught:
                     monitor.investigate(self.evidence()[0])
             diagnostics = caught.exception.investigation
@@ -328,7 +328,7 @@ class MonitoringTests(unittest.TestCase):
             self.assertEqual(attributes['langfuse.trace.metadata.exception_class'], type(failure).__name__)
 
     def test_history_failure_does_not_replace_original_failure(self):
-        with patch.object(monitor, 'zeroclaw_run', side_effect=TimeoutError), patch.object(monitor, 'session_messages', side_effect=OSError), patch.dict(os.environ, {'HERMES_API_KEY': 'test'}):
+        with patch.object(monitor, 'zeroclaw_run', side_effect=TimeoutError), patch.object(monitor, 'session_messages', side_effect=OSError):
             with self.assertRaises(TimeoutError) as caught:
                 monitor.investigate(self.evidence()[0])
         self.assertEqual(caught.exception.investigation['tool_history_error'], 'OSError')
@@ -336,7 +336,7 @@ class MonitoringTests(unittest.TestCase):
 
     def test_invalid_format_retains_completed_tools_and_failure_stage(self):
         response = {'choices': [{'message': {'content': 'invalid JSON'}}]}
-        with patch.object(monitor, 'zeroclaw_run', return_value=response), patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': 'monitor__search_tools'}]), patch.dict(os.environ, {'HERMES_API_KEY': 'test'}):
+        with patch.object(monitor, 'zeroclaw_run', return_value=response), patch.object(monitor, 'session_messages', return_value=[{'role': 'tool', 'tool_name': 'monitor__search_tools'}]):
             with self.assertRaises(ValueError) as caught:
                 monitor.investigate(self.evidence()[0])
         self.assertEqual(caught.exception.investigation['failure_stage'], 'response_validation')

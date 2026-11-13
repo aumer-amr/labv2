@@ -1,16 +1,16 @@
 apiVersion: litellm.home-operations.com/v1alpha1
 kind: LiteLLMVirtualKey
 metadata:
-  name: windmill-github-hooks
+  name: zeroclaw-github-hooks
 spec:
-  keyAlias: windmill-github-hooks
+  keyAlias: zeroclaw-github-hooks
   mcpToolsets:
     - ENC[AES256_GCM,data:r6rBN47bLaz0zMczDVbJjZ17LFiMiJigfU6J8ISRTppWxTMz,iv:R4ZriK35YLdHUGeoieccupTlmOMRmZZp2og4c4RH6bU=,tag:wGmYqCnB7zG8QNEJUClGqA==,type:str]
   models:
     - no-model-access
   proxyRef: litellm
   secretKey: key
-  secretName: windmill-github-hooks-litellm
+  secretName: zeroclaw-github-hooks-litellm
 sops:
   age:
     - enc: |

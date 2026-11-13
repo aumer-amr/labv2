@@ -106,12 +106,12 @@ spec:
               PUBLICATION_API_KEY:
                 valueFrom:
                   secretKeyRef:
-                    name: windmill-github-hooks-litellm
+                    name: zeroclaw-github-hooks-litellm
                     key: key
               CLOUDFLARE_WAF_API_TOKEN:
                 valueFrom:
                   secretKeyRef:
-                    name: windmill-cloudflare-secret
+                    name: zeroclaw-cloudflare-secret
                     key: token
               LANGFUSE_PUBLIC_KEY:
                 valueFrom:
@@ -245,7 +245,7 @@ spec:
                 readOnly: true
       github-hooks:
         type: secret
-        name: windmill-github-hooks-config
+        name: zeroclaw-github-hooks-config
         advancedMounts:
           main:
             automation:
