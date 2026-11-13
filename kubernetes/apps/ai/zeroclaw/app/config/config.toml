@@ -1,0 +1,229 @@
+schema_version = 4
+
+[gateway]
+host = "0.0.0.0"
+port = 42617
+allow_public_bind = true
+# Envoy authenticates browser requests; automation tools bind only to loopback.
+require_pairing = false
+session_persistence = true
+request_timeout_secs = 300
+check_updates = false
+web_dist_dir = "/usr/share/zeroclawlabs/web/dist"
+
+[memory]
+backend = "sqlite.default"
+auto_save = true
+
+[storage.sqlite.default]
+
+[heartbeat]
+enabled = false
+
+[mcp]
+enabled = true
+deferred_loading = false
+
+[runtime_profiles.default]
+agentic = true
+max_tool_iterations = 20
+max_execution_tree_iterations = 30
+max_actions_per_hour = 200
+max_history_messages = 50
+keep_tool_context_turns = 50
+max_tool_result_chars = 60000
+
+[risk_profiles.default]
+level = "full"
+workspace_only = true
+allowed_tools = ["litellm__search_tools", "litellm__get_tool_schema", "litellm__call_tool", "memory_store", "memory_recall"]
+allowed_commands = []
+block_high_risk_commands = true
+
+[agents.main]
+model_provider = "openai.assistant"
+risk_profile = "default"
+runtime_profile = "default"
+mcp_bundles = ["litellm"]
+
+[agents.main.memory]
+backend = "sqlite"
+
+[agents.alerts]
+model_provider = "openai.monitor"
+risk_profile = "monitor"
+runtime_profile = "default"
+mcp_bundles = ["monitor"]
+
+[agents.alerts.memory]
+backend = "sqlite"
+
+[providers.models.openai.assistant]
+uri = "http://litellm.ai.svc.cluster.local:4000/v1"
+model = "qwen3.5-9b-fallback"
+
+[providers.models.openai.monitor]
+uri = "http://litellm.ai.svc.cluster.local:4000/v1"
+model = "qwen3.5-9b"
+
+[providers.models.openai.gpt_5_6_terra]
+uri = "http://litellm.ai.svc.cluster.local:4000/v1"
+model = "gpt-5.6-terra"
+
+[providers.models.openai.gpt_5_6_luna]
+uri = "http://litellm.ai.svc.cluster.local:4000/v1"
+model = "gpt-5.6-luna"
+
+[providers.models.openai.gpt_5_6_sol]
+uri = "http://litellm.ai.svc.cluster.local:4000/v1"
+model = "gpt-5.6-sol"
+
+[providers.models.openai.gpt_6_luna]
+uri = "http://litellm.ai.svc.cluster.local:4000/v1"
+model = "gpt-6-luna"
+
+[providers.models.openai.gpt_6_1_sol]
+uri = "http://litellm.ai.svc.cluster.local:4000/v1"
+model = "gpt-6.1-sol"
+
+[providers.models.openai.gpt_6_astra]
+uri = "http://litellm.ai.svc.cluster.local:4000/v1"
+model = "gpt-6-astra"
+
+[mcp_bundles.litellm]
+servers = ["litellm"]
+
+[[mcp.servers]]
+name = "litellm"
+transport = "http"
+url = "http://litellm.ai.svc.cluster.local:4000/mcp/proxy"
+tool_timeout_secs = 45
+max_response_bytes = 2000000
+
+[mcp_bundles.monitor]
+servers = ["monitor"]
+
+[[mcp.servers]]
+name = "monitor"
+transport = "http"
+url = "http://litellm.ai.svc.cluster.local:4000/mcp/proxy"
+tool_timeout_secs = 45
+max_response_bytes = 2000000
+
+[sop]
+sops_dir = "/sops"
+default_execution_mode = "auto"
+persist_runs = true
+max_concurrent_total = 1
+max_finished_runs = 100
+
+[risk_profiles.monitor]
+level = "full"
+workspace_only = true
+allowed_tools = ["monitor__search_tools", "monitor__get_tool_schema", "monitor__call_tool"]
+allowed_commands = []
+block_high_risk_commands = true
+
+# Profiles grant only their listed tools. No agent has shell or delegation access.
+[agents.investigator]
+model_provider = "openai.monitor"
+risk_profile = "monitor"
+runtime_profile = "default"
+mcp_bundles = ["monitor"]
+delegate_same_risk_profile = false
+
+[agents.investigator.memory]
+backend = "sqlite"
+
+[agents.monitor]
+model_provider = "openai.monitor"
+risk_profile = "monitor_schedule"
+runtime_profile = "automation"
+mcp_bundles = ["monitor_cycle"]
+cron_jobs = ["cluster_monitor"]
+delegate_same_risk_profile = false
+
+[agents.monitor.memory]
+backend = "sqlite"
+
+[agents.github_hooks]
+model_provider = "openai.monitor"
+risk_profile = "github_hooks"
+runtime_profile = "automation"
+mcp_bundles = ["github_hooks"]
+cron_jobs = ["github_hooks"]
+delegate_same_risk_profile = false
+
+[agents.github_hooks.memory]
+backend = "sqlite"
+
+[runtime_profiles.automation]
+agentic = true
+max_tool_iterations = 3
+max_execution_tree_iterations = 4
+max_actions_per_hour = 12
+max_history_messages = 10
+max_tool_result_chars = 4000
+agentic_timeout_secs = 720
+
+[risk_profiles.monitor_schedule]
+level = "full"
+workspace_only = true
+allowed_tools = ["monitor_cycle__run"]
+allowed_commands = []
+block_high_risk_commands = true
+
+[risk_profiles.github_hooks]
+level = "full"
+workspace_only = true
+allowed_tools = ["github_hooks__run"]
+allowed_commands = []
+block_high_risk_commands = true
+
+[mcp_bundles.monitor_cycle]
+servers = ["monitor_cycle"]
+
+[[mcp.servers]]
+name = "monitor_cycle"
+transport = "http"
+url = "http://127.0.0.1:42618/monitor"
+tool_timeout_secs = 660
+max_response_bytes = 16000
+
+[mcp_bundles.github_hooks]
+servers = ["github_hooks"]
+
+[[mcp.servers]]
+name = "github_hooks"
+transport = "http"
+url = "http://127.0.0.1:42618/github-hooks"
+tool_timeout_secs = 300
+max_response_bytes = 16000
+
+[scheduler]
+enabled = true
+max_concurrent = 1
+catch_up_on_startup = false
+max_run_history = 100
+
+[cron.cluster_monitor]
+name = "Cluster monitoring"
+job_type = "agent"
+# Verify credentials and stop the retired schedulers before enabling this job.
+enabled = false
+prompt = "Call monitor_cycle__run exactly once with no arguments. Report its result. Never claim that monitoring succeeded unless the tool reports success. Do not retry a failed or skipped run."
+allowed_tools = ["monitor_cycle__run"]
+uses_memory = false
+session_target = "isolated"
+schedule = { kind = "cron", expr = "*/15 * * * *", tz = "Europe/Amsterdam" }
+
+[cron.github_hooks]
+name = "GitHub webhook ranges"
+job_type = "agent"
+# Verify credentials and stop the retired schedulers before enabling this job.
+enabled = false
+prompt = "Call github_hooks__run exactly once with no arguments. Report its result. The tool alone validates and applies the scoped Cloudflare update. Do not retry a failed or skipped run."
+allowed_tools = ["github_hooks__run"]
+uses_memory = false
+session_target = "isolated"
+schedule = { kind = "cron", expr = "17 * * * *", tz = "Europe/Amsterdam" }

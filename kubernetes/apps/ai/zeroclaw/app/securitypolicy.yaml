@@ -1,0 +1,28 @@
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: zeroclaw-oidc
+spec:
+  mergeType: StrategicMerge
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: zeroclaw
+      sectionName: ui
+  oidc:
+    provider:
+      issuer: https://idm.aumer.dev/oauth2/openid/zeroclaw
+      authorizationEndpoint: https://idm.aumer.dev/ui/oauth2
+      tokenEndpoint: https://idm.aumer.dev/oauth2/token
+      backendRefs:
+        - name: kanidm
+          namespace: security
+          port: 8443
+    clientID: zeroclaw
+    clientSecret:
+      name: zeroclaw-secret
+    redirectURL: https://zeroclaw.aumer.dev/oauth2/callback
+    logoutPath: /logout
+    scopes:
+      - openid

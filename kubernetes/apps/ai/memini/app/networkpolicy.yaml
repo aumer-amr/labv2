@@ -40,14 +40,6 @@ spec:
       ports:
         - port: 8081
           protocol: TCP
-    - from:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/instance: hermes
-              app.kubernetes.io/name: hermes
-      ports:
-        - port: 8080
-          protocol: TCP
   egress:
     - to:
         - namespaceSelector:

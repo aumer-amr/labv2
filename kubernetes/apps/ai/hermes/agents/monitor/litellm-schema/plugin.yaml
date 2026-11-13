@@ -1,3 +1,0 @@
-name: litellm-schema
-version: "1.0.0"
-description: Type LiteLLM proxy arguments from schemas discovered in the current session.

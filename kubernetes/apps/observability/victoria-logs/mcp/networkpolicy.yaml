@@ -16,9 +16,6 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: litellm
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: hermes-monitor
           namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: ai

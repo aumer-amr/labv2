@@ -429,14 +429,6 @@ specs:
                 protocol: TCP
       - toServices:
           - k8sService:
-              serviceName: windmill-app
-              namespace: ai
-        toPorts:
-          - ports:
-              - port: "8000"
-                protocol: TCP
-      - toServices:
-          - k8sService:
               serviceName: karakeep
               namespace: administration
         toPorts:
@@ -461,11 +453,11 @@ specs:
                 protocol: TCP
       - toServices:
           - k8sService:
-              serviceName: hermes
+              serviceName: zeroclaw
               namespace: ai
         toPorts:
           - ports:
-              - port: "9119"
+              - port: "42617"
                 protocol: TCP
       - toServices:
           - k8sService:

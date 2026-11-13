@@ -2,6 +2,7 @@
 """Check AI routing invariants and alert behavior. Requires yq and promtool on PATH."""
 
 import json
+import tomllib
 from pathlib import Path
 import subprocess
 import tempfile
@@ -25,19 +26,12 @@ assert local["modelName"] == "qwen3.5-9b"
 assert not (models / "local.yaml").exists(), "Reuse the existing Qwen exposure"
 router = read_yaml(AI / "litellm/app/litellmproxy.yaml")["spec"]["routerSettings"]
 assert not router.get("fallbacks"), "Review local-only routing before adding proxy fallbacks"
-config_text = read_yaml(AI / "hermes/app/configmap.yaml")["data"]["config.yaml"]
-config = json.loads(subprocess.check_output(
-    ["yq", "-o=json", "."], input=config_text, text=True
-))
+config = tomllib.loads((AI / "zeroclaw/app/config/config.toml").read_text())
 primary = fallback["modelName"]
-assert config["model"]["default"] == primary
-assert config["model"]["context_length"] == 65536
-assert not config.get("fallback_providers"), "ChatGPT must remain opt-in"
-assert config["auxiliary"]["title_generation"]["model_upgrade_enabled"] is False
-assert config["model_overrides"]["lab-litellm"][fallback["modelName"]]["context_window"] == 65536
-assert config["agent"]["reasoning_overrides"][fallback["modelName"]] is False
-allowed = read_yaml(AI / "hermes/app/litellmvirtualkey.yaml")["spec"]["models"]
-assert {primary, "gpt-5.6-terra", "gpt-6.1-sol"} <= set(allowed), "Hermes must retain manual ChatGPT selection"
+assert config["agents"]["main"]["model_provider"] == "openai.assistant"
+assert config["providers"]["models"]["openai"]["assistant"]["model"] == primary
+allowed = read_yaml(AI / "zeroclaw/app/litellmvirtualkey.yaml")["spec"]["models"]
+assert {primary, "gpt-5.6-terra", "gpt-6.1-sol"} <= set(allowed), "Keep manual ChatGPT selection"
 
 webui = read_yaml(AI / "open-webui/app/helmrelease.yaml")["spec"]["values"]["controllers"]["open-webui"]["containers"]["app"]["env"]
 assert webui["DEFAULT_MODELS"] == primary
@@ -51,20 +45,17 @@ for app in ("open-webui", "memini"):
     permitted = read_yaml(AI / app / "app/litellmvirtualkey.yaml")["spec"]["models"]
     assert {primary, "gpt-6-luna"} <= set(permitted), f"{app} must allow Qwen and manual ChatGPT selection"
 
-monitor_config = json.loads(subprocess.check_output(
-    ["yq", "-o=json", "."], input=read_yaml(AI / "hermes/agents/monitor/configmap.yaml")["data"]["config.yaml"], text=True
-))
-assert monitor_config["model"]["default"] == local["modelName"]
-assert monitor_config["auxiliary"]["title_generation"]["model_upgrade_enabled"] is False
+monitor_config = config
+assert monitor_config["providers"]["models"]["openai"]["monitor"]["model"] == local["modelName"]
 for path in AI.rglob("*virtualkey.yaml"):
     key = read_yaml(path)
     permitted = key["spec"]["models"]
-    if key["metadata"]["name"] == "hermes-monitor":
+    if key["metadata"]["name"] == "zeroclaw-monitor":
         assert permitted == [local["modelName"]]
     else:
         assert local["modelName"] not in permitted, str(path)
         assert "*" not in permitted and permitted, str(path)
-    if key["metadata"]["name"] in ("hermes", "pr-reviewer", "open-webui", "memini"):
+    if key["metadata"]["name"] in ("zeroclaw", "pr-reviewer", "open-webui", "memini"):
         assert fallback["modelName"] in permitted
 inference = read_yaml(AI / "llmkube/models/qwen3-5-9b-fallback.yaml")["spec"]
 assert inference["modelRef"] == local["modelName"]
@@ -73,11 +64,6 @@ assert inference["contextSize"] == 65536 and inference["parallelSlots"] == 1
 assert inference["resources"] == {"cpu": "500m", "memory": "12Gi", "memoryLimit": "24Gi"}
 assert inference["podSecurityContext"]["runAsUser"] == 101
 assert inference["securityContext"]["runAsNonRoot"] is True
-cron = read_yaml(AI / "hermes/app/bootstrap/cron-jobs.yaml")["jobs"]
-assert all(job.get("enabled", True) is False for job in cron)
-assert next(j for j in cron if j["name"] == "Morning exception brief")["model"] == primary
-assert "model" not in next(j for j in cron if j["name"] == "Weekly personal review")
-
 # Exercise sustained failures, isolated failures, recovery, and namespace isolation.
 cases = [
     ("LlamaCppRequestsDeferred", 'llamacpp:requests_deferred{namespace="ai",service="qwen3.5-9b"}', "1x30", "0x30", 15,

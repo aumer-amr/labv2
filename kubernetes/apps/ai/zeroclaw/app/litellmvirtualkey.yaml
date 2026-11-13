@@ -1,0 +1,20 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMVirtualKey
+metadata:
+  name: zeroclaw
+spec:
+  keyAlias: zeroclaw
+  mcpToolsets:
+    - 2c2ac094-5960-4a5c-8eba-2afcd92500d6
+  models:
+    - qwen3.5-9b-fallback
+    - gpt-5.6-terra
+    - gpt-5.6-luna
+    - gpt-5.6-sol
+    - gpt-6-luna
+    - gpt-6.1-sol
+    - gpt-6-astra
+  proxyRef: litellm
+  secretKey: key
+  secretName: zeroclaw-litellm

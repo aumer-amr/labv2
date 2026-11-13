@@ -362,27 +362,6 @@ class ContextTests(unittest.TestCase):
         self.assertIn("Private rules marker", output["hookSpecificOutput"]["additionalContext"])
         self.assertFalse((root / "AGENTS.override.md").exists())
 
-    def test_hermes_uses_same_snapshot_without_exposing_broker_to_agent(self):
-        self.fetch()
-        module_path = ROOT / "kubernetes/apps/ai/hermes/app/bootstrap/bootstrap.py"
-        with patch.dict(sys.modules, {"yaml": types.ModuleType("yaml")}):
-            bootstrap = load("hermes_context_test", module_path)
-        data = self.directory.parent / "hermes"
-        original_path = Path
-        def paths(value):
-            if str(value) == "/run/private-context/bundle/current":
-                return self.directory / "current"
-            return original_path(value)
-        with patch.object(bootstrap, "DATA", data), patch.object(bootstrap, "Path", side_effect=paths), patch.object(bootstrap, "run") as run:
-            bootstrap.install_private_skills()
-            self.assertIn("fetch", run.call_args.args)
-            self.assertNotIn("--install-skills", run.call_args.args)
-            fetch_root = Path(run.call_args.args[run.call_args.args.index("--destination") + 1])
-            self.assertTrue(fetch_root.is_relative_to("/run/private-context"))
-            self.assertNotEqual(fetch_root, Path("/run/private-context"))
-            self.assertEqual((data / "private-prompts/example.txt").read_text(), "Private task marker\n")
-            self.assertEqual((data / "skills/private/example/scripts/assessment.py").stat().st_mode & 0o777, 0o700)
-            self.assertFalse((data / "skills/private/example/broker.py").exists())
 
 
 if __name__ == "__main__":
