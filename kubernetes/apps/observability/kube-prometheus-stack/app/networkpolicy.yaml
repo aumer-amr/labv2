@@ -97,8 +97,7 @@ spec:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
-              release: windmill
-              app: windmill-workers
+              app.kubernetes.io/name: zeroclaw
       ports:
         - port: 9093
           protocol: TCP
@@ -193,8 +192,7 @@ spec:
               kubernetes.io/metadata.name: ai
           podSelector:
             matchLabels:
-              release: windmill
-              app: windmill-workers
+              app.kubernetes.io/name: zeroclaw
       ports:
         - port: 9090
           protocol: TCP

@@ -14,6 +14,12 @@ spec:
           - name: alertname
             value: InfoInhibitor
             matchType: =
+      - receiver: zeroclaw
+        continue: true
+        matchers:
+          - name: severity
+            value: warning|critical
+            matchType: =~
       - receiver: pushover
         matchers:
           - name: severity
@@ -41,6 +47,17 @@ spec:
 
   receivers:
     - name: blackhole
+    - name: zeroclaw
+      webhookConfigs:
+        - url: https://zeroclaw.aumer.dev/sop/alertmanager
+          sendResolved: true
+          maxAlerts: 20
+          httpConfig:
+            authorization:
+              type: Bearer
+              credentials:
+                name: zeroclaw-alertmanager-secret
+                key: token
     - name: pushover
       pushoverConfigs:
         - token:
