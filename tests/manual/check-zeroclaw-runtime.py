@@ -120,7 +120,9 @@ threading.Thread(target=helper.serve_forever, daemon=True).start()
 server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
 threading.Thread(target=server.serve_forever, daemon=True).start()
 try:
-    for mode in ('investigator', 'alerts', 'cluster_monitor', 'github_hooks'):
+    for mode, manual in (('investigator', False), ('alerts', False),
+                         ('cluster_monitor', False), ('github_hooks', False),
+                         ('cluster_monitor', True)):
         calls.clear()
         tool_name = {'cluster_monitor': 'monitor_cycle__run', 'github_hooks': 'github_hooks__run'}.get(mode, 'monitor__call_tool')
         with tempfile.TemporaryDirectory() as directory:
@@ -131,7 +133,7 @@ try:
             sopdir.mkdir(parents=True)
             shutil.copyfile(WORKFLOW.parent / 'app/config/alertmanager.toml', sopdir / 'SOP.toml')
             config = config.replace('sops_dir = "/sops"', 'sops_dir = "' + directory + '/sops"')
-            if mode in ('cluster_monitor', 'github_hooks'):
+            if mode in ('cluster_monitor', 'github_hooks') and not manual:
                 # Exercise the actual scheduler tick, not just manual execution.
                 start = config.index('[cron.' + mode + ']')
                 before, section = config[:start], config[start:]
@@ -226,6 +228,11 @@ try:
                         assert len(calls) == 2, len(calls)
                         assert Path(directory, 'data/sop/runs.db').is_file()
                     elif mode in ('cluster_monitor', 'github_hooks'):
+                        if manual:
+                            jobs = monitor.http(monitor.ZEROCLAW + '/api/cron')['jobs']
+                            assert not next(job for job in jobs if job['id'] == mode)['enabled']
+                            result = monitor.http(monitor.ZEROCLAW + '/api/cron/' + mode + '/run', {})
+                            assert result['success'], result
                         for attempt in range(240):
                             runs = monitor.http(monitor.ZEROCLAW + '/api/cron/' + mode + '/runs')
                             if runs.get('runs'):
@@ -237,6 +244,11 @@ try:
                         receipt = automation.state.read('dispatch-' + mode)
                         assert receipt['status'] == 'completed', receipt
                         assert receipt['result'] == {'fixture': 'completed'}, receipt
+                        assert runs['runs'][0]['status'] == 'ok', runs
+                        assert runs['runs'][0]['execution'] == 'ok', runs
+                        if manual:
+                            jobs = monitor.http(monitor.ZEROCLAW + '/api/cron')['jobs']
+                            assert not next(job for job in jobs if job['id'] == mode)['enabled']
                         assert 'fixture' in json.dumps(runs), runs
                     else:
                         session_id = uuid.uuid4().hex
@@ -257,7 +269,7 @@ try:
                     except subprocess.TimeoutExpired:
                         process.kill()
                         process.wait(timeout=5)
-    print('Pinned ZeroClaw profiles, native scheduled tools, evidence persistence, and authenticated alert procedure passed')
+    print('Pinned ZeroClaw profiles, manual and scheduled tools, evidence persistence, and authenticated alert procedure passed')
 finally:
     server.shutdown()
     helper.shutdown()

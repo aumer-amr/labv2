@@ -27,7 +27,8 @@ JOB_ENV = {
 
 def run_job(path):
     job, script, timeout, interval = JOBS[path]
-    if not tomllib.loads(CONFIG.read_text())['cron'][job]['enabled']:
+    # Native cron controls automatic dispatch; monitoring also supports manual runs.
+    if job != 'cluster_monitor' and not tomllib.loads(CONFIG.read_text())['cron'][job]['enabled']:
         raise ValueError('Enable the native schedule first')
     # The lock and persisted attempt also cover model retries and daemon restarts.
     with state.lock('dispatch-' + job):
