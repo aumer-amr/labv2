@@ -72,6 +72,8 @@ The Hermes and Windmill application trees are removed, including their storage, 
 
 ZeroClaw owns the Cloudflare ExternalSecret, encrypted webhook configuration, and restricted LiteLLM publication key. Their resource names and all consumers use the `zeroclaw-` prefix. Credential payloads and tool restrictions remain unchanged.
 
+The three keys use independent toolsets named `zeroclaw`, `zeroclaw-monitor`, and `zeroclaw-publication`. They no longer depend on the retired applications' toolsets. The operator generates separate credentials from the ZeroClaw key definitions after deployment.
+
 Reverting manifests cannot recover deleted historical state. Reinstalling the old applications requires fresh state or an independently available backup.
 
 ## Verification
