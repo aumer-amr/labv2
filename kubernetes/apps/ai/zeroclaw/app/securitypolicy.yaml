@@ -23,6 +23,12 @@ spec:
     clientSecret:
       name: zeroclaw-secret
     redirectURL: https://zeroclaw.aumer.dev/oauth2/callback
+    # Expired dashboard polling must not accumulate OAuth flow cookies.
+    denyRedirect:
+      headers:
+        - name: ":path"
+          type: Prefix
+          value: /api/
     logoutPath: /logout
     scopes:
       - openid
