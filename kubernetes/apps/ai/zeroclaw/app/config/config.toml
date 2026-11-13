@@ -73,7 +73,7 @@ backend = "sqlite"
 
 [providers.models.openai.assistant]
 uri = "http://litellm.ai.svc.cluster.local:4000/v1"
-model = "qwen3.5-9b-fallback"
+model = "codex-gpt-6.1-sol"
 
 [providers.models.openai.monitor]
 uri = "http://litellm.ai.svc.cluster.local:4000/v1"

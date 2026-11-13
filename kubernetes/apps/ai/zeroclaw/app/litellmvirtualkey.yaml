@@ -8,6 +8,7 @@ spec:
   mcpToolsets:
     - 2c2ac094-5960-4a5c-8eba-2afcd92500d6
   models:
+    - codex-gpt-6.1-sol
     - qwen3.5-9b-fallback
     - gpt-5.6-terra
     - gpt-5.6-luna
