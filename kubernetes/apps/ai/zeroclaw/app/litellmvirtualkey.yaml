@@ -34,7 +34,7 @@ spec:
   proxyRef: litellm
   secretKey: key
   secretName: zeroclaw-monitor-litellm
-  rpmLimit: 20
+  rpmLimit: 120
 ---
 apiVersion: litellm.home-operations.com/v1alpha1
 kind: LiteLLMVirtualKey
