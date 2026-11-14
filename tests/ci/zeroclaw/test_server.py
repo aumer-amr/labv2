@@ -155,8 +155,14 @@ class BoundaryTests(unittest.TestCase):
         expected = {'main': 'litellm', 'alerts': 'monitor', 'investigator': 'monitor',
                     'monitor': 'monitor_cycle', 'github_hooks': 'github_hooks'}
         self.assertEqual(set(config['agents']), set(expected))
+        default_runtime = config['runtime_profiles']['default']
+        investigation_runtime = config['runtime_profiles']['investigation']
+        self.assertEqual(investigation_runtime, {**default_runtime, 'max_context_tokens': 64000})
+        self.assertNotIn('max_context_tokens', default_runtime)
         for name, bundle in expected.items():
             agent = config['agents'][name]
+            self.assertEqual(agent['runtime_profile'], 'investigation' if name in ('investigator', 'alerts')
+                             else 'default' if name == 'main' else 'automation')
             self.assertEqual(agent['mcp_bundles'], [bundle, 'memini_' + name])
             self.assertEqual(agent['skill_bundles'], ['baseline'])
             risk = config['risk_profiles'][agent['risk_profile']]

@@ -78,7 +78,8 @@ def fake_memory(url, body, token, **kwargs):
     assert scope in {'labv2/zeroclaw/main', 'labv2/zeroclaw/investigator'} if mode == 'delegation' else scope == 'labv2/zeroclaw/' + agent_alias
     assert body['params'] == {'name': 'memory_briefing', 'arguments': {'scope': 'full'}}
     memory_calls.append(scope)
-    return {'jsonrpc': '2.0', 'id': 1, 'result': {'content': [{'type': 'text', 'text': 'Fixture memory briefing'}]}}
+    briefing = 'memory ' * 1320 if mode == 'context_budget' else 'Fixture memory briefing'
+    return {'jsonrpc': '2.0', 'id': 1, 'result': {'content': [{'type': 'text', 'text': briefing}]}}
 
 
 def delegation_reply(body):
@@ -163,7 +164,9 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     message = {'role': 'assistant', 'content': json.dumps({'fixture': 'completed'} if mode in ('cluster_monitor', 'github_hooks') else assessment)}
                     reason = 'stop'
-            result = {'id': 'fake-completion', 'object': 'chat.completion', 'created': 1, 'model': 'qwen3.5-9b', 'choices': [{'index': 0, 'message': message, 'finish_reason': reason}], 'usage': {'prompt_tokens': 20, 'completion_tokens': 20, 'total_tokens': 40}}
+            # The live provider reports roughly twice the runtime's character estimate.
+            prompt_tokens = (len(json.dumps(body['messages'])) + len(json.dumps(body.get('tools', [])))) // 2 if mode == 'context_budget' else 20
+            result = {'id': 'fake-completion', 'object': 'chat.completion', 'created': 1, 'model': 'qwen3.5-9b', 'choices': [{'index': 0, 'message': message, 'finish_reason': reason}], 'usage': {'prompt_tokens': prompt_tokens, 'completion_tokens': 20, 'total_tokens': prompt_tokens + 20}}
             if body.get('stream'):
                 delta = copy.deepcopy(message)
                 for index, call in enumerate(delta.get('tool_calls', [])):

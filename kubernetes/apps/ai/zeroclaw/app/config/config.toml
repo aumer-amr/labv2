@@ -46,6 +46,18 @@ keep_tool_context_turns = 50
 max_tool_result_chars = 8000
 max_delegation_depth = 1
 
+[runtime_profiles.investigation]
+agentic = true
+max_tool_iterations = 20
+max_execution_tree_iterations = 30
+max_actions_per_hour = 200
+max_history_messages = 50
+keep_tool_context_turns = 50
+max_tool_result_chars = 8000
+max_delegation_depth = 1
+# Provider-reported usage exceeds the unconfigured 32k context fallback.
+max_context_tokens = 64000
+
 [delegate]
 agentic_timeout_secs = 240
 
@@ -73,7 +85,7 @@ backend = "sqlite"
 [agents.alerts]
 model_provider = "openai.investigator"
 risk_profile = "monitor"
-runtime_profile = "default"
+runtime_profile = "investigation"
 mcp_bundles = ["monitor", "memini_alerts"]
 skill_bundles = ["baseline"]
 
@@ -157,7 +169,7 @@ block_high_risk_commands = true
 [agents.investigator]
 model_provider = "openai.investigator"
 risk_profile = "monitor"
-runtime_profile = "default"
+runtime_profile = "investigation"
 mcp_bundles = ["monitor", "memini_investigator"]
 skill_bundles = ["baseline"]
 delegate_same_risk_profile = false
