@@ -161,7 +161,18 @@ class BoundaryTests(unittest.TestCase):
             self.assertEqual(agent['skill_bundles'], ['baseline'])
             risk = config['risk_profiles'][agent['risk_profile']]
             self.assertEqual(risk['allowed_commands'], [])
-            self.assertFalse({'shell', 'http_request', 'file_read', 'file_write', 'delegate', 'cron_add'} & set(risk['allowed_tools']))
+            self.assertFalse({'shell', 'http_request', 'file_read', 'file_write', 'cron_add'} & set(risk['allowed_tools']))
+            self.assertEqual('delegate' in risk['allowed_tools'], name == 'main')
+            if name == 'main':
+                self.assertFalse(agent['delegate_same_risk_profile'])
+                self.assertEqual(agent['delegates'], [{'agent': 'investigator', 'mode': 'independent'}])
+                self.assertEqual(risk['delegation_policy']['mode'], 'allow')
+                runtime = config['runtime_profiles'][agent['runtime_profile']]
+                self.assertEqual(runtime['max_delegation_depth'], 1)
+                self.assertLess(config['delegate']['agentic_timeout_secs'], config['gateway']['request_timeout_secs'])
+            else:
+                self.assertEqual(agent.get('delegates', []), [])
+                self.assertEqual(risk.get('delegation_policy', {'mode': 'forbidden'})['mode'], 'forbidden')
         for job in config['cron']:
             owners = [name for name, agent in config['agents'].items() if job in agent.get('cron_jobs', [])]
             self.assertEqual(len(owners), 1)

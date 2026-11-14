@@ -43,16 +43,23 @@ max_execution_tree_iterations = 30
 max_actions_per_hour = 200
 max_history_messages = 50
 keep_tool_context_turns = 50
-max_tool_result_chars = 60000
+max_tool_result_chars = 8000
+max_delegation_depth = 1
+
+[delegate]
+agentic_timeout_secs = 240
 
 [risk_profiles.default]
 level = "full"
 workspace_only = true
-allowed_tools = ["litellm__search_tools", "litellm__get_tool_schema", "litellm__call_tool", "memini_main__memory_briefing", "memini_main__memory_recall", "memini_main__memory_remember"]
+allowed_tools = ["delegate", "litellm__search_tools", "litellm__get_tool_schema", "litellm__call_tool", "memini_main__memory_briefing", "memini_main__memory_recall", "memini_main__memory_remember"]
 allowed_commands = []
 block_high_risk_commands = true
+delegation_policy = { mode = "allow" }
 
 [agents.main]
+delegate_same_risk_profile = false
+delegates = [{ agent = "investigator", mode = "independent" }]
 channels = ["discord.main"]
 model_provider = "openai.assistant"
 risk_profile = "default"
@@ -146,7 +153,7 @@ allowed_tools = ["monitor__search_tools", "monitor__get_tool_schema", "monitor__
 allowed_commands = []
 block_high_risk_commands = true
 
-# Profiles grant only their listed tools. No agent has shell or delegation access.
+# Only main can delegate, and only to investigator. No agent has shell access.
 [agents.investigator]
 model_provider = "openai.investigator"
 risk_profile = "monitor"

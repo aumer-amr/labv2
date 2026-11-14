@@ -17,6 +17,7 @@ import tempfile
 import threading
 import tomllib
 import uuid
+from types import SimpleNamespace
 from urllib.parse import urlencode
 from datetime import datetime, timedelta, timezone
 from urllib.error import HTTPError
@@ -58,14 +59,57 @@ tool_name = "monitor__call_tool"
 query_args = {'query': 'sum(up)', 'start_time': '100', 'end_time': '21700', 'step': '30m'}
 assessment = {'verdict': 'expected', 'summary': 'Stable', 'evidence': ['sum(up), 100-21700'], 'next_step': 'Observe'}
 memory_calls = []
+trim_events = []
+
+
+def observe_event(data):
+    value = json.loads(data)
+    if isinstance(value, dict) and value.get('type') == 'history_trimmed':
+        trim_events.append(value)
+    return value
+
+
+monitor.session.json = SimpleNamespace(loads=observe_event, dumps=json.dumps)
 
 
 def fake_memory(url, body, token, **kwargs):
     assert token == 'fixture-memory-key'
-    assert kwargs['headers']['X-Memini-Namespace'] == 'labv2/zeroclaw/' + agent_alias
+    scope = kwargs['headers']['X-Memini-Namespace']
+    assert scope in {'labv2/zeroclaw/main', 'labv2/zeroclaw/investigator'} if mode == 'delegation' else scope == 'labv2/zeroclaw/' + agent_alias
     assert body['params'] == {'name': 'memory_briefing', 'arguments': {'scope': 'full'}}
-    memory_calls.append(body)
+    memory_calls.append(scope)
     return {'jsonrpc': '2.0', 'id': 1, 'result': {'content': [{'type': 'text', 'text': 'Fixture memory briefing'}]}}
+
+
+def delegation_reply(body):
+    child = body['model'] == 'codex-gpt-6.1-sol'
+    assert child or body['model'] == 'gpt-6-luna'
+    calls.append(body)
+    count = sum(c['model'] == body['model'] for c in calls)
+    alias = 'investigator' if child else 'main'
+    available = {t['function']['name'] for t in body['tools']}
+    memory_tools = {'memini_' + alias + '__' + name for name in ('memory_briefing', 'memory_recall', 'memory_remember')}
+    expected = memory_tools | ({'monitor__call_tool'} if child else {'litellm__call_tool', 'delegate'})
+    assert available == expected, (alias, available)
+    context = json.dumps(body['messages'])
+    assert 'MEMINI_BASELINE_FIXTURE' in context and 'CAVEMAN_BASELINE_FIXTURE' in context
+    if count == 1:
+        name, arguments = 'memini_' + alias + '__memory_briefing', {}
+    elif child and count == 2:
+        name, arguments = 'monitor__call_tool', {'tool_id': 'range', 'arguments': query_args}
+    elif not child and count in (2, 3):
+        if count == 3:
+            assert not any(c['model'] == 'codex-gpt-6.1-sol' for c in calls)
+            assert 'not reachable' in context, context
+        name, arguments = 'delegate', {'agent': 'alerts' if count == 2 else 'investigator',
+                                      'prompt': 'Query the evidence once and return the assessment.'}
+    else:
+        if not child:
+            assert sum(c['model'] == 'codex-gpt-6.1-sol' for c in calls) == 3
+            assert 'Stable' in context
+        return {'role': 'assistant', 'content': json.dumps(assessment)}, 'stop'
+    return {'role': 'assistant', 'content': None, 'tool_calls': [{'id': alias + str(count), 'type': 'function',
+            'function': {'name': name, 'arguments': json.dumps(arguments)}}]}, 'tool_calls'
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -80,17 +124,23 @@ class Handler(BaseHTTPRequestHandler):
         assert self.headers.get('Authorization') == 'Bearer fixture-key'
         body = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
         if self.path.startswith('/v1/'):
-            assert body['model'] == expected_model, (mode, body['model'], expected_model)
+            if mode != 'delegation':
+                assert body['model'] == expected_model, (mode, body['model'], expected_model)
             if not body.get('tools') and body['messages'][0]['content'].startswith('You are a memory consolidation engine.'):
                 # The shared daemon retains the assistant's automatic memory behavior.
                 message = {'role': 'assistant', 'content': json.dumps({'history_entry': 'Fixture investigation completed', 'memory_update': ''})}
                 reason = 'stop'
+            elif mode == 'delegation':
+                message, reason = delegation_reply(body)
             else:
                 calls.append(body)
                 context = json.dumps(body['messages'])
                 assert 'MEMINI_BASELINE_FIXTURE' in context
                 assert 'CAVEMAN_BASELINE_FIXTURE' in context
                 tool = {'id': 'evidence-call', 'type': 'function', 'function': {'name': tool_name, 'arguments': json.dumps({} if mode in ('cluster_monitor', 'github_hooks') else {'tool_id': 'range', 'arguments': query_args})}}
+                if mode == 'context_budget':
+                    tool['id'] += str(len(calls))
+                    tool['function']['arguments'] = json.dumps({'tool_id': 'range', 'arguments': {**query_args, 'query': 'sum(up) # ' + str(len(calls))}})
                 if len(calls) == 1:
                     available = {t['function']['name'] for t in body['tools']}
                     memory_tools = {'memini_' + agent_alias + '__' + t for t in ('memory_briefing', 'memory_recall', 'memory_remember')}
@@ -101,11 +151,12 @@ class Handler(BaseHTTPRequestHandler):
                         assert available == {tool_name} | memory_tools, body['tools']
                     else:
                         assert not {'monitor_cycle__run', 'github_hooks__run'} & {t['function']['name'] for t in body['tools']}
-                    assert not {'shell', 'file_read', 'file_write', 'http_request', 'browser', 'delegate', 'cron_add'} & {t['function']['name'] for t in body['tools']}
+                    assert not {'shell', 'file_read', 'file_write', 'http_request', 'browser', 'cron_add'} & available
+                    assert ('delegate' in available) == (agent_alias == 'main')
                     message = {'role': 'assistant', 'content': None, 'tool_calls': [{'id': 'memory-call', 'type': 'function',
                                'function': {'name': 'memini_' + agent_alias + '__memory_briefing', 'arguments': '{}'}}]}
                     reason = 'tool_calls'
-                elif len(calls) == 2:
+                elif len(calls) == 2 or mode == 'context_budget' and len(calls) <= 7:
                     assert len(memory_calls) == 1
                     message = {'role': 'assistant', 'content': None, 'tool_calls': [tool]}
                     reason = 'tool_calls'
@@ -138,8 +189,12 @@ class Handler(BaseHTTPRequestHandler):
             elif method == 'tools/list':
                 value = {'tools': [{'name': 'call_tool', 'description': 'Query read-only evidence', 'inputSchema': {'type': 'object', 'properties': {'tool_id': {'type': 'string'}, 'arguments': {'type': 'object', 'additionalProperties': True}}, 'required': ['tool_id', 'arguments']}}]}
             elif method == 'tools/call':
-                assert body['params']['arguments'] == {'tool_id': 'range', 'arguments': query_args}
-                value = {'content': [{'type': 'text', 'text': json.dumps({'result': 'counts', 'warnings': None})}], 'structuredContent': {'result': 'counts', 'warnings': None}, 'isError': False}
+                if mode == 'context_budget':
+                    assert body['params']['arguments']['arguments']['query'].startswith('sum(up) # ')
+                else:
+                    assert body['params']['arguments'] == {'tool_id': 'range', 'arguments': query_args}
+                payload = {'result': 'sample ' * 16000 if mode == 'context_budget' else 'counts', 'warnings': None}
+                value = {'content': [{'type': 'text', 'text': json.dumps(payload)}], 'structuredContent': payload, 'isError': False}
             else:
                 value = {}
             result = {'jsonrpc': '2.0', 'id': body['id'], 'result': value}
@@ -156,12 +211,13 @@ threading.Thread(target=helper.serve_forever, daemon=True).start()
 server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
 threading.Thread(target=server.serve_forever, daemon=True).start()
 try:
-    for mode, manual in (('main', False), ('investigator', False), ('alerts', False),
+    for mode, manual in (('delegation', False), ('context_budget', False), ('main', False), ('investigator', False), ('alerts', False),
                          ('cluster_monitor', False), ('github_hooks', False),
                          ('cluster_monitor', True)):
         calls.clear()
         memory_calls.clear()
-        agent_alias = 'monitor' if mode == 'cluster_monitor' else mode
+        trim_events.clear()
+        agent_alias = {'cluster_monitor': 'monitor', 'context_budget': 'investigator', 'delegation': 'main'}.get(mode, mode)
         expected_model = {'main': 'gpt-6-luna', 'investigator': 'codex-gpt-6.1-sol',
                           'alerts': 'codex-gpt-6.1-sol'}.get(agent_alias, 'qwen3.5-9b')
         tool_name = {'main': 'litellm__call_tool', 'cluster_monitor': 'monitor_cycle__run', 'github_hooks': 'github_hooks__run'}.get(mode, 'monitor__call_tool')
@@ -306,9 +362,14 @@ try:
                         if mode == 'investigator':
                             assert activity == [{'name': 'memini_investigator__memory_briefing', 'query_success': False},
                                                 {'name': 'monitor__call_tool', 'query_success': True, 'query_arguments': query_args}], activity
-                        assert len(calls) == 3, len(calls)
-                    assert len(memory_calls) == 1
+                        assert len(calls) == {'context_budget': 8, 'delegation': 7}.get(mode, 3), len(calls)
+                    assert not any(event.get('unsatisfiable_floor') for event in trim_events), trim_events
+                    if mode == 'delegation':
+                        assert memory_calls == ['labv2/zeroclaw/main', 'labv2/zeroclaw/investigator'], memory_calls
+                    else:
+                        assert len(memory_calls) == 1
                 except Exception:
+                    print('History trim events:', trim_events, file=sys.stderr)
                     output.seek(0)
                     print(output.read().decode()[-3000:], file=sys.stderr)
                     print([(c.get('model'), [t['function']['name'] for t in c.get('tools', [])]) for c in calls], file=sys.stderr)
