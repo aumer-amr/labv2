@@ -15,6 +15,7 @@ from pathlib import Path
 import sys
 import tempfile
 import threading
+import tomllib
 import uuid
 from datetime import datetime, timedelta, timezone
 from urllib.error import HTTPError
@@ -38,6 +39,17 @@ if shutil.which("zeroclaw") is None:
                     '-v', str(Path(__file__).resolve()) + ':/repo/tests/manual/check-zeroclaw-runtime.py:ro',
                     'labv2-zeroclaw-test:0.9.0', 'python3', '/repo/tests/manual/check-zeroclaw-runtime.py'], check=True)
     raise SystemExit(0)
+
+with tempfile.TemporaryDirectory() as directory:
+    config = (WORKFLOW.parent / 'app/config/config.toml').read_text()
+    config = config.replace('[channels.discord.main]\nenabled = true', '[channels.discord.main]\nenabled = false')
+    Path(directory, 'config.toml').write_text(config)
+    patch_ops = [{'op': 'replace', 'path': '/providers/models/openai/assistant/model', 'value': 'qwen3.5-9b'}]
+    result = subprocess.run(['zeroclaw', '--config-dir', directory, 'config', 'patch', '--json'],
+                            input=json.dumps(patch_ops), text=True, capture_output=True)
+    assert result.returncode == 0, result.stderr
+    saved = tomllib.loads(Path(directory, 'config.toml').read_text())
+    assert saved['providers']['models']['openai']['assistant']['model'] == 'qwen3.5-9b'
 
 calls = []
 tool_name = "monitor__call_tool"

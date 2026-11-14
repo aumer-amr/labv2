@@ -203,7 +203,7 @@ servers = ["monitor_cycle"]
 name = "monitor_cycle"
 transport = "http"
 url = "http://127.0.0.1:42618/monitor"
-tool_timeout_secs = 660
+tool_timeout_secs = 600
 max_response_bytes = 16000
 
 [mcp_bundles.github_hooks]
