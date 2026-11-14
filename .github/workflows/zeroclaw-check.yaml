@@ -7,6 +7,8 @@ on:
       - .github/workflows/zeroclaw-check.yaml
       - kubernetes/apps/ai/zeroclaw/**
       - tests/ci/zeroclaw/**
+      - scripts/zeroclaw-bootstrap.py
+      - scripts/langfuse-private.py
 permissions:
   contents: read
 jobs:

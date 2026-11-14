@@ -48,7 +48,7 @@ max_tool_result_chars = 60000
 [risk_profiles.default]
 level = "full"
 workspace_only = true
-allowed_tools = ["litellm__search_tools", "litellm__get_tool_schema", "litellm__call_tool", "memory_store", "memory_recall"]
+allowed_tools = ["litellm__search_tools", "litellm__get_tool_schema", "litellm__call_tool", "memini_main__memory_briefing", "memini_main__memory_recall", "memini_main__memory_remember"]
 allowed_commands = []
 block_high_risk_commands = true
 
@@ -57,7 +57,8 @@ channels = ["discord.main"]
 model_provider = "openai.assistant"
 risk_profile = "default"
 runtime_profile = "default"
-mcp_bundles = ["litellm"]
+mcp_bundles = ["litellm", "memini_main"]
+skill_bundles = ["baseline"]
 
 [agents.main.memory]
 backend = "sqlite"
@@ -66,7 +67,8 @@ backend = "sqlite"
 model_provider = "openai.monitor"
 risk_profile = "monitor"
 runtime_profile = "default"
-mcp_bundles = ["monitor"]
+mcp_bundles = ["monitor", "memini_alerts"]
+skill_bundles = ["baseline"]
 
 [agents.alerts.memory]
 backend = "sqlite"
@@ -136,7 +138,7 @@ max_finished_runs = 100
 [risk_profiles.monitor]
 level = "full"
 workspace_only = true
-allowed_tools = ["monitor__search_tools", "monitor__get_tool_schema", "monitor__call_tool"]
+allowed_tools = ["monitor__search_tools", "monitor__get_tool_schema", "monitor__call_tool", "memini_alerts__memory_briefing", "memini_alerts__memory_recall", "memini_alerts__memory_remember", "memini_investigator__memory_briefing", "memini_investigator__memory_recall", "memini_investigator__memory_remember"]
 allowed_commands = []
 block_high_risk_commands = true
 
@@ -145,7 +147,8 @@ block_high_risk_commands = true
 model_provider = "openai.monitor"
 risk_profile = "monitor"
 runtime_profile = "default"
-mcp_bundles = ["monitor"]
+mcp_bundles = ["monitor", "memini_investigator"]
+skill_bundles = ["baseline"]
 delegate_same_risk_profile = false
 
 [agents.investigator.memory]
@@ -155,7 +158,8 @@ backend = "sqlite"
 model_provider = "openai.monitor"
 risk_profile = "monitor_schedule"
 runtime_profile = "automation"
-mcp_bundles = ["monitor_cycle"]
+mcp_bundles = ["monitor_cycle", "memini_monitor"]
+skill_bundles = ["baseline"]
 cron_jobs = ["cluster_monitor"]
 delegate_same_risk_profile = false
 
@@ -166,7 +170,8 @@ backend = "sqlite"
 model_provider = "openai.monitor"
 risk_profile = "github_hooks"
 runtime_profile = "automation"
-mcp_bundles = ["github_hooks"]
+mcp_bundles = ["github_hooks", "memini_github_hooks"]
+skill_bundles = ["baseline"]
 cron_jobs = ["github_hooks"]
 delegate_same_risk_profile = false
 
@@ -175,8 +180,8 @@ backend = "sqlite"
 
 [runtime_profiles.automation]
 agentic = true
-max_tool_iterations = 3
-max_execution_tree_iterations = 4
+max_tool_iterations = 6
+max_execution_tree_iterations = 7
 max_actions_per_hour = 12
 max_history_messages = 10
 max_tool_result_chars = 4000
@@ -185,14 +190,14 @@ agentic_timeout_secs = 720
 [risk_profiles.monitor_schedule]
 level = "full"
 workspace_only = true
-allowed_tools = ["monitor_cycle__run"]
+allowed_tools = ["monitor_cycle__run", "memini_monitor__memory_briefing", "memini_monitor__memory_recall", "memini_monitor__memory_remember"]
 allowed_commands = []
 block_high_risk_commands = true
 
 [risk_profiles.github_hooks]
 level = "full"
 workspace_only = true
-allowed_tools = ["github_hooks__run"]
+allowed_tools = ["github_hooks__run", "memini_github_hooks__memory_briefing", "memini_github_hooks__memory_recall", "memini_github_hooks__memory_remember"]
 allowed_commands = []
 block_high_risk_commands = true
 
@@ -228,7 +233,7 @@ job_type = "agent"
 # Verify credentials and stop the retired schedulers before enabling this job.
 enabled = false
 prompt = "Call monitor_cycle__run exactly once with no arguments. Report its result. Never claim that monitoring succeeded unless the tool reports success. Do not retry a failed or skipped run."
-allowed_tools = ["monitor_cycle__run"]
+allowed_tools = ["monitor_cycle__run", "memini_monitor__memory_briefing", "memini_monitor__memory_recall", "memini_monitor__memory_remember"]
 uses_memory = false
 session_target = "isolated"
 schedule = { kind = "cron", expr = "*/15 * * * *", tz = "Europe/Amsterdam" }
@@ -239,7 +244,59 @@ job_type = "agent"
 # Verify credentials and stop the retired schedulers before enabling this job.
 enabled = false
 prompt = "Call github_hooks__run exactly once with no arguments. Report its result. The tool alone validates and applies the scoped Cloudflare update. Do not retry a failed or skipped run."
-allowed_tools = ["github_hooks__run"]
+allowed_tools = ["github_hooks__run", "memini_github_hooks__memory_briefing", "memini_github_hooks__memory_recall", "memini_github_hooks__memory_remember"]
 uses_memory = false
 session_target = "isolated"
 schedule = { kind = "cron", expr = "17 * * * *", tz = "Europe/Amsterdam" }
+
+[skill_bundles.baseline]
+
+[mcp_bundles.memini_main]
+servers = ["memini_main"]
+
+[[mcp.servers]]
+name = "memini_main"
+transport = "http"
+url = "http://127.0.0.1:42618/memory/main"
+tool_timeout_secs = 20
+max_response_bytes = 2000000
+
+[mcp_bundles.memini_alerts]
+servers = ["memini_alerts"]
+
+[[mcp.servers]]
+name = "memini_alerts"
+transport = "http"
+url = "http://127.0.0.1:42618/memory/alerts"
+tool_timeout_secs = 20
+max_response_bytes = 2000000
+
+[mcp_bundles.memini_investigator]
+servers = ["memini_investigator"]
+
+[[mcp.servers]]
+name = "memini_investigator"
+transport = "http"
+url = "http://127.0.0.1:42618/memory/investigator"
+tool_timeout_secs = 20
+max_response_bytes = 2000000
+
+[mcp_bundles.memini_monitor]
+servers = ["memini_monitor"]
+
+[[mcp.servers]]
+name = "memini_monitor"
+transport = "http"
+url = "http://127.0.0.1:42618/memory/monitor"
+tool_timeout_secs = 20
+max_response_bytes = 2000000
+
+[mcp_bundles.memini_github_hooks]
+servers = ["memini_github_hooks"]
+
+[[mcp.servers]]
+name = "memini_github_hooks"
+transport = "http"
+url = "http://127.0.0.1:42618/memory/github_hooks"
+tool_timeout_secs = 20
+max_response_bytes = 2000000

@@ -196,7 +196,8 @@ class MonitoringTests(unittest.TestCase):
             self.assertEqual({k: v for k, v in monitor.investigate(self.evidence()[0]).items() if k in assessment}, assessment)
         messages = run.call_args.args[0]['messages']
         self.assertEqual([message['role'] for message in messages], ['system', 'user'])
-        self.assertIn('first response must call monitor__search_tools', messages[0]['content'])
+        self.assertIn('After the session memory briefing, call monitor__search_tools', messages[0]['content'])
+        self.assertIn('only fresh monitoring query results count as evidence', messages[0]['content'])
         self.assertIn('monitor__get_tool_schema', messages[0]['content'])
         self.assertIn('monitor__call_tool with tool_id and arguments', messages[0]['content'])
         self.assertIn('read-only', messages[0]['content'])

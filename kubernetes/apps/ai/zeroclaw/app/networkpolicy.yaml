@@ -25,6 +25,14 @@ spec:
     - to:
         - podSelector:
             matchLabels:
+              app.kubernetes.io/instance: memini
+              app.kubernetes.io/name: memini
+      ports:
+        - port: 8080
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
               k8s-app: kube-dns
           namespaceSelector:
             matchLabels:

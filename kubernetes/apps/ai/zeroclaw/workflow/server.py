@@ -11,6 +11,7 @@ import tomllib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import state
+import memory
 
 WORKFLOW = Path(__file__).resolve().parent
 CONFIG = Path('/config/config.toml')
@@ -63,6 +64,8 @@ def run_job(path):
 
 
 def rpc(path, body):
+    if path.startswith('/memory/'):
+        return memory.rpc(path, body)
     if path not in JOBS or not isinstance(body, dict) or body.get('jsonrpc') != '2.0':
         raise ValueError('Invalid MCP request')
     method = body.get('method')

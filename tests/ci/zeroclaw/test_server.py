@@ -157,7 +157,8 @@ class BoundaryTests(unittest.TestCase):
         self.assertEqual(set(config['agents']), set(expected))
         for name, bundle in expected.items():
             agent = config['agents'][name]
-            self.assertEqual(agent['mcp_bundles'], [bundle])
+            self.assertEqual(agent['mcp_bundles'], [bundle, 'memini_' + name])
+            self.assertEqual(agent['skill_bundles'], ['baseline'])
             risk = config['risk_profiles'][agent['risk_profile']]
             self.assertEqual(risk['allowed_commands'], [])
             self.assertFalse({'shell', 'http_request', 'file_read', 'file_write', 'delegate', 'cron_add'} & set(risk['allowed_tools']))
@@ -168,7 +169,10 @@ class BoundaryTests(unittest.TestCase):
             self.assertFalse(config['cron'][job]['uses_memory'])
         for name in ('monitor', 'github_hooks'):
             risk = config['risk_profiles'][config['agents'][name]['risk_profile']]
-            self.assertEqual(risk['allowed_tools'], [expected[name] + '__run'])
+            memory_tools = ['memini_' + name + '__' + tool for tool in ('memory_briefing', 'memory_recall', 'memory_remember')]
+            self.assertEqual(risk['allowed_tools'], [expected[name] + '__run'] + memory_tools)
+            job = config['agents'][name]['cron_jobs'][0]
+            self.assertEqual(config['cron'][job]['allowed_tools'], risk['allowed_tools'])
 
     def test_discord_restricts_sender_and_locations_without_binding_automation_agents(self):
         config = tomllib.loads((WORKFLOW.parent / 'app/config/config.toml').read_text())

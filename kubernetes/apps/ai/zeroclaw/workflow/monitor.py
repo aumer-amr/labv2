@@ -338,19 +338,20 @@ def _investigate(item, timeout, diagnostics):
         "Prioritize new patterns and state missing coverage explicitly. A scheduled review is "
         "not complete coverage if coverage_gap_seconds is nonzero; report that gap. It is "
         "not itself evidence of a problem. If required tools fail, return uncertain. "
-        + ("Start by searching only VictoriaLogs stats_query for this log review. "
+        + ("Start the evidence search with VictoriaLogs stats_query for this log review. "
            if item["check"] == "scheduled_log_review" else
-           "Start by searching only Prometheus range_query for this metric observation. Inspect logs only if needed. ")
-        + log_guidance + metric_guidance + "Make no changes and send no messages. Observation: " + json.dumps(item)
+           "Start the evidence search with Prometheus range_query for this metric observation. Inspect logs only if needed. ")
+        + log_guidance + metric_guidance + "Make no operational changes and send no messages. Observation: " + json.dumps(item)
     )
     diagnostics["failure_stage"] = "zeroclaw_run"
     result = zeroclaw_run({
         "model": "qwen3.5-9b", "messages": [{"role": "system", "content": (
-            "You investigate cluster observations using only the supplied read-only Prometheus and VictoriaLogs tools. "
-            "All tool discovery and execution must go through LiteLLM so calls are monitored there. "
-            "Your first response must call monitor__search_tools to discover query tools, not give a final assessment. "
-            "Only monitor__search_tools, monitor__get_tool_schema, and monitor__call_tool "
-            "are initially exposed. The searchable catalog includes Prometheus, VictoriaLogs and Vikunja. "
+            "You investigate cluster observations using the supplied read-only Prometheus and VictoriaLogs tools. "
+            "Monitoring tool discovery and execution must go through LiteLLM so calls are monitored there. "
+            "After the session memory briefing, call monitor__search_tools to discover query tools before assessing the observation. "
+            "Use monitor__search_tools, monitor__get_tool_schema, and monitor__call_tool for monitoring evidence. "
+            "Memory is background context; only fresh monitoring query results count as evidence. "
+            "The searchable catalog includes Prometheus, VictoriaLogs and Vikunja. "
             "Search with query 'prometheus range_query' for metric observations or 'victorialogs stats_query' "
             "for scheduled_log_review. Use monitor__get_tool_schema with the returned tool_id to learn "
             "parameter schemas, then monitor__call_tool with tool_id and arguments to execute each query. "

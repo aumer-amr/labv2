@@ -17,6 +17,7 @@ import tempfile
 import threading
 import tomllib
 import uuid
+from urllib.parse import urlencode
 from datetime import datetime, timedelta, timezone
 from urllib.error import HTTPError
 from unittest.mock import patch
@@ -26,6 +27,7 @@ WORKFLOW = ROOT / 'kubernetes/apps/ai/zeroclaw/workflow'
 sys.path.insert(0, str(WORKFLOW))
 import monitor
 import server as automation
+import memory
 
 IMAGE = "ghcr.io/zeroclaw-labs/zeroclaw:default-features-v0.9.0@sha256:f63c01339d69187af86d3ec9df0d30e9b325c81bb1f558ef0be0bbf683c6ec4f"
 PYTHON = "docker.io/python:3.15.2-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928"
@@ -55,6 +57,15 @@ calls = []
 tool_name = "monitor__call_tool"
 query_args = {'query': 'sum(up)', 'start_time': '100', 'end_time': '21700', 'step': '30m'}
 assessment = {'verdict': 'expected', 'summary': 'Stable', 'evidence': ['sum(up), 100-21700'], 'next_step': 'Observe'}
+memory_calls = []
+
+
+def fake_memory(url, body, token, **kwargs):
+    assert token == 'fixture-memory-key'
+    assert kwargs['headers']['X-Memini-Namespace'] == 'labv2/zeroclaw/' + agent_alias
+    assert body['params'] == {'name': 'memory_briefing', 'arguments': {'scope': 'full'}}
+    memory_calls.append(body)
+    return {'jsonrpc': '2.0', 'id': 1, 'result': {'content': [{'type': 'text', 'text': 'Fixture memory briefing'}]}}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -75,14 +86,26 @@ class Handler(BaseHTTPRequestHandler):
                 reason = 'stop'
             else:
                 calls.append(body)
+                context = json.dumps(body['messages'])
+                assert 'MEMINI_BASELINE_FIXTURE' in context
+                assert 'CAVEMAN_BASELINE_FIXTURE' in context
                 tool = {'id': 'evidence-call', 'type': 'function', 'function': {'name': tool_name, 'arguments': json.dumps({} if mode in ('cluster_monitor', 'github_hooks') else {'tool_id': 'range', 'arguments': query_args})}}
                 if len(calls) == 1:
-                    assert tool_name in [t['function']['name'] for t in body['tools']], body.get('tools')
+                    available = {t['function']['name'] for t in body['tools']}
+                    memory_tools = {'memini_' + agent_alias + '__' + t for t in ('memory_briefing', 'memory_recall', 'memory_remember')}
+                    assert memory_tools <= available, available
+                    assert {t for t in available if t.startswith('memini_')} == memory_tools
+                    assert tool_name in available, body.get('tools')
                     if mode in ('cluster_monitor', 'github_hooks'):
-                        assert {t['function']['name'] for t in body['tools']} == {tool_name}, body['tools']
+                        assert available == {tool_name} | memory_tools, body['tools']
                     else:
                         assert not {'monitor_cycle__run', 'github_hooks__run'} & {t['function']['name'] for t in body['tools']}
                     assert not {'shell', 'file_read', 'file_write', 'http_request', 'browser', 'delegate', 'cron_add'} & {t['function']['name'] for t in body['tools']}
+                    message = {'role': 'assistant', 'content': None, 'tool_calls': [{'id': 'memory-call', 'type': 'function',
+                               'function': {'name': 'memini_' + agent_alias + '__memory_briefing', 'arguments': '{}'}}]}
+                    reason = 'tool_calls'
+                elif len(calls) == 2:
+                    assert len(memory_calls) == 1
                     message = {'role': 'assistant', 'content': None, 'tool_calls': [tool]}
                     reason = 'tool_calls'
                 else:
@@ -132,15 +155,22 @@ threading.Thread(target=helper.serve_forever, daemon=True).start()
 server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
 threading.Thread(target=server.serve_forever, daemon=True).start()
 try:
-    for mode, manual in (('investigator', False), ('alerts', False),
+    for mode, manual in (('main', False), ('investigator', False), ('alerts', False),
                          ('cluster_monitor', False), ('github_hooks', False),
                          ('cluster_monitor', True)):
         calls.clear()
-        tool_name = {'cluster_monitor': 'monitor_cycle__run', 'github_hooks': 'github_hooks__run'}.get(mode, 'monitor__call_tool')
+        memory_calls.clear()
+        agent_alias = 'monitor' if mode == 'cluster_monitor' else mode
+        tool_name = {'main': 'litellm__call_tool', 'cluster_monitor': 'monitor_cycle__run', 'github_hooks': 'github_hooks__run'}.get(mode, 'monitor__call_tool')
         with tempfile.TemporaryDirectory() as directory:
             os.chmod(directory, 0o777)
             base = 'http://127.0.0.1:' + str(server.server_port)
             config = (WORKFLOW.parent / 'app/config/config.toml').read_text().replace('http://litellm.ai.svc.cluster.local:4000', base)
+            config += '\n[skills]\nprompt_injection_mode = "compact"\n'
+            for skill, marker in [('memini', 'MEMINI_BASELINE_FIXTURE'), ('caveman', 'CAVEMAN_BASELINE_FIXTURE')]:
+                target = Path(directory, 'shared/skills/baseline', skill)
+                target.mkdir(parents=True)
+                (target / 'SKILL.md').write_text(f'---\nname: {skill}\ndescription: Test baseline policy\nalways: true\n---\n{marker}\n')
             sopdir = Path(directory, 'sops/alertmanager')
             sopdir.mkdir(parents=True)
             shutil.copyfile(WORKFLOW.parent / 'app/config/alertmanager.toml', sopdir / 'SOP.toml')
@@ -160,6 +190,7 @@ try:
             stale_lock.touch()
             stale_lock.chmod(0o660)
             automation.CONFIG = Path(directory, 'config.toml')
+            memory.CONFIG = automation.CONFIG
             automation.WORKFLOW = Path(directory, 'tools')
             automation.WORKFLOW.mkdir()
             for script in ('monitor.py', 'github_hooks.py'):
@@ -185,7 +216,7 @@ try:
                 'ZEROCLAW_mcp__servers__monitor__headers__authorization': 'Bearer fixture-key',
             })
             command = ['zeroclaw', '--config-dir', directory, '-v', 'daemon']
-            with tempfile.TemporaryFile() as output:
+            with tempfile.TemporaryFile() as output, patch.object(memory, 'http', fake_memory), patch.dict(os.environ, {'MEMINI_API_KEY': 'fixture-memory-key'}):
                 process = subprocess.Popen(command, stdout=output, stderr=output, env=environment)
                 try:
                     monitor.ZEROCLAW = 'http://127.0.0.1:' + str(port)
@@ -237,7 +268,7 @@ try:
                             time.sleep(0.25)
                         else:
                             raise AssertionError(runs)
-                        assert len(calls) == 2, len(calls)
+                        assert len(calls) == 3, len(calls)
                         assert Path(directory, 'data/sop/runs.db').is_file()
                     elif mode in ('cluster_monitor', 'github_hooks'):
                         if manual:
@@ -252,7 +283,7 @@ try:
                             time.sleep(0.25)
                         else:
                             raise AssertionError(runs)
-                        assert len(calls) == 2, (mode, len(calls), runs)
+                        assert len(calls) == 3, (mode, len(calls), runs)
                         receipt = automation.state.read('dispatch-' + mode)
                         assert receipt['status'] == 'completed', receipt
                         assert receipt['result'] == {'fixture': 'completed'}, receipt
@@ -264,15 +295,19 @@ try:
                         assert 'fixture' in json.dumps(runs), runs
                     else:
                         session_id = uuid.uuid4().hex
-                        response = monitor.zeroclaw_run({'messages': [{'role': 'user', 'content': 'Query the evidence once, then report the assessment.'}]}, session_id, 90)
+                        with patch.object(monitor.session, 'urlencode', lambda values: urlencode({**values, 'agent': agent_alias})):
+                            response = monitor.zeroclaw_run({'messages': [{'role': 'user', 'content': 'Query the evidence once, then report the assessment.'}]}, session_id, 90)
                         assert monitor.assessment_json(response['choices'][0]['message']['content']) == assessment
                         activity = monitor.investigation_tools(session_id)
-                        assert activity == [{'name': 'monitor__call_tool', 'query_success': True, 'query_arguments': query_args}], activity
-                        assert len(calls) == 2, len(calls)
+                        if mode == 'investigator':
+                            assert activity == [{'name': 'memini_investigator__memory_briefing', 'query_success': False},
+                                                {'name': 'monitor__call_tool', 'query_success': True, 'query_arguments': query_args}], activity
+                        assert len(calls) == 3, len(calls)
+                    assert len(memory_calls) == 1
                 except Exception:
                     output.seek(0)
                     print(output.read().decode()[-3000:], file=sys.stderr)
-                    print([(c.get('model'), [t['function']['name'] for t in c.get('tools', [])], str(c.get('messages', []))[:300]) for c in calls], file=sys.stderr)
+                    print([(c.get('model'), [t['function']['name'] for t in c.get('tools', [])]) for c in calls], file=sys.stderr)
                     raise
                 finally:
                     process.terminate()

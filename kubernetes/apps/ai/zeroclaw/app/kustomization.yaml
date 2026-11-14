@@ -24,6 +24,11 @@ configMapGenerator:
       - session.py=../workflow/session.py
       - github_hooks.py=../workflow/github_hooks.py
       - server.py=../workflow/server.py
+      - memory.py=../workflow/memory.py
+  - name: zeroclaw-bootstrap
+    files:
+      - zeroclaw-bootstrap.py=../../../../../scripts/zeroclaw-bootstrap.py
+      - langfuse-private.py=../../../../../scripts/langfuse-private.py
 generatorOptions:
   disableNameSuffixHash: true
   annotations:
