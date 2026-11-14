@@ -29,6 +29,7 @@ spec:
   mcpToolsets:
     - b01ebc5e-ff79-47c2-8af0-1ad72635f8aa
   models:
+    - codex-gpt-6.1-sol
     - qwen3.5-9b
   proxyRef: litellm
   secretKey: key

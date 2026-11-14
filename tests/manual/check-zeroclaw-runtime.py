@@ -80,6 +80,7 @@ class Handler(BaseHTTPRequestHandler):
         assert self.headers.get('Authorization') == 'Bearer fixture-key'
         body = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
         if self.path.startswith('/v1/'):
+            assert body['model'] == expected_model, (mode, body['model'], expected_model)
             if not body.get('tools') and body['messages'][0]['content'].startswith('You are a memory consolidation engine.'):
                 # The shared daemon retains the assistant's automatic memory behavior.
                 message = {'role': 'assistant', 'content': json.dumps({'history_entry': 'Fixture investigation completed', 'memory_update': ''})}
@@ -161,6 +162,8 @@ try:
         calls.clear()
         memory_calls.clear()
         agent_alias = 'monitor' if mode == 'cluster_monitor' else mode
+        expected_model = {'main': 'gpt-6-luna', 'investigator': 'codex-gpt-6.1-sol',
+                          'alerts': 'codex-gpt-6.1-sol'}.get(agent_alias, 'qwen3.5-9b')
         tool_name = {'main': 'litellm__call_tool', 'cluster_monitor': 'monitor_cycle__run', 'github_hooks': 'github_hooks__run'}.get(mode, 'monitor__call_tool')
         with tempfile.TemporaryDirectory() as directory:
             os.chmod(directory, 0o777)
@@ -207,6 +210,7 @@ try:
                 'ZEROCLAW_channels__discord__main__enabled': 'false',
                 'ZEROCLAW_channels__discord__main__bot_token': 'fixture-discord-token',
                 'ZEROCLAW_providers__models__openai__monitor__api_key': 'fixture-key',
+                'ZEROCLAW_providers__models__openai__investigator__api_key': 'fixture-key',
                 'ZEROCLAW_mcp__servers__litellm__headers__authorization': 'Bearer fixture-key',
             })
             environment.update({

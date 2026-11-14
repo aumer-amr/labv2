@@ -64,7 +64,7 @@ skill_bundles = ["baseline"]
 backend = "sqlite"
 
 [agents.alerts]
-model_provider = "openai.monitor"
+model_provider = "openai.investigator"
 risk_profile = "monitor"
 runtime_profile = "default"
 mcp_bundles = ["monitor", "memini_alerts"]
@@ -74,6 +74,10 @@ skill_bundles = ["baseline"]
 backend = "sqlite"
 
 [providers.models.openai.assistant]
+uri = "http://litellm.ai.svc.cluster.local:4000/v1"
+model = "gpt-6-luna"
+
+[providers.models.openai.investigator]
 uri = "http://litellm.ai.svc.cluster.local:4000/v1"
 model = "codex-gpt-6.1-sol"
 
@@ -144,7 +148,7 @@ block_high_risk_commands = true
 
 # Profiles grant only their listed tools. No agent has shell or delegation access.
 [agents.investigator]
-model_provider = "openai.monitor"
+model_provider = "openai.investigator"
 risk_profile = "monitor"
 runtime_profile = "default"
 mcp_bundles = ["monitor", "memini_investigator"]

@@ -10,6 +10,7 @@ import subprocess
 import unittest
 from pathlib import Path
 import sys
+import tomllib
 WORKFLOW = Path(__file__).resolve().parents[3] / 'kubernetes/apps/ai/zeroclaw/workflow'
 sys.path.insert(0, str(WORKFLOW))
 from unittest.mock import patch
@@ -302,6 +303,10 @@ class MonitoringTests(unittest.TestCase):
         self.assertTrue(http.call_args.args[0].endswith('/api/public/otel/v1/traces'))
         span = http.call_args.args[1]['resourceSpans'][0]['scopeSpans'][0]['spans'][0]
         attributes = {item['key']: item['value'] for item in span['attributes']}
+        config = tomllib.loads((WORKFLOW.parent / 'app/config/config.toml').read_text())
+        provider = config['agents']['investigator']['model_provider'].split('.')[-1]
+        self.assertEqual(attributes['langfuse.observation.metadata.model']['stringValue'],
+                         config['providers']['models']['openai'][provider]['model'])
         self.assertEqual(attributes['langfuse.session.id']['stringValue'], 'stable')
         self.assertEqual(span['startTimeUnixNano'], '1000000000')
         self.assertEqual(http.call_args.kwargs['headers']['x-langfuse-ingestion-version'], '4')

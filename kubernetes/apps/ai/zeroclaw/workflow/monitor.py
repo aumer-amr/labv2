@@ -345,7 +345,7 @@ def _investigate(item, timeout, diagnostics):
     )
     diagnostics["failure_stage"] = "zeroclaw_run"
     result = zeroclaw_run({
-        "model": "qwen3.5-9b", "messages": [{"role": "system", "content": (
+        "messages": [{"role": "system", "content": (
             "You investigate cluster observations using the supplied read-only Prometheus and VictoriaLogs tools. "
             "Monitoring tool discovery and execution must go through LiteLLM so calls are monitored there. "
             "After the session memory briefing, call monitor__search_tools to discover query tools before assessing the observation. "
@@ -378,7 +378,7 @@ def _investigate(item, timeout, diagnostics):
         # One format-only pass reuses the session and the original evidence deadline.
         diagnostics["failure_stage"] = "format_run"
         formatted = zeroclaw_run({
-            "model": "qwen3.5-9b", "stream": False, "messages": [{"role": "user", "content":
+            "stream": False, "messages": [{"role": "user", "content":
                 "MONITOR_FORMAT_ASSESSMENT_JSON: Serialize your previous assessment as JSON with verdict, "
                 "summary, evidence (at most five strings), and next_step. Reuse only the recorded query results. "
                 "Do not invent evidence or run additional tools. If the evidence is insufficient, use uncertain. "
@@ -417,7 +417,7 @@ def trace(run_id, item, assessment, start, end, error=None, mode="shadow"):
         "langfuse.session.id": item["id"],
         "langfuse.trace.metadata.automation_job_id": run_id,
         "langfuse.trace.metadata.observation_id": item["id"],
-        "langfuse.observation.metadata.model": "qwen3.5-9b",
+        "langfuse.observation.metadata.model": "codex-gpt-6.1-sol",
         "langfuse.observation.output": json.dumps({
             "verdict": assessment.get("verdict", "failed"),
             **{key: assessment[key] for key in ("summary", "evidence", "next_step") if key in assessment},
@@ -577,7 +577,7 @@ def draft_for(state, item, now):
         + "Investigated (UTC Unix seconds): " + str(item["last_investigated"]) + "\n\n"
         + "Collector query: `" + item["query"] + "`\n\n"
         + "Verified MCP query and time window: `" + json.dumps(verified, sort_keys=True) + "`\n\n"
-        + "Qwen interpretation (may contain errors; review against query evidence):\n\n" + assessment["summary"]
+        + "Agent interpretation (may contain errors; review against query evidence):\n\n" + assessment["summary"]
         + "\n\nEvidence references (model supplied):\n\n" + "\n".join("- " + e for e in assessment["evidence"])
         + "\n\nUncertainty: successful tool execution does not prove the interpretation or workload attribution."
         + "\n\nSuggested next step: " + assessment["next_step"]
