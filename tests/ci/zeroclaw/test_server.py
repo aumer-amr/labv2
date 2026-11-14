@@ -113,6 +113,15 @@ class ToolsTests(unittest.TestCase):
 
 
 class BoundaryTests(unittest.TestCase):
+    def test_mcp_deadlines_fit_config_validation_and_allow_job_cleanup(self):
+        config = tomllib.loads((WORKFLOW.parent / 'app/config/config.toml').read_text())
+        for entry in config['mcp']['servers']:
+            with self.subTest(server=entry['name']):
+                self.assertLessEqual(entry['tool_timeout_secs'], 600)
+                for path, (_, _, timeout, _) in server.JOBS.items():
+                    if entry['url'] == 'http://127.0.0.1:42618' + path:
+                        self.assertGreaterEqual(entry['tool_timeout_secs'] - timeout, 60)
+
     def test_server_initializes_state_before_listening(self):
         with patch.object(state, 'initialize') as initialize, patch('http.server.ThreadingHTTPServer') as http:
             def listen(*args):

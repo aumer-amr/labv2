@@ -15,7 +15,7 @@ import state
 WORKFLOW = Path(__file__).resolve().parent
 CONFIG = Path('/config/config.toml')
 JOBS = {
-    '/monitor': ('cluster_monitor', 'monitor.py', 600, 900),
+    '/monitor': ('cluster_monitor', 'monitor.py', 540, 900),
     '/github-hooks': ('github_hooks', 'github_hooks.py', 240, 3600),
 }
 COMMON_ENV = ('PATH', 'HOME', 'TZ', 'AUTOMATION_STATE_DIR', 'PUBLICATION_API_KEY')

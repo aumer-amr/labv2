@@ -493,7 +493,7 @@ def collect_main(mode="shadow"):
     save(state)
     investigated = []
     for item in candidates[:2]:
-        # Leave time to confirm cancellation and persist/export the result before the 600-second job limit.
+        # Leave time to confirm cancellation and persist/export the result before the 540-second job limit.
         remaining = run_deadline - time.monotonic() - 30
         timeout = 360
         if remaining < timeout:
