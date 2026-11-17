@@ -18,7 +18,7 @@ jobs:
   # Remove this build and the patch once upstream wires the evidence transport.
   build-runtime:
     if: ${{ !github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
