@@ -217,6 +217,7 @@ spec:
             dns:
               - matchName: helm.cilium.io
               - matchName: codeberg.org
+              - matchName: code.forgejo.org
               - matchName: github.com
               - matchPattern: "*.github.com"
               - matchName: ghcr.io
@@ -243,6 +244,7 @@ spec:
             dns:
               - matchName: helm.cilium.io
               - matchName: codeberg.org
+              - matchName: code.forgejo.org
               - matchName: github.com
               - matchPattern: "*.github.com"
               - matchName: ghcr.io
@@ -260,6 +262,7 @@ spec:
     - toFQDNs:
         - matchName: helm.cilium.io
         - matchName: codeberg.org
+        - matchName: code.forgejo.org
         - matchName: github.com
         - matchPattern: "*.github.com"
         - matchName: ghcr.io
