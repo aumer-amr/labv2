@@ -14,19 +14,19 @@ patches:
       name: .*-valkey
     patch: |-
       - op: replace
-        path: /spec/values/dataStorage/enabled
+        path: /spec/values/persistence/enabled
         value: true
       - op: add
-        path: /spec/values/dataStorage/requestedSize
+        path: /spec/values/persistence/size
         value: 1Gi
       - op: add
-        path: /spec/values/dataStorage/className
+        path: /spec/values/persistence/storageClass
         value: ceph-block
       - op: add
-        path: /spec/values/dataStorage/keepPvc
+        path: /spec/values/persistence/keepOnUninstall
         value: true
       - op: replace
-        path: /spec/values/valkeyConfig
+        path: /spec/values/extraConfig
         value: |-
           maxmemory 192mb
           maxmemory-policy noeviction
