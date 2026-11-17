@@ -10,21 +10,44 @@ spec:
         - alert: CNPGClusterOffline
           annotations:
             summary: PostgreSQL cluster ${NAMESPACE}/${APP} has no healthy metrics collector.
-          expr: cnpg_collector_up{namespace="${NAMESPACE}",cnpg_cluster="${APP}"} == 0
+          expr: |-
+            max(cnpg_collector_up{namespace="${NAMESPACE}",cluster="${APP}"}) == 0
+            or absent(max(cnpg_collector_up{namespace="${NAMESPACE}",cluster="${APP}"}))
           for: 5m
           labels:
+            namespace: ${NAMESPACE}
+            cluster: ${APP}
             severity: critical
         - alert: CNPGBackupFailed
           annotations:
             summary: The latest backup for PostgreSQL cluster ${NAMESPACE}/${APP} failed.
-          expr: barman_cloud_cloudnative_pg_io_last_failed_backup_timestamp{namespace="${NAMESPACE}",cnpg_cluster="${APP}"} > barman_cloud_cloudnative_pg_io_last_available_backup_timestamp{namespace="${NAMESPACE}",cnpg_cluster="${APP}"}
+          expr: |-
+            max(barman_cloud_cloudnative_pg_io_last_failed_backup_timestamp{namespace="${NAMESPACE}",job="${NAMESPACE}/${APP}-postgres"})
+            > max(barman_cloud_cloudnative_pg_io_last_available_backup_timestamp{namespace="${NAMESPACE}",job="${NAMESPACE}/${APP}-postgres"})
           for: 5m
           labels:
+            namespace: ${NAMESPACE}
+            cluster: ${APP}
             severity: critical
         - alert: CNPGBackupStale
           annotations:
             summary: PostgreSQL cluster ${NAMESPACE}/${APP} has no successful backup newer than 26 hours.
-          expr: time() - barman_cloud_cloudnative_pg_io_last_available_backup_timestamp{namespace="${NAMESPACE}",cnpg_cluster="${APP}"} > 93600
+          expr: |-
+            time() - max(barman_cloud_cloudnative_pg_io_last_available_backup_timestamp{namespace="${NAMESPACE}",job="${NAMESPACE}/${APP}-postgres"}) > 93600
+            or max(barman_cloud_cloudnative_pg_io_last_available_backup_timestamp{namespace="${NAMESPACE}",job="${NAMESPACE}/${APP}-postgres"}) == 0
           for: 15m
           labels:
+            namespace: ${NAMESPACE}
+            cluster: ${APP}
+            severity: warning
+        - alert: CNPGBackupMetricsMissing
+          annotations:
+            summary: PostgreSQL cluster ${NAMESPACE}/${APP} is missing backup timestamp metrics.
+          expr: |-
+            absent(max(barman_cloud_cloudnative_pg_io_last_available_backup_timestamp{namespace="${NAMESPACE}",job="${NAMESPACE}/${APP}-postgres"}))
+            or absent(max(barman_cloud_cloudnative_pg_io_last_failed_backup_timestamp{namespace="${NAMESPACE}",job="${NAMESPACE}/${APP}-postgres"}))
+          for: 15m
+          labels:
+            namespace: ${NAMESPACE}
+            cluster: ${APP}
             severity: warning
