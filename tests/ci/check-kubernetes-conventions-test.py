@@ -5,6 +5,7 @@ from copy import deepcopy
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import tempfile
 
 spec = importlib.util.spec_from_file_location(
@@ -107,5 +108,31 @@ with tempfile.TemporaryDirectory() as directory:
     original["resources"].remove("network-policies.yaml")
     root_file.write_text(json.dumps(original))
     assert any("child removed" in error for error in conventions.validate(baseline, conventions.render(root)))
+
+root = conventions.ROOT
+with tempfile.TemporaryDirectory() as directory:
+    child_file = Path(directory) / "reloader.json"
+    reloader_spec = conventions.render(root)["kube-system", "reloader"]
+    child_file.write_text(json.dumps({
+        "apiVersion": "kustomize.toolkit.fluxcd.io/v1", "kind": "Kustomization",
+        "metadata": {"namespace": "kube-system", "name": "reloader"}, "spec": reloader_spec,
+    }))
+    release = subprocess.check_output(
+        ["flux", "build", "kustomization", "reloader", "--namespace", "kube-system",
+         "--dry-run", "--in-memory-build", "--kubeconfig", "/dev/null",
+         "--path", reloader_spec["path"], "--kustomization-file", str(child_file)],
+        cwd=root,
+    )
+    release_defaults = json.loads(subprocess.check_output(
+        ["yq", "-o=json", 'select(.kind == "HelmRelease" and .metadata.name == "reloader") | .spec', "-"],
+        input=release,
+    ))
+    assert release_defaults["driftDetection"] == {"mode": "warn"}
+    assert release_defaults["install"] == {"crds": "CreateReplace", "strategy": {"name": "RetryOnFailure"}}
+    assert release_defaults["rollback"] == {"cleanupOnFail": True, "recreate": True}
+    assert release_defaults["upgrade"] == {
+        "cleanupOnFail": True, "crds": "CreateReplace", "strategy": {"name": "RemediateOnFailure"},
+        "remediation": {"remediateLastFailure": True, "retries": 2},
+    }
 
 print("Kubernetes convention fixtures passed")

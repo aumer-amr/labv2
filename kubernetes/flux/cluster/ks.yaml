@@ -34,6 +34,8 @@ spec:
                 metadata:
                   name: _
                 spec:
+                  driftDetection:
+                    mode: warn
                   install:
                     crds: CreateReplace
                     strategy:
