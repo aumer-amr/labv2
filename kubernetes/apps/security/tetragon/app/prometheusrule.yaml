@@ -1,0 +1,72 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: tetragon
+spec:
+  groups:
+    - name: tetragon-pilot
+      rules:
+        - alert: TetragonPilotUnavailable
+          expr: absent(up{job="tetragon"}) or up{job="tetragon"} == 0
+          labels:
+            severity: warning
+          annotations:
+            summary: Tetragon pilot is unavailable
+            description: Inspect security/tetragon on deathscythe. See https://vikunja.aumer.dev/tasks/163.
+          for: 5m
+        - alert: TetragonPilotPolicyMissing
+          expr: sum(tetragon_tracingpolicy_loaded{job="tetragon",state="enabled"}) !=
+            2 or absent(tetragon_tracingpolicy_loaded{job="tetragon",state="enabled"})
+          labels:
+            severity: warning
+          annotations:
+            summary: Tetragon pilot policies are unavailable
+            description: Expect two enabled static policies. See https://vikunja.aumer.dev/tasks/163.
+          for: 5m
+        - alert: TetragonPilotEventLoss
+          expr:
+            sum(increase({job="tetragon",__name__=~"tetragon_observer_ringbuf_events_lost_total|tetragon_observer_ringbuf_queue_events_lost_total|tetragon_observer_ringbuf_errors_total|tetragon_export_ratelimit_events_dropped_total|tetragon_events_export_failed_total"}[5m]))
+            > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: Tetragon pilot lost events
+            description: Inspect ring buffers, exporter failures, and the export rate
+              limit. See https://vikunja.aumer.dev/tasks/163.
+        - alert: TetragonEchoUnexpectedExec
+          expr:
+            sum(increase(tetragon_tracingpolicy_selector_actions_total{job="tetragon",policy_namespace="network",policy="echo-unexpected-exec",action="post"}[5m]))
+            > 0 or sum(tetragon_tracingpolicy_selector_actions_total{job="tetragon",policy_namespace="network",policy="echo-unexpected-exec",action="post"}
+            unless tetragon_tracingpolicy_selector_actions_total{job="tetragon",policy_namespace="network",policy="echo-unexpected-exec",action="post"}
+            offset 5m) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: Unexpected execution in echo
+            description: Inspect the sanitized security/tetragon export-stdout events
+              in VictoriaLogs. The policy only observes network/echo on deathscythe. See
+              https://vikunja.aumer.dev/tasks/163.
+        - alert: TetragonEchoFileAccess
+          expr:
+            sum(increase(tetragon_tracingpolicy_selector_actions_total{job="tetragon",policy_namespace="network",policy="echo-file-access",action="post"}[5m]))
+            > 0 or sum(tetragon_tracingpolicy_selector_actions_total{job="tetragon",policy_namespace="network",policy="echo-file-access",action="post"}
+            unless tetragon_tracingpolicy_selector_actions_total{job="tetragon",policy_namespace="network",policy="echo-file-access",action="post"}
+            offset 5m) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: Selected file access in echo
+            description: Inspect the sanitized security/tetragon export-stdout events
+              in VictoriaLogs. The policy only observes network/echo on deathscythe. See
+              https://vikunja.aumer.dev/tasks/163.
+        - alert: TetragonPilotExportBudget
+          expr: sum(increase(tetragon_events_exported_bytes_total{job="tetragon"}[24h]))
+            > 50 * 1024 * 1024
+          labels:
+            severity: warning
+          annotations:
+            summary: Tetragon pilot exceeds the daily export budget
+            description: The budget is 50 MiB per day. This measures exported bytes, not
+              compressed storage. See https://vikunja.aumer.dev/tasks/163.
+          for: 15m

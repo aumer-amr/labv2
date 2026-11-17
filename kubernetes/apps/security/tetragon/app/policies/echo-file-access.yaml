@@ -1,0 +1,35 @@
+---
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicyNamespaced
+metadata:
+  name: echo-file-access
+  namespace: network
+spec:
+  options:
+    - name: policy-mode
+      value: monitor
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: echo
+      app.kubernetes.io/instance: echo
+  kprobes:
+    - call: security_file_permission
+      syscall: false
+      args:
+        - index: 0
+          type: file
+        - index: 1
+          type: int
+      selectors:
+        - matchArgs:
+            - index: 0
+              operator: Equal
+              values:
+                - /tmp/tetragon-pilot-sensitive
+                - /etc/shadow
+            - index: 1
+              operator: Mask
+              values:
+                - "6"
+          matchActions:
+            - action: Post

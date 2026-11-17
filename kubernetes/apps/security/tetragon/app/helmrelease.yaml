@@ -1,0 +1,148 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tetragon
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: tetragon
+      version: 1.8.0
+      sourceRef:
+        kind: HelmRepository
+        name: tetragon
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: DaemonSet
+              name: tetragon
+            patch: |
+              apiVersion: apps/v1
+              kind: DaemonSet
+              metadata:
+                name: tetragon
+              spec:
+                template:
+                  spec:
+                    initContainers:
+                    - name: mount-bpf-fs
+                      $patch: delete
+                    volumes:
+                    - name: export-logs
+                      hostPath: null
+                      emptyDir:
+                        sizeLimit: 16Mi
+                    - name: tetragon-run
+                      hostPath: null
+                      emptyDir: {}
+                    - name: cilium-run
+                      $patch: delete
+                    containers:
+                    - name: tetragon
+                      volumeMounts:
+                      - name: host-proc
+                        mountPath: /procRoot
+                        readOnly: true
+                      - name: cilium-run
+                        mountPath: /var/run/cilium
+                        $patch: delete
+                    terminationGracePeriodSeconds: 30
+  values:
+    nodeSelector:
+      kubernetes.io/hostname: deathscythe
+    hostNetwork: true
+    serviceAccount:
+      create: false
+      name: tetragon
+    tetragonOperator:
+      enabled: false
+      tracingPolicy:
+        enabled: false
+    crds:
+      installMethod: none
+    extraHostPathMounts:
+      - name: sys-kernel-tracing
+        mountPath: /sys/kernel/tracing
+        readOnly: true
+    extraConfigmapMounts:
+      - name: tetragon-policies
+        mountPath: /etc/tetragon/policies
+        readOnly: true
+    tetragon:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        runAsNonRoot: false
+        privileged: false
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        appArmorProfile:
+          type: Unconfined
+        capabilities:
+          drop:
+            - ALL
+          add:
+            - SYS_ADMIN
+            - SYS_PTRACE
+            - SYS_RESOURCE
+            - DAC_OVERRIDE
+            - SYSLOG
+      extraArgs:
+        # Skip projection metadata so each static policy loads once.
+        tracing-policy-dir: /etc/tetragon/policies/..data
+      processCacheSize: 8192
+      debug: false
+      enableKeepSensorsOnExit: false
+      exportFilePerm: "640"
+      exportFileMaxSizeMB: 2
+      exportFileMaxBackups: 2
+      exportRateLimit: 60
+      exportAllowList: '{"namespace":["network"],"labels":["app.kubernetes.io/name=echo,app.kubernetes.io/instance=echo"],"event_set":["PROCESS_EXEC","PROCESS_KPROBE"]}'
+      exportDenyList: |-
+        {"health_check":true}
+        {"namespace":["", "cilium", "kube-system"]}
+      fieldFilters: '{"fields":"process.exec_id,process.pid,process.uid,process.binary,process.start_time,process.pod.namespace,process.pod.name,process.pod.container.name,parent.exec_id,parent.pid,parent.binary,function_name,policy_name,message","action":"INCLUDE"}'
+      redactionFilters: '{"redact":["(?s)(.+)"]}'
+      prometheus:
+        metricsLabelFilter: namespace,workload
+        serviceMonitor:
+          enabled: true
+          scrapeInterval: 30s
+      grpc:
+        address: unix:///var/run/tetragon/tetragon.sock
+      enablePolicyFilter: true
+    export:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          cpu: 100m
+          memory: 64Mi
+      securityContext:
+        runAsUser: 65534
+        runAsGroup: 0
+        runAsNonRoot: true
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+        seccompProfile:
+          type: RuntimeDefault
+    extraVolumes:
+      - name: tetragon-policies
+        configMap:
+          name: tetragon-policies
+    daemonSetAnnotations:
+      reloader.stakater.com/auto: "true"
+  releaseName: tetragon
