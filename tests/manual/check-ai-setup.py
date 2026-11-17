@@ -11,8 +11,10 @@ ROOT = Path(__file__).resolve().parents[2]
 AI = ROOT / "kubernetes/apps/ai"
 
 
-def read_yaml(path):
-    return json.loads(subprocess.check_output(["yq", "-o=json", ".", str(path)], text=True))
+def read_yaml(path, expression="."):
+    return json.loads(subprocess.check_output(
+        ["yq", "eval-all", "-o=json", expression, str(path)], text=True
+    ))
 
 
 models = AI / "litellm/app/models"
@@ -29,9 +31,7 @@ assert not router.get("fallbacks"), "Review local-only routing before adding pro
 config = tomllib.loads((AI / "zeroclaw/app/config/config.toml").read_text())
 primary = fallback["modelName"]
 assert config["agents"]["main"]["model_provider"] == "openai.assistant"
-assert config["providers"]["models"]["openai"]["assistant"]["model"] == primary
-allowed = read_yaml(AI / "zeroclaw/app/litellmvirtualkey.yaml")["spec"]["models"]
-assert {primary, "gpt-5.6-terra", "gpt-6.1-sol"} <= set(allowed), "Keep manual ChatGPT selection"
+assert config["providers"]["models"]["openai"]["assistant"]["model"] == "gpt-6-luna"
 
 webui = read_yaml(AI / "open-webui/app/helmrelease.yaml")["spec"]["values"]["controllers"]["open-webui"]["containers"]["app"]["env"]
 assert webui["DEFAULT_MODELS"] == primary
@@ -45,18 +45,20 @@ for app in ("open-webui", "memini"):
     permitted = read_yaml(AI / app / "app/litellmvirtualkey.yaml")["spec"]["models"]
     assert {primary, "gpt-6-luna"} <= set(permitted), f"{app} must allow Qwen and manual ChatGPT selection"
 
-monitor_config = config
-assert monitor_config["providers"]["models"]["openai"]["monitor"]["model"] == local["modelName"]
+assert config["providers"]["models"]["openai"]["monitor"]["model"] == local["modelName"]
 for path in AI.rglob("*virtualkey.yaml"):
-    key = read_yaml(path)
-    permitted = key["spec"]["models"]
-    if key["metadata"]["name"] == "zeroclaw-monitor":
-        assert permitted == [local["modelName"]]
-    else:
-        assert local["modelName"] not in permitted, str(path)
-        assert "*" not in permitted and permitted, str(path)
-    if key["metadata"]["name"] in ("zeroclaw", "pr-reviewer", "open-webui", "memini"):
-        assert fallback["modelName"] in permitted
+    for key in read_yaml(path, "[.]"):
+        permitted = set(key["spec"]["models"])
+        name = key["metadata"]["name"]
+        if name == "zeroclaw-monitor":
+            assert permitted == {local["modelName"], "codex-gpt-6.1-sol"}
+        else:
+            assert local["modelName"] not in permitted, str(path)
+            assert "*" not in permitted and permitted, str(path)
+        if name in ("zeroclaw", "pr-reviewer", "open-webui", "memini"):
+            assert primary in permitted
+        if name == "zeroclaw":
+            assert {"gpt-6-luna", "gpt-5.6-terra", "gpt-6.1-sol"} <= permitted
 inference = read_yaml(AI / "llmkube/models/qwen3-5-9b-fallback.yaml")["spec"]
 assert inference["modelRef"] == local["modelName"]
 assert inference["nodeSelector"]["kubernetes.io/hostname"] == "deathscythe"
@@ -72,7 +74,6 @@ cases = [
      {"namespace": "ai", "service": "qwen3-5-9b-fallback"}),
     ("MeminiRecallErrors", 'memini_recall_results_total{namespace="ai",result="error"}', "0+1x30", "0x30", 20, {"namespace": "ai"}),
     ("MeminiRerankErrors", 'memini_rerank_results_total{namespace="ai",result="error"}', "0+1x30", "0x30", 20, {"namespace": "ai"}),
-    ("MeminiConsolidateErrors", 'memini_consolidate_results_total{namespace="ai",result="error"}', "0+1x30", "0x30", 25, {"namespace": "ai"}),
 ]
 with tempfile.TemporaryDirectory(prefix="ai-alert-tests-") as directory:
     directory = Path(directory)
@@ -88,6 +89,7 @@ with tempfile.TemporaryDirectory(prefix="ai-alert-tests-") as directory:
         for group in spec["groups"]:
             rules.update({rule["alert"]: rule for rule in group["rules"]})
     assert "LiteLLMAuthOrQuotaFailures" not in rules
+    assert "MeminiConsolidateErrors" not in rules, "Task 133 disabled the consolidation alert"
     tests = [
         {
             "name": f"Disabled auth/quota alert: HTTP {status} at {minute}m",
@@ -100,6 +102,15 @@ with tempfile.TemporaryDirectory(prefix="ai-alert-tests-") as directory:
         }
         for status in ("401", "403", "429") for minute in (20, 120)
     ]
+    tests.append({
+        "name": "Disabled Memini consolidation alert: sustained errors",
+        "interval": "1m",
+        "input_series": [{
+            "series": 'memini_consolidate_results_total{namespace="ai",result="error"}',
+            "values": "0+1x30",
+        }],
+        "alert_rule_test": [{"eval_time": "25m", "alertname": "MeminiConsolidateErrors", "exp_alerts": []}],
+    })
     for alert, series, failing, healthy, minute, labels in cases:
         annotations = {}
         for key, value in rules[alert]["annotations"].items():
