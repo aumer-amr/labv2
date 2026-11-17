@@ -99,6 +99,10 @@ spec:
         pdb:
           create: false
       worker:
+        pod:
+          additionalEnv:
+            - name: NODE_OPTIONS
+              value: --require=/opt/langfuse-patches/redis-socket-timeout.cjs
         resources:
           requests:
             cpu: 100m
@@ -161,6 +165,22 @@ spec:
   postRenderers:
     - kustomize:
         patches:
+          - target:
+              kind: Deployment
+              name: langfuse-worker
+            patch: |
+              - op: add
+                path: /spec/template/spec/volumes/-
+                value:
+                  name: redis-socket-timeout
+                  configMap:
+                    name: langfuse-redis-socket-timeout
+              - op: add
+                path: /spec/template/spec/containers/0/volumeMounts/-
+                value:
+                  name: redis-socket-timeout
+                  mountPath: /opt/langfuse-patches
+                  readOnly: true
           - target:
               kind: Deployment
               name: langfuse-web

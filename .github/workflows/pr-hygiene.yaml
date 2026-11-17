@@ -49,4 +49,5 @@ jobs:
           mise exec -- python3 tests/ci/check-kubernetes-conventions-test.py
           python3 tests/ci/check-pr-rendered-summary.py
           python3 tests/ci/check-private-context.py
+          mise exec -- node --test tests/ci/test-langfuse-redis-timeout.cjs
           python3 tests/ci/test-forgejo-mirror.py
