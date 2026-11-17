@@ -18,6 +18,7 @@ spec:
     - name: searxng
     - name: whisper
     - name: piper
+    - name: forgejo-mcp
     - name: karakeep-mcp
     - name: unifi-mcp
     - name: victoria-logs-mcp

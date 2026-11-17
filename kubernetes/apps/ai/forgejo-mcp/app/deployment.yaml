@@ -1,0 +1,111 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forgejo-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: forgejo-mcp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: forgejo-mcp
+    spec:
+      automountServiceAccountToken: false
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: packages
+          # renovate: datasource=docker depName=docker.io/library/node
+          image: &image docker.io/library/node:26.13.1-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc
+          command: [sh, -ec]
+          args:
+            - cp /packages/package*.json /app/ && npm ci --prefix /app --omit=dev --ignore-scripts --no-audit --no-fund
+          env:
+            - name: npm_config_cache
+              value: /tmp/npm
+          securityContext: &security
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: packages
+              mountPath: /packages
+              readOnly: true
+            - name: app
+              mountPath: /app
+            - name: tmp
+              mountPath: /tmp
+      containers:
+        - name: mcp
+          image: *image
+          command: [node, /app/node_modules/@vbcdx/forgejo-plugin/bin/vbcdx-forgejo.js, serve]
+          env:
+            - name: VBCDX_FORGEJO_URL
+              value: http://forgejo-http.developer-tools.svc.cluster.local:3000
+            - name: VBCDX_FORGEJO_HTTP_HOST
+              value: 0.0.0.0
+            - name: VBCDX_FORGEJO_WRITES
+              value: "off"
+            - name: NODE_ENV
+              value: production
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext: *security
+          volumeMounts:
+            - name: app
+              mountPath: /app
+              readOnly: true
+      volumes:
+        - name: packages
+          configMap:
+            name: forgejo-mcp-packages
+        - name: app
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: forgejo-mcp
+spec:
+  selector:
+    app.kubernetes.io/name: forgejo-mcp
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

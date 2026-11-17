@@ -1,0 +1,38 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMMCPServer
+metadata:
+  name: forgejo-mcp
+spec:
+  alias: forgejo
+  params:
+    allow_all_keys: false
+    allowed_tools:
+      - whoami
+      - list_repositories
+      - get_repository
+      - list_branches
+      - get_file
+      - list_issues
+      - get_issue
+      - list_comments
+      - get_comment
+      - list_labels
+      - list_milestones
+      - list_pull_requests
+      - get_pull_request
+      - get_pull_request_diff
+      - list_pull_request_files
+      - list_reviews
+      - get_review
+      - list_commit_statuses
+      - list_workflow_runs
+      - get_workflow_run
+      - list_workflow_jobs
+  proxyRef: litellm
+  transport: http
+  url: http://forgejo-mcp.ai.svc.cluster.local.:8080/mcp
+  authType: bearer_token
+  authTokenRef:
+    name: forgejo-mcp-secret
+    key: API_TOKEN

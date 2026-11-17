@@ -1,0 +1,8 @@
+{
+  "name": "labv2-forgejo-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@vbcdx/forgejo-plugin": "0.1.1"
+  }
+}
