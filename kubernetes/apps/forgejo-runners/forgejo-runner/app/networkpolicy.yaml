@@ -1,0 +1,171 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: forgejo-runner-external
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: forgejo-runner
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchName: api.github.com
+              - matchName: codeload.github.com
+              - matchName: forgejo-http.developer-tools.svc.cluster.local
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchName: api.github.com
+              - matchName: codeload.github.com
+              - matchName: forgejo-http.developer-tools.svc.cluster.local
+    - toFQDNs:
+        - matchName: github.com
+        - matchName: api.github.com
+        - matchName: codeload.github.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: forgejo-jobs-external
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/managed-by: forgejo-runner
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchName: api.github.com
+              - matchName: codeload.github.com
+              - matchName: forgejo-http.developer-tools.svc.cluster.local
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: github.com
+              - matchName: api.github.com
+              - matchName: codeload.github.com
+              - matchName: forgejo-http.developer-tools.svc.cluster.local
+    - toFQDNs:
+        - matchName: github.com
+        - matchName: api.github.com
+        - matchName: codeload.github.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: forgejo-controller
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: forgejo-runner
+  policyTypes: [Ingress, Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: developer-tools
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: forgejo
+              app.kubernetes.io/instance: forgejo
+      ports:
+        - port: 3000
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: forgejo-jobs
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/managed-by: forgejo-runner
+  policyTypes: [Ingress, Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: developer-tools
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: forgejo
+              app.kubernetes.io/instance: forgejo
+      ports:
+        - port: 3000
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: forgejo-runners-dns
+spec:
+  endpointSelector:
+    matchLabels:
+      k8s:io.kubernetes.pod.namespace: kube-system
+      k8s:k8s-app: kube-dns
+  ingress:
+    - fromEndpoints:
+        - matchLabels: &id001
+            k8s:io.kubernetes.pod.namespace: forgejo-runners
+            app.kubernetes.io/name: forgejo-runner
+        - matchLabels: &id002
+            k8s:io.kubernetes.pod.namespace: forgejo-runners
+            app.kubernetes.io/managed-by: forgejo-runner
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+    - fromEndpoints:
+        - matchLabels: *id001
+        - matchLabels: *id002
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP

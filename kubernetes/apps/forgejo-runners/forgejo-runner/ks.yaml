@@ -1,0 +1,23 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: forgejo-runner
+spec:
+  dependsOn:
+    - name: network-policies
+    - name: forgejo
+      namespace: developer-tools
+    - name: gvisor
+      namespace: kube-system
+    - name: onepassword-connect
+      namespace: external-secrets
+  interval: 1h
+  path: ./kubernetes/apps/forgejo-runners/forgejo-runner/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: forgejo-runners
+  wait: true
