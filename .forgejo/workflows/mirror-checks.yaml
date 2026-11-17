@@ -1,0 +1,26 @@
+---
+name: Mirror checks
+on:
+  push:
+    branches: [main]
+jobs:
+  check:
+    name: Mirrored main checks
+    runs-on: labv2-mirror
+    timeout-minutes: 10
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          github-server-url: http://forgejo-http.developer-tools.svc.cluster.local:3000
+          persist-credentials: false
+          ref: ${{ forgejo.sha }}
+      - name: Confirm the synchronized revision
+        env:
+          EXPECTED_SHA: ${{ forgejo.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - name: Check Talos and Kubernetes compatibility
+        run: bash scripts/ci/check-talos-kubernetes-compatibility.sh
+      - name: Check mirror monitoring regressions
+        run: python3 tests/ci/test-forgejo-mirror.py
+      - name: Exercise ZeroClaw regression tests
+        run: python3 -m unittest discover -s tests/ci/zeroclaw -p 'test_*.py'
