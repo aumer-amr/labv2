@@ -1,3 +1,24 @@
+diff --git a/src/enforcement/enforce.ts b/src/enforcement/enforce.ts
+index 4023351..7c20dfa 100644
+--- a/src/enforcement/enforce.ts
++++ b/src/enforcement/enforce.ts
+@@ -73,12 +73,10 @@ function toolHarnessFailureReason(harness: ToolHarnessArtifact | null): string |
+   if (harness.error !== undefined && harness.error !== null) {
+     return String(harness.error);
+   }
+-  const executed = harness.executed_request_count ?? 0;
+-  if (executed > 0) {
+-    const statuses = harness.tool_results ?? [];
+-    if (!statuses.some((t) => t && t.status === "ok")) {
+-      return "all tool requests failed";
+-    }
++  const statuses = harness.tool_results ?? [];
++  if ((statuses.length > 0 || (harness.executed_request_count ?? 0) > 0) &&
++      !statuses.some((t) => t && t.status === "ok")) {
++    return "all tool requests failed";
+   }
+   return null;
+ }
 diff --git a/src/tools/executors.ts b/src/tools/executors.ts
 index 72975e3..2deb781 100644
 --- a/src/tools/executors.ts
@@ -93,7 +114,7 @@ index 72975e3..2deb781 100644
          break;
        }
 diff --git a/src/tools/harness.ts b/src/tools/harness.ts
-index 80112d5..24ad9f6 100644
+index 80112d5..0616020 100644
 --- a/src/tools/harness.ts
 +++ b/src/tools/harness.ts
 @@ -22,6 +22,7 @@
@@ -104,7 +125,35 @@ index 80112d5..24ad9f6 100644
  import path from "node:path";
  import {
    Conversation,
-@@ -1381,6 +1382,10 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+@@ -917,14 +918,17 @@ export function buildPlanningContext(
+  * Deliberately compact: every tool result is already in the verdict turn's
+  * conversation as a tool message. */
+ export function verdictHarnessFindingsBody(outcome: LoopOutcome): string {
++  const succeeded = outcome.executed.filter((call) => call.result.status === "ok").length;
+   const lines = [
+     `The tool harness ran for this review: ${outcome.executed.length} tool call(s) ` +
+       `executed across ${outcome.rounds} round(s) ` +
+       `(${outcome.toolCallsIssued} issued; stop reason: ${outcome.stopReason}).`,
++    `Tool results: ${succeeded} succeeded; ${outcome.executed.length - succeeded} failed.`,
+     "",
+     "The full results are the tool messages earlier in this conversation. " +
+       "Treat them as this review's tool harness evidence and report what they " +
+-      "showed under Tool Harness Findings.",
++      "showed under Tool Harness Findings. Only successful results support evidence claims. " +
++      "Report relevant checks that failed or lacked evidence as unverified.",
+     "",
+   ];
+   if (outcome.stopReason === STOP_BUDGET) {
+@@ -1298,6 +1302,8 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+       `${input.allowedGhApiRepos.size > 0 ? [...input.allowedGhApiRepos].sort().join(", ") : "(none)"}\n` +
+       `Allowed hosts for web_fetch: ` +
+       `${input.allowedHosts.length > 0 ? input.allowedHosts.join(", ") : "(none)"}\n` +
++      "Use gh_api and repo_contents only for listed repositories. For public upstream evidence, " +
++      "use web_fetch with a listed host, such as an allowed GitHub release page or public API URL.\n" +
+       (searchUrl
+         ? "web_search is available — use it to find a page's URL when you don't know it, then web_fetch the best result.\n"
+         : "") +
+@@ -1381,6 +1387,10 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
    const toolCtx: ToolContext = {
      workspaceRoot: input.workspaceRoot,
      trackedIndex,
@@ -115,7 +164,7 @@ index 80112d5..24ad9f6 100644
      allowedGhRepos: [...input.allowedGhApiRepos],
      currentRepo: input.repo,
      allowedHosts: input.allowedHosts,
-@@ -1388,7 +1393,18 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+@@ -1388,7 +1398,18 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
      requestTimeout: input.requestTimeout,
      searchUrl,
      maxSearchResults,
@@ -135,7 +184,24 @@ index 80112d5..24ad9f6 100644
    };
 
    const executeFn = async (toolName: string, args: Record<string, unknown>): Promise<Record<string, unknown>> => {
-@@ -1769,6 +1785,20 @@ export function summarizeLoopOutcome(result: HarnessResult, outcome: LoopOutcome
+@@ -1480,6 +1501,7 @@ export async function runNativeLoop(input: RunNativeLoopInput): Promise<boolean>
+       cachePrefix: true,
+       summarizeFn,
+       timeFn,
++      retryWithoutEvidence: Number(env.TOOL_MIN_SUCCESSFUL_REQUESTS ?? "0") > 0,
+     },
+   );
+
+@@ -1731,6 +1753,8 @@ export function summarizeLoopOutcome(result: HarnessResult, outcome: LoopOutcome
+
+   const mdLines: string[] = ["# Tool Harness Results", ""];
+   mdLines.push(`**Planned requests:** ${outcome.toolCallsIssued}`);
++  const succeeded = outcome.executed.filter((call) => call.result.status === "ok").length;
++  mdLines.push(`**Tool results:** ${succeeded} succeeded; ${outcome.executed.length - succeeded} failed.`);
+   mdLines.push(`**Loop rounds:** ${outcome.rounds}`);
+   mdLines.push(`**Stop reason:** ${outcome.stopReason}`);
+   if (outcome.stopReason === STOP_BUDGET) {
+@@ -1769,6 +1793,20 @@ export function summarizeLoopOutcome(result: HarnessResult, outcome: LoopOutcome
   * `write_outputs`): embeds the #702 telemetry object, redacts, and writes the
   * tier-scoped artifacts 0600. */
  export function writeOutputs(summary: HarnessResult, markdown: string, deps: HarnessDeps): void {
@@ -156,3 +222,49 @@ index 80112d5..24ad9f6 100644
    const telemetry = buildToolLoopTelemetry(summary);
    if (telemetry !== null) summary.tool_loop_telemetry = telemetry;
    const tier = deps.env.TOOL_HARNESS_TIER || "primary";
+diff --git a/src/tools/loop.ts b/src/tools/loop.ts
+index 7d7cd93..f522d6d 100644
+--- a/src/tools/loop.ts
++++ b/src/tools/loop.ts
+@@ -262,6 +262,7 @@ export interface DriveToolLoopOptions {
+   stream?: boolean;
+   tokensParam?: string;
+   cachePrefix?: boolean;
++  retryWithoutEvidence?: boolean;
+   /** Best-effort summarizer for context compaction; may be async. */
+   summarizeFn?: ((block: string) => string | Promise<string>) | null;
+   /** Injectable clock (seconds) for deterministic tests. */
+@@ -315,6 +316,7 @@ export async function driveToolLoop(
+   };
+   const started = timeFn();
+   let callsExecuted = 0;
++  let recoveryRound = 0;
+   const seenKeys = new Set<string>();
+   // Python while-else: the else clause (STOP_MAX_ROUNDS) runs only when the
+   // loop condition expires naturally — never after a break.
+@@ -367,7 +369,10 @@ export async function driveToolLoop(
+           requestsTotal: budgets.maxToolCalls,
+           roundsLeft,
+           roundsTotal: budgets.maxRounds,
+-        }),
++        }) + (recoveryRound === outcome.rounds
++          ? "\nNo tool request has succeeded. Try one relevant, allowed evidence source before stopping. " +
++            "Use web_fetch for public upstream sources on allowed hosts. Do not repeat a rejected request."
++          : ""),
+       );
+     }
+
+@@ -393,6 +398,13 @@ export async function driveToolLoop(
+     const { calls, text } = extractToolCalls(response, options.apiFormat);
+
+     if (calls.length === 0) {
++      if (options.retryWithoutEvidence && recoveryRound === 0 &&
++          outcome.rounds < budgets.maxRounds && callsExecuted < budgets.maxToolCalls &&
++          !outcome.executed.some((call) => call.result.status === "ok")) {
++        recoveryRound = outcome.rounds;
++        conversation.addAssistantText(text || "No tool request in this turn.");
++        continue;
++      }
+       outcome.finalText = text;
+       outcome.stopReason = outcome.toolCallsIssued > 0 ? STOP_MODEL_DONE : STOP_NO_TOOL_CALLS;
+       broke = true;

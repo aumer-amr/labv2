@@ -14,6 +14,9 @@ const { resolveToolMaxRequests } = require(
 const { adaptiveLoopBudgets } = require(
   path.resolve(process.argv[2], ".test-build/src/tools/loop.js"),
 );
+const { applyToolHarnessFailureEnforcement, applyToolMinSuccessfulEnforcement } = require(
+  path.resolve(process.argv[2], ".test-build/src/enforcement/enforce.js"),
+);
 
 for (const [changedFiles, changedLines, requests, rounds] of [
   [3, 120, 24, 24],
@@ -143,6 +146,8 @@ async function check(mode) {
 (async () => {
   try {
     for (const mode of ["ok", "redirect", "forbidden"]) await check(mode);
+    for (const mode of ["no-call", "denied", "mixed", "unrecovered", "no-evidence"])
+      await checkPlanning(mode);
     await checkHeadReads();
     console.log(
       "Evidence transport, exact-head reads, security boundaries, and diagnostics passed",
@@ -154,6 +159,101 @@ async function check(mode) {
   console.error(error);
   process.exitCode = 1;
 });
+
+async function checkPlanning(mode) {
+  const corpus = "# PR Diff\n+ Update Grafana MCP\n\n# Tool Harness Findings\nPending\n";
+  const artifacts = new Map([["review-corpus.truncated.md", corpus]]);
+  const releaseUrl = "https://api.github.com/repos/grafana/mcp-grafana/releases/tags/v1.0.0";
+  const denied = ["gh_api", { endpoint: new URL(releaseUrl).pathname }];
+  const publicRead = ["web_fetch", { url: releaseUrl }];
+  const calls = (...requests) => ({
+    choices: [
+      {
+        message: {
+          tool_calls: requests.map(([name, args], i) => ({
+            id: `${requests.length}-${name}-${i}`,
+            type: "function",
+            function: { name, arguments: JSON.stringify(args) },
+          })),
+        },
+      },
+    ],
+  });
+  const stop = text("Evidence collection complete");
+  const startsWithoutCall = mode === "no-call" || mode === "no-evidence";
+  const recovers = mode === "no-call" || mode === "denied";
+  const requests = [];
+  const responses = [
+    startsWithoutCall ? stop : mode === "mixed" ? calls(denied, publicRead) : calls(denied),
+    ...(startsWithoutCall ? [] : [stop]),
+    ...(recovers ? [calls(publicRead), stop] : []),
+    ...(mode === "unrecovered" || mode === "no-evidence" ? [stop] : []),
+    ...(mode === "no-evidence"
+      ? []
+      : [
+          text(
+            JSON.stringify({ verdict: "approve", review_markdown: "Fixture review", findings: [] }),
+          ),
+        ]),
+  ];
+  let fetched = 0;
+  global.fetch = async (url, init) => {
+    assert.equal(String(url), releaseUrl);
+    assert.equal(new Headers(init.headers).has("Authorization"), false);
+    fetched++;
+    return Response.json({ body: "Grafana MCP release notes" });
+  };
+  const { result } = await runToolHarness({
+    env: {
+      REPO: repo,
+      GH_TOKEN: secret,
+      AI_BASE_URL: "http://model.test/v1",
+      AI_MODEL: "fixture",
+      AI_API_KEY: secret,
+      AI_STREAM: "false",
+      SYSTEM_PROMPT: "Review fixture",
+      ALLOWED_SOURCE_HOSTS: "github.com,api.github.com",
+      TOOL_MIN_SUCCESSFUL_REQUESTS: "1",
+    },
+    cwd: "/tmp",
+    readText: (name) => artifacts.get(name) ?? null,
+    exists: (name) => artifacts.has(name),
+    writeArtifact: (name, value) => artifacts.set(name, value),
+    deleteArtifact: (name) => artifacts.delete(name),
+    transport: async (_url, _format, request) => {
+      requests.push(JSON.stringify(request));
+      assert.ok(responses.length, "Unexpected extra model turn");
+      return responses.shift();
+    },
+    timeFn: () => 0,
+  });
+  const success = recovers || mode === "mixed" ? 1 : 0;
+  const failure = startsWithoutCall ? 0 : 1;
+  assert.equal(result.executed_request_count, success, mode);
+  assert.equal(fetched, success, mode);
+  assert.equal(responses.length, 0, mode);
+  assert.match(requests[0], /For public upstream evidence, use web_fetch with a listed host/);
+  const harnessMarkdown = String(artifacts.get("tool-harness.md"));
+  if (mode === "no-evidence") {
+    assert.equal(result.stop_reason, "no-tool-calls");
+    assert.match(harnessMarkdown, /no evidence gathered/);
+  } else {
+    const counts = new RegExp(`${success} succeeded; ${failure} failed`);
+    assert.match(requests.at(-1), counts);
+    assert.match(harnessMarkdown, counts);
+  }
+  assert.equal(
+    requests.filter((request) => request.includes("No tool request has succeeded")).length,
+    mode === "mixed" ? 0 : 1,
+  );
+  const artifact = { verdict: "approve", review_markdown: "Fixture review" };
+  assert.equal(
+    applyToolHarnessFailureEnforcement(artifact, result).applied,
+    mode === "unrecovered",
+  );
+  assert.equal(applyToolMinSuccessfulEnforcement(artifact, 1, result).applied, success === 0);
+  assert.equal(artifact.verdict, success ? "approve" : "request_changes");
+}
 
 async function checkHeadReads() {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "review-base-"));
