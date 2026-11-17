@@ -11,6 +11,14 @@ resources:
   - ./ocirepository.yaml
   - ./httproute.yaml
   - ./networkpolicy.yaml
+configMapGenerator:
+  - name: langfuse-redis-socket-timeout
+    files:
+      - redis-socket-timeout.cjs
+generatorOptions:
+  disableNameSuffixHash: true
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
 patches:
   - target:
       group: helm.toolkit.fluxcd.io
