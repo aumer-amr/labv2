@@ -7,9 +7,25 @@ metadata:
 spec:
   chartRef:
     kind: OCIRepository
-    name: valkey
+    name: valkey-v1
     namespace: database
   interval: 1h
+  # Keep the existing ingress-only policy without the chart's added peer or egress rules.
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              group: networking.k8s.io
+              kind: NetworkPolicy
+              name: ${APP}-valkey
+            patch: |-
+              - op: remove
+                path: /spec/ingress/0
+              - op: remove
+                path: /spec/egress
+              - op: replace
+                path: /spec/policyTypes
+                value: [Ingress]
   values:
     auth:
       enabled: true
@@ -18,14 +34,17 @@ spec:
         default:
           passwordKey: VALKEY_PASSWORD
           permissions: "~* &* +@all"
-    dataStorage:
+    persistence:
       enabled: false
     deploymentStrategy: Recreate
     fullnameOverride: ${APP}-valkey
     metrics:
       enabled: false
     networkPolicy:
-      ingress:
+      enabled: true
+      allowExternal: false
+      allowExternalEgress: false
+      extraIngress:
         - from:
             - podSelector:
                 matchLabels:
@@ -46,6 +65,6 @@ spec:
       limits:
         cpu: ${VALKEY_CPU_LIMIT:=500m}
         memory: ${VALKEY_MEMORY_LIMIT:=256Mi}
-    valkeyConfig: |-
+    extraConfig: |-
       maxmemory ${VALKEY_MAXMEMORY:=192mb}
       maxmemory-policy ${VALKEY_MAXMEMORY_POLICY:=allkeys-lru}
