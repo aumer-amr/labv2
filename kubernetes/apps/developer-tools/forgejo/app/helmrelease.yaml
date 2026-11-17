@@ -1,0 +1,107 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: forgejo
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: forgejo
+  interval: 1h
+  values:
+    image:
+      rootless: true
+      registry: code.forgejo.org
+      repository: forgejo/forgejo
+      tag: 17.0.1-rootless
+      digest: sha256:5ef02fbcf22beef56b8c844952ffad58cfe177b6f98e46e6abb5df90b88dc8d3
+    replicaCount: 1
+    strategy:
+      type: Recreate
+    deployment:
+      labels:
+        network.home.arpa/to-envoy-external: allow
+      annotations:
+        reloader.stakater.com/auto: "true"
+      env:
+        - name: TZ
+          value: Europe/Amsterdam
+    serviceAccount:
+      create: true
+      automountServiceAccountToken: false
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: [ALL]
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 1Gi
+    persistence:
+      create: false
+      claimName: forgejo
+    dnsConfig:
+      options:
+        - name: ndots
+          value: "1"
+    gitea:
+      admin:
+        username: ""
+      oauth:
+        - name: kanidm
+          provider: openidConnect
+          existingSecret: forgejo-oauth
+          autoDiscoverUrl: https://idm.aumer.dev/oauth2/openid/forgejo/.well-known/openid-configuration
+          scopes: openid,profile,email
+      config:
+        APP_NAME: LabV2 Forgejo
+        database:
+          DB_TYPE: sqlite3
+          PATH: /data/gitea/forgejo.db
+        server:
+          ROOT_URL: https://git.aumer.dev/
+          DISABLE_SSH: true
+          LFS_START_SERVER: false
+        service:
+          ALLOW_ONLY_EXTERNAL_REGISTRATION: true
+          ENABLE_INTERNAL_SIGNIN: false
+          REQUIRE_SIGNIN_VIEW: true
+          SHOW_REGISTRATION_BUTTON: false
+        oauth2_client:
+          ENABLE_AUTO_REGISTRATION: true
+          ACCOUNT_LINKING: disabled
+        openid:
+          ENABLE_OPENID_SIGNIN: false
+          ENABLE_OPENID_SIGNUP: false
+        repository:
+          DEFAULT_REPO_UNITS: repo.code,repo.actions
+          DEFAULT_MIRROR_REPO_UNITS: repo.code,repo.actions
+          DISABLED_REPO_UNITS: repo.issues,repo.ext_issues,repo.pulls,repo.wiki,repo.ext_wiki,repo.projects,repo.packages
+        actions:
+          ENABLED: true
+          DEFAULT_ACTIONS_URL: https://github.com
+        mirror:
+          DEFAULT_INTERVAL: 10m
+          MIN_INTERVAL: 10m
+          DISABLE_NEW_PUSH: true
+        migrations:
+          ALLOWED_DOMAINS: github.com
+          ALLOW_LOCALNETWORKS: false
+        cron.update_mirrors:
+          SCHEDULE: "@every 5m"
+        session:
+          PROVIDER: file
+          PROVIDER_CONFIG: /data/gitea/sessions
+      startupProbe:
+        enabled: true

@@ -7,6 +7,7 @@ metadata:
 spec:
   dependsOn:
     - name: atuin
+    - name: forgejo
     - name: slink
     - name: vikunja
     - name: kopiur
