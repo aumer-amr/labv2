@@ -6,7 +6,7 @@ metadata:
   name: litellm
 spec:
   dependsOn:
-    - name: codex-proxy
+    - name: cliproxyapi
       namespace: ai
     - name: langfuse
       namespace: ai

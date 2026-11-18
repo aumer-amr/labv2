@@ -1,0 +1,12 @@
+---
+config-version: 8
+server:
+  port: 3466
+  commercial-mode: true
+oauth:
+  auth-dir: /var/lib/cliproxyapi/auth
+management:
+  disable-control-panel: true
+upstream:
+  codex:
+    disable-codex-cloaking: true

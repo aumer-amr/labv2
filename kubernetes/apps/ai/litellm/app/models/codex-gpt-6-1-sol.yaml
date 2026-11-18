@@ -8,7 +8,7 @@ spec:
   modelName: codex-gpt-6.1-sol
   params:
     model: openai/gpt-6.1-sol
-    apiBase: http://codex-proxy.ai.svc.cluster.local:3466/v1
+    apiBase: http://cliproxyapi.ai.svc.cluster.local:3466/v1
     apiKey: none
   info:
     mode: chat

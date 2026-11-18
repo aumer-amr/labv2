@@ -15,6 +15,7 @@ resources:
   - ./litellmproxy.yaml
   - ./models/
   - ./networkpolicy.yaml
+  - ./cliproxyapi-networkpolicy.yaml
   - ./servicemonitor.yaml
 configMapGenerator:
   - name: litellm-usage-dashboard

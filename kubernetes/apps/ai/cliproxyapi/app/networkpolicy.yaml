@@ -1,0 +1,64 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cliproxyapi
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: cliproxyapi
+      app.kubernetes.io/name: cliproxyapi
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: litellm
+              app.kubernetes.io/name: litellm
+      ports:
+        - port: 3466
+          protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: cliproxyapi-external
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: cliproxyapi
+      app.kubernetes.io/name: cliproxyapi
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchName: auth.openai.com
+              - matchName: chatgpt.com
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: auth.openai.com
+              - matchName: chatgpt.com
+    - toFQDNs:
+        - matchName: auth.openai.com
+        - matchName: chatgpt.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
