@@ -12,6 +12,10 @@ ROOT = Path(__file__).resolve().parents[2]
 FLUX_ROOT = "kubernetes/flux/cluster/ks.yaml"
 SCHEMAS = "https://k8s-schemas.home-operations.com/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
 ROUTES = 'select(.kind == "Gateway" or .kind == "HTTPRoute" or .kind == "DNSEndpoint")'
+SUBSTITUTION_DISABLED = (
+    '(.metadata.annotations."kustomize.toolkit.fluxcd.io/substitute" == "disabled" or '
+    '.metadata.labels."kustomize.toolkit.fluxcd.io/substitute" == "disabled")'
+)
 KUSTOMIZATIONS = '[select(.apiVersion == "kustomize.toolkit.fluxcd.io/v1" and .kind == "Kustomization")]'
 
 
@@ -40,8 +44,15 @@ def render_routes(root, flux):
             variables = child_spec.pop("postBuild", {}).get("substitute", {})
             manifest.write_text(json.dumps(child))
             manifests = build(root, flux, child, manifest)
+            literal_routes = subprocess.check_output(
+                ["yq", "eval-all", f"{ROUTES} | select({SUBSTITUTION_DISABLED})", "-"],
+                input=manifests, text=True,
+            )
+            if literal_routes.strip():
+                yield literal_routes
             routes = subprocess.check_output(
-                ["yq", "eval-all", ROUTES, "-"], input=manifests, text=True,
+                ["yq", "eval-all", f"{ROUTES} | select({SUBSTITUTION_DISABLED} | not)", "-"],
+                input=manifests, text=True,
             )
             if routes.strip():
                 try:
