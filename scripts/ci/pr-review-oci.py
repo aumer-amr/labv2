@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""Read exact-head OCI publication and pinned image evidence without executing PR code."""
+"""Read OCI publication, pinned images, and Helm upgrade evidence without executing PR code."""
 
 import base64
+import gzip
 import hashlib
+import io
 import json
 import os
-from pathlib import Path
 import re
 import subprocess
+import tarfile
 import time
+import zlib
 from urllib import error, parse, request
 
 
@@ -18,6 +21,10 @@ INDEX_TYPES = {"application/vnd.oci.image.index.v1+json",
                "application/vnd.docker.distribution.manifest.list.v2+json"}
 CONFIG_TYPES = {"application/vnd.oci.image.config.v1+json",
                 "application/vnd.docker.container.image.v1+json"}
+CHART_LAYER = "application/vnd.cncf.helm.chart.content.v1.tar+gzip"
+JSON_LIMIT = 1024 * 1024
+CHART_LIMIT = 8 * 1024 * 1024
+CHART_EXPANDED_LIMIT = 32 * 1024 * 1024
 DIGEST = r"sha256:[0-9a-f]{64}"
 REPOSITORY = r"[a-z0-9][a-z0-9._-]*(?:/[a-z0-9][a-z0-9._-]*)+"
 IMAGE = re.compile(rf"(?P<repository>{REPOSITORY})(?::(?P<tag>[\w][\w.-]{{0,127}}))?@(?P<digest>{DIGEST})", re.ASCII)
@@ -45,12 +52,12 @@ class NoRedirect(request.HTTPRedirectHandler):
         return None  # Never forward an anonymous registry token to another host.
 
 
-def fetch(url, headers=None):
+def fetch(url, headers=None, *, limit=JSON_LIMIT):
     with request.build_opener(NoRedirect).open(
         request.Request(url, headers=headers or {}), timeout=timeout(10)
     ) as response:
-        body = response.read(1024 * 1024 + 1)
-        if len(body) > 1024 * 1024:
+        body = response.read(limit + 1)
+        if len(body) > limit:
             raise ValueError("response too large")
         return body
 
@@ -86,24 +93,28 @@ def verify(spec):
     return result
 
 
-def registry_json(repo, kind, digest, headers, size=None):
+def registry_blob(repo, kind, digest, headers, size, limit):
     if not isinstance(digest, str) or not re.fullmatch(DIGEST, digest):
         raise ValueError("invalid digest")
-    if size is not None and (type(size) is not int or not 0 < size <= 1024 * 1024):
+    if size is not None and (type(size) is not int or not 0 < size <= limit):
         raise ValueError("invalid descriptor size")
     try:
-        body = fetch(f"https://ghcr.io/v2/{repo}/{kind}/{digest}", headers)
+        body = fetch(f"https://ghcr.io/v2/{repo}/{kind}/{digest}", headers, limit=limit)
     except error.HTTPError as exc:
-        # GHCR serves config blobs through this CDN. Never forward the registry token.
+        # GHCR serves blobs through this CDN. Never forward the registry token.
         location = exc.headers.get("Location", "")
         target = parse.urlsplit(location)
         if (kind != "blobs" or exc.code not in {302, 307} or target.scheme != "https"
                 or target.netloc != "pkg-containers.githubusercontent.com" or target.fragment):
             raise
-        body = fetch(location)
+        body = fetch(location, limit=limit)
     if "sha256:" + hashlib.sha256(body).hexdigest() != digest or (size is not None and len(body) != size):
         raise ValueError("digest or size mismatch")
-    value = json.loads(body)
+    return body
+
+
+def registry_json(repo, kind, digest, headers, size=None):
+    value = json.loads(registry_blob(repo, kind, digest, headers, size, JSON_LIMIT))
     if not isinstance(value, dict):
         raise ValueError("invalid registry object")
     return value
@@ -282,6 +293,101 @@ def read_docs(repo, path, ref):
     return json.loads(parsed)
 
 
+def chart_defaults(repository, digest):
+    name = repository.removeprefix("oci://ghcr.io/")
+    headers = ghcr_headers(name)
+    manifest = registry_json(name, "manifests", digest, headers)
+    layers = [layer for layer in manifest["layers"] if layer["mediaType"] == CHART_LAYER]
+    if len(layers) != 1 or type(layers[0]["size"]) is not int:
+        raise ValueError("requires a single Helm chart layer")
+    layer = layers[0]
+    compressed = registry_blob(name, "blobs", layer["digest"], headers, layer["size"], CHART_LIMIT)
+    with gzip.GzipFile(fileobj=io.BytesIO(compressed)) as archive:
+        expanded = archive.read(CHART_EXPANDED_LIMIT + 1)
+    if len(expanded) > CHART_EXPANDED_LIMIT:
+        raise ValueError("chart archive too large")
+    with tarfile.open(fileobj=io.BytesIO(expanded), mode="r:") as archive:
+        path = f"{name.rsplit('/', 1)[-1]}/values.yaml"
+        member = archive.getmember(path)
+        if not member.isfile() or member.size > JSON_LIMIT:
+            raise ValueError("invalid chart values file")
+        with archive.extractfile(member) as values:
+            parsed = json.loads(subprocess.check_output(
+                ["yq", "eval", "-o=json", ".", "-"], input=values.read(),
+                timeout=timeout(10), stderr=subprocess.DEVNULL,
+            ))
+    if not isinstance(parsed, dict):
+        raise ValueError("requires chart defaults as a mapping")
+    return parsed
+
+
+def changed_value_keys(overrides, old, new, path=()):
+    for key, override in overrides.items():
+        if key not in old:
+            continue
+        key_path = (*path, key)
+        if key not in new:
+            yield {"key": key_path, "change": "removed"}
+        elif type(old[key]) is not type(new[key]):
+            yield {"key": key_path, "change": "type_changed",
+                   "old_type": type(old[key]).__name__, "new_type": type(new[key]).__name__}
+        elif isinstance(override, dict) and isinstance(old[key], dict):
+            yield from changed_value_keys(override, old[key], new[key], key_path)
+
+
+def chart_upgrade(repo, pr, chart, publication, changed):
+    path = changed["filename"]
+    base = pr.get("base", {}).get("sha")
+    metadata = chart.get("metadata")
+    if changed["status"] == "added" or not base or not isinstance(metadata, dict) or not metadata.get("name"):
+        return None
+    name, namespace = metadata["name"], metadata.get("namespace")
+    result = {"file": path, "status": "unknown"}
+    try:
+        previous = read_docs(repo, changed.get("previous_filename", path), base)
+        old_spec = next(
+            (doc.get("spec", {}) for doc in previous if isinstance(doc, dict)
+             and doc.get("kind") == "OCIRepository"
+             and doc.get("metadata", {}).get("name") == name
+             and doc.get("metadata", {}).get("namespace") == namespace),
+            None,
+        )
+        new_spec = chart["spec"]
+        if old_spec is None or old_spec.get("ref") == new_spec.get("ref"):
+            return None
+        if old_spec.get("url") != new_spec.get("url"):
+            return {**result, "reason": "chart repository changed"}
+        result.update(old_tag=old_spec.get("ref", {}).get("tag"), new_tag=publication.get("tag"))
+        release_path = f"{path.rsplit('/', 1)[0]}/helmrelease.yaml"
+        releases = read_docs(repo, release_path, pr["head"]["sha"])
+        overrides = []
+        for release in releases:
+            if not isinstance(release, dict) or release.get("kind") != "HelmRelease":
+                continue
+            spec = release.get("spec", {})
+            ref = spec.get("chartRef", {})
+            release_ns = release.get("metadata", {}).get("namespace")
+            if (ref.get("kind") == "OCIRepository" and ref.get("name") == name
+                    and ref.get("namespace", release_ns) == namespace
+                    and isinstance(spec.get("values"), dict) and spec["values"]):
+                overrides.append((release.get("metadata", {}).get("name"), spec["values"]))
+        if not overrides:
+            return None
+        old = verify(old_spec)
+        if old["status"] != "published" or publication["status"] != "published":
+            return {**result, "reason": "both chart tags must be accessible by exact tag"}
+        repository = publication["repository"]
+        old_defaults = chart_defaults(repository, old["digest"])
+        new_defaults = chart_defaults(repository, publication["digest"])
+        changes = [{"release": release, **change} for release, values in overrides
+                   for change in changed_value_keys(values, old_defaults, new_defaults)]
+        return {**result, "status": "compared", "release_file": release_path,
+                "changes": changes[:12], "omitted_changes": max(0, len(changes) - 12)}
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, EOFError, RecursionError,
+            tarfile.TarError, subprocess.SubprocessError, zlib.error):
+        return {**result, "reason": "chart defaults or matching HelmRelease unavailable"}
+
+
 def collect(event):
     global deadline
     deadline = time.monotonic() + 150
@@ -292,7 +398,7 @@ def collect(event):
         return {"head_sha": head, "status": "unknown", "reason": "fork evidence disabled"}
     if not re.fullmatch(r"[0-9a-f]{40}", head):
         raise ValueError("invalid head SHA")
-    results, images = [], []
+    results, images, charts = [], [], []
     seen_images = set()
     visited = 0
     # Bound API work; unvisited files are explicitly reported, never silently certified.
@@ -320,7 +426,9 @@ def collect(event):
             continue
         for doc in docs:
             if is_oci and isinstance(doc, dict) and doc.get("kind") == "OCIRepository":
-                results.append({"file": path, **verify(doc.get("spec") or {})})
+                publication = {"file": path, **verify(doc.get("spec") or {})}
+                results.append(publication)
+                charts.append((doc, publication, changed))
         references = image_references(docs)
         if references and changed["status"] != "added":
             try:
@@ -337,17 +445,26 @@ def collect(event):
             images.append({"file": path, **inspect_image(reference)})
     if len(files) == 100:
         results.append({"status": "unknown", "reason": "changed-file listing capped at 100"})
-    return {"head_sha": head, "publication": results, "images": images,
+    chart_upgrades = [upgrade for doc, publication, changed in charts
+                      if (upgrade := chart_upgrade(repo, pr, doc, publication, changed)) is not None]
+    return {"head_sha": head, "publication": results, "chart_upgrades": chart_upgrades, "images": images,
             "scope": "Publication proves existence only. Image evidence covers changed literal image fields in YAML, "
                      "including repository/tag/digest maps, public GHCR, sha256 and up to four platforms per image. "
                      "Match platform evidence to workload scheduling using Konflate; no runner-platform assumption. "
                      "GitHub release comparison requires a versioned image tag and a usable source label. "
-                     "Labels are publisher claims, not signed provenance or runtime compatibility proof."}
+                     "Labels are publisher claims, not signed provenance or runtime compatibility proof. "
+                     "Chart evidence covers inline values in a sibling HelmRelease for same-source public "
+                     "GHCR tag upgrades, and excludes valuesFrom."}
 
 
 if __name__ == "__main__":
     try:
-        evidence = collect(json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text()))
+        repo = os.environ["REPO"]
+        evidence = collect({"repository": {"full_name": repo}, "pull_request": {
+            "number": int(os.environ["PR_NUMBER"]),
+            "head": {"sha": os.environ["PR_HEAD_SHA"], "repo": {"full_name": repo}},
+            "base": {"sha": os.environ["PR_REVIEWER_BASE_REF"]},
+        }})
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
         evidence = {"status": "unknown", "reason": "OCI evidence collection unavailable"}
-    print(json.dumps(evidence))
+    print(json.dumps({"findings": [{"message": json.dumps(evidence)}]}))

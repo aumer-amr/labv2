@@ -46,7 +46,8 @@ class Images(unittest.TestCase):
         self.calls = []
 
     def inspect(self, data, pin, tag="1.2.3", release_revision=REVISION):
-        def fetch(url, headers=None):
+        def fetch(url, headers=None, *, limit=oci.JSON_LIMIT):
+            self.assertEqual(limit, oci.JSON_LIMIT)
             self.calls.append((url, headers))
             if url.startswith("https://ghcr.io/token?"):
                 self.assertIsNone(headers)

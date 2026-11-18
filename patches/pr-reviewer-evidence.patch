@@ -268,3 +268,67 @@ index 7d7cd93..f522d6d 100644
        outcome.finalText = text;
        outcome.stopReason = outcome.toolCallsIssued > 0 ? STOP_MODEL_DONE : STOP_NO_TOOL_CALLS;
        broke = true;
+diff --git a/src/evidence/orchestrate.ts b/src/evidence/orchestrate.ts
+--- a/src/evidence/orchestrate.ts
++++ b/src/evidence/orchestrate.ts
+@@ -213,7 +213,7 @@
+
+   let providers: unknown[] = [];
+   let configError = "";
+-  if (configPathRaw) ({ providers, error: configError } = loadConfig(configPathRaw, cwd));
++  if (configPathRaw) ({ providers, error: configError } = loadConfig(configPathRaw, workspaceRoot));
+
+   if (configError) summary.error = configError;
+   summary.configured = true;
+@@ -239,7 +239,7 @@
+       timeoutSec: defaultTimeout,
+       maxOutputBytes: defaultMaxOutput,
+       ambientEnv: env,
+-      cwd,
++      cwd: workspaceRoot,
+       ...(options.clock ? { clock: options.clock } : {}),
+       ...(options.log ? { log: options.log } : {}),
+     });
+diff --git a/src/evidence/providers.ts b/src/evidence/providers.ts
+--- a/src/evidence/providers.ts
++++ b/src/evidence/providers.ts
+@@ -85,6 +85,8 @@
+   "GITHUB_API_URL",
+   "REPO",
+   "PR_NUMBER",
++  "PR_HEAD_SHA",
++  "PR_REVIEWER_BASE_REF",
+   "PLATFORM",
+ ];
+
+diff --git a/src/precheck/decide.ts b/src/precheck/decide.ts
+--- a/src/precheck/decide.ts
++++ b/src/precheck/decide.ts
+@@ -744,6 +744,27 @@
+     );
+   }
+
++  // A manual dispatch has no PR webhook payload. The hosted build job pins
++  // the review target before the private runner can receive the PR.
++  if (env.LABV2_REVIEW_HEAD_SHA || env.LABV2_REVIEW_BASE_SHA) {
++    const pr = prObject as { state?: string; base?: { ref?: string } };
++    let reason = "";
++    if (pr.state !== "open" || pr.base?.ref !== "main" || deriveIsFork(prObject)) {
++      reason = "manual-pr-ineligible";
++    } else if (identity.headSha !== env.LABV2_REVIEW_HEAD_SHA) {
++      reason = "superseded-head";
++    } else if (identity.baseSha !== env.LABV2_REVIEW_BASE_SHA) {
++      reason = "superseded-base";
++    }
++    if (reason) {
++      return platformOutputs(
++        { should_review: "false", skip_reason: reason, diff_fingerprint: broadFingerprint },
++        resolvedPlatform,
++        effectiveForgejoApiUrl,
++      );
++    }
++  }
++
+   if (spec.eventHeadSha && identity.headSha && spec.eventHeadSha !== identity.headSha) {
+     return platformOutputs(
+       {
