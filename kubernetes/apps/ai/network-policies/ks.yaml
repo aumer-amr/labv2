@@ -6,7 +6,6 @@ metadata:
   name: network-policies
 spec:
   dependsOn:
-    - name: codex-proxy
     - name: cliproxyapi
     - name: ha-mcp
       namespace: home

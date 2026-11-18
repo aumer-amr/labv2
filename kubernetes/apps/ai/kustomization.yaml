@@ -12,7 +12,6 @@ resources:
   - ./network-policies/networkpolicy.yaml
   - ./litellm-operator/ks.yaml
   - ./litellm/ks.yaml
-  - ./codex-proxy/ks.yaml
   - ./cliproxyapi/ks.yaml
   - ./llmkube/ks.yaml
   - ./pr-reviewer/ks.yaml
