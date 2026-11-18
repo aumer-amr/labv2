@@ -25,9 +25,12 @@ spec:
             description: Expect two enabled static policies. See https://vikunja.aumer.dev/tasks/163.
           for: 5m
         - alert: TetragonPilotEventLoss
-          expr:
-            sum(increase({job="tetragon",__name__=~"tetragon_observer_ringbuf_events_lost_total|tetragon_observer_ringbuf_queue_events_lost_total|tetragon_observer_ringbuf_errors_total|tetragon_export_ratelimit_events_dropped_total|tetragon_events_export_failed_total"}[5m]))
-            > 0
+          expr: |-
+            sum(increase(tetragon_observer_ringbuf_events_lost_total{job="tetragon"}[5m])) > 0
+            or sum(increase(tetragon_observer_ringbuf_queue_events_lost_total{job="tetragon"}[5m])) > 0
+            or sum(increase(tetragon_observer_ringbuf_errors_total{job="tetragon"}[5m])) > 0
+            or sum(increase(tetragon_export_ratelimit_events_dropped_total{job="tetragon"}[5m])) > 0
+            or sum(increase(tetragon_events_export_failed_total{job="tetragon"}[5m])) > 0
           labels:
             severity: warning
           annotations:
