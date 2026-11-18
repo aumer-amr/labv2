@@ -304,7 +304,8 @@
             "welcome": "{{ state_attr('input_datetime.surface_welcome_until','timestamp') | float(0) > as_timestamp(now()) }}",
             "personal_events": {},
             "birthday_events": {},
-            "holiday_events": {}
+            "holiday_events": {},
+            "weather_forecast": {}
           }
         },
         {
@@ -354,12 +355,23 @@
               },
               "response_variable": "holiday_events",
               "continue_on_error": true
+            },
+            {
+              "action": "weather.get_forecasts",
+              "target": {
+                "entity_id": "weather.buienradar"
+              },
+              "data": {
+                "type": "daily"
+              },
+              "response_variable": "weather_forecast",
+              "continue_on_error": true
             }
           ]
         },
         {
           "variables": {
-            "message": "{% set out = namespace(parts=[]) %}\n{% if welcome %}{% set out.parts = out.parts + ['Welcome home, Sem.'] %}{% endif %}\n{% if morning %}\n  {% set out.parts = out.parts + ['Good morning, Sem.'] %}\n  {% set agenda = namespace(events=[]) %}\n  {% for result in [personal_events, birthday_events, holiday_events] %}\n    {% for cal, response in result.items() %}\n      {% for event in response.get('events', []) %}\n        {% if as_timestamp(event.end, 0) > as_timestamp(now()) %}\n          {% set agenda.events = agenda.events + [dict(start=as_timestamp(event.start, 0), all_day=(event.start | length == 10), summary=event.summary)] %}\n        {% endif %}\n      {% endfor %}\n    {% endfor %}\n  {% endfor %}\n  {% if agenda.events %}\n    {% set out.parts = out.parts + [\"On today's agenda:\"] %}\n    {% for event in agenda.events | sort(attribute='start') %}\n      {% set when = 'All day' if event.all_day else event.start | timestamp_custom('%H:%M', true) %}\n      {% set out.parts = out.parts + [when ~ ', ' ~ event.summary ~ '.'] %}\n    {% endfor %}\n  {% endif %}\n  {% set battery = states('sensor.garage_audi_battery_level') %}\n  {% set range = states('sensor.garage_audi_range') %}\n  {% set charging = states('sensor.garage_audi_charging_status') %}\n  {% if is_number(battery) %}{% set out.parts = out.parts + ['Your Audi battery is at ' ~ battery ~ ' percent.'] %}{% endif %}\n  {% if is_number(range) %}{% set out.parts = out.parts + ['Remaining range is ' ~ range ~ ' ' ~ ('kilometres' if state_attr('sensor.garage_audi_range','unit_of_measurement') == 'km' else 'miles' if state_attr('sensor.garage_audi_range','unit_of_measurement') == 'mi' else state_attr('sensor.garage_audi_range','unit_of_measurement') or 'kilometres') ~ '.'] %}{% endif %}\n  {% if charging not in ['unknown','unavailable','none',''] %}\n    {% set out.parts = out.parts + ['Charging status: ' ~ charging | replace('_',' ') ~ '.'] %}\n  {% endif %}\n  {% for stream, label in [('gft','food and garden waste'),('papier','paper'),('pmd','plastic, metal and drink cartons'),('restafval','residual waste')] %}\n    {% set entity = 'sensor.afvalbeheer_circulus_circulus_' ~ stream %}\n    {% set days = state_attr(entity, 'Days_until') %}\n    {% if states(entity) not in ['unknown','unavailable'] and days is not none and is_number(days) and days | int(-1) in [0,1] and state_attr(entity, 'Sort_date') | string == (now() + timedelta(days=days | int)).strftime('%Y%m%d') %}\n      {% set when = 'today' if days | int == 0 else 'tomorrow' %}\n      {% set out.parts = out.parts + ['The ' ~ label ~ ' bin is collected ' ~ when ~ '.'] %}\n    {% endif %}\n  {% endfor %}\n{% endif %}\n{{ out.parts | join(' ') }}"
+            "message": "{% set out = namespace(parts=[]) %}\n{% if welcome %}{% set out.parts = out.parts + ['Welcome home, Sem.'] %}{% endif %}\n{% if morning %}\n  {% set out.parts = out.parts + ['Good morning, Sem.'] %}\n  {% set local_now = now() %}\n  {% set out.parts = out.parts + ['Today is ' ~ local_now.strftime('%A, %B %-d') ~ '.', 'The time is ' ~ local_now.strftime('%H:%M') ~ '.'] %}\n  {% set forecasts = (weather_forecast or {}).get('weather.buienradar', {}).get('forecast', []) %}\n  {% for day in forecasts if (as_timestamp(day.datetime, 0) | timestamp_custom('%Y-%m-%d', true)) == local_now.strftime('%Y-%m-%d') %}\n    {% if loop.first %}\n      {% set condition = day.get('condition') %}\n      {% set labels = {'partlycloudy': 'partly cloudy', 'pouring': 'heavy rain', 'lightning': 'thunderstorms', 'lightning-rainy': 'thunderstorms with rain', 'snowy-rainy': 'rain and snow', 'windy-variant': 'windy and cloudy', 'exceptional': 'unusual conditions'} %}\n      {% if condition and condition not in ['unknown', 'unavailable'] %}\n        {% set out.parts = out.parts + [\"Today's weather is \" ~ labels.get(condition, condition) ~ '.'] %}\n      {% endif %}\n      {% set unit = {'°C': ' Celsius', '°F': ' Fahrenheit'}.get(state_attr('weather.buienradar', 'temperature_unit'), '') %}\n      {% for key, label in [('temperature', 'High'), ('templow', 'Low')] %}\n        {% if is_number(day.get(key)) %}\n          {% set out.parts = out.parts + [label ~ ' of ' ~ day[key] ~ ' degrees' ~ unit ~ '.'] %}\n        {% endif %}\n      {% endfor %}\n    {% endif %}\n  {% endfor %}\n  {% set agenda = namespace(events=[]) %}\n  {% for result in [personal_events, birthday_events, holiday_events] %}\n    {% for cal, response in result.items() %}\n      {% for event in response.get('events', []) %}\n        {% if as_timestamp(event.end, 0) > as_timestamp(now()) %}\n          {% set agenda.events = agenda.events + [dict(start=as_timestamp(event.start, 0), all_day=(event.start | length == 10), summary=event.summary)] %}\n        {% endif %}\n      {% endfor %}\n    {% endfor %}\n  {% endfor %}\n  {% if agenda.events %}\n    {% set out.parts = out.parts + [\"On today's agenda:\"] %}\n    {% for event in agenda.events | sort(attribute='start') %}\n      {% set when = 'All day' if event.all_day else event.start | timestamp_custom('%H:%M', true) %}\n      {% set out.parts = out.parts + [when ~ ', ' ~ event.summary ~ '.'] %}\n    {% endfor %}\n  {% endif %}\n  {% for stream, label in [('gft','food and garden waste'),('papier','paper'),('pmd','plastic, metal and drink cartons'),('restafval','residual waste')] %}\n    {% set entity = 'sensor.afvalbeheer_circulus_circulus_' ~ stream %}\n    {% set days = state_attr(entity, 'Days_until') %}\n    {% if states(entity) not in ['unknown','unavailable'] and days is not none and is_number(days) and days | int(-1) in [0,1] and state_attr(entity, 'Sort_date') | string == (now() + timedelta(days=days | int)).strftime('%Y%m%d') %}\n      {% set when = 'today' if days | int == 0 else 'tomorrow' %}\n      {% set out.parts = out.parts + ['The ' ~ label ~ ' bin is collected ' ~ when ~ '.'] %}\n    {% endif %}\n  {% endfor %}\n{% endif %}\n{{ out.parts | join(' ') }}"
           }
         },
         {

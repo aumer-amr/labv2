@@ -133,13 +133,14 @@ class GreetingTests(unittest.TestCase):
 
     def render(self, **values):
         variables = dict(morning=True, welcome=False, personal_events={}, birthday_events={},
-                         holiday_events={})
+                         holiday_events={}, weather_forecast={})
         variables.update(values)
         return self.env.from_string(MESSAGE).render(**variables).strip()
 
     def test_welcome_alone_and_combined_greeting(self):
         self.assertEqual(self.render(morning=False, welcome=True), "Welcome home, Sem.")
-        self.assertEqual(self.render(welcome=True), "Welcome home, Sem. Good morning, Sem.")
+        self.assertEqual(self.render(welcome=True),
+                         "Welcome home, Sem. Good morning, Sem. Today is Tuesday, October 13. The time is 07:00.")
 
     def test_agenda_orders_events_and_omits_finished_events(self):
         events = [{"start": "2026-10-13T09:00:00+02:00", "end": "2026-10-13T10:00:00+02:00",
@@ -155,16 +156,28 @@ class GreetingTests(unittest.TestCase):
         self.assertLess(message.index("All day, Birthday"), message.index("06:30, Ongoing"))
         self.assertLess(message.index("06:30, Ongoing"), message.index("09:00, Appointment"))
 
-    def test_missing_car_data_never_becomes_zero_or_unknown_speech(self):
-        self.assertEqual(self.render(), "Good morning, Sem.")
+    def test_briefing_uses_todays_local_forecast_and_omits_audi(self):
         self.states.update({"sensor.garage_audi_battery_level": "80",
                             "sensor.garage_audi_range": "204",
-                            "sensor.garage_audi_charging_status": "unknown"})
+                            "sensor.garage_audi_charging_status": "charging"})
         self.attributes[("sensor.garage_audi_range", "unit_of_measurement")] = "km"
-        message = self.render()
-        self.assertIn("80 percent", message)
-        self.assertIn("204 kilometres", message)
-        self.assertNotIn("Charging status", message)
+        self.attributes[("weather.buienradar", "temperature_unit")] = "°C"
+        forecast = {"weather.buienradar": {"forecast": [
+            {"datetime": "2026-10-14T00:00:00+02:00", "condition": "sunny"},
+            {"datetime": "2026-10-12T22:00:00+00:00", "condition": "partlycloudy",
+             "temperature": 10, "templow": 0},
+        ]}}
+        self.assertEqual(self.render(weather_forecast=forecast),
+                         "Good morning, Sem. Today is Tuesday, October 13. The time is 07:00. "
+                         "Today's weather is partly cloudy. High of 10 degrees Celsius. Low of 0 degrees Celsius.")
+
+    def test_missing_or_future_forecast_keeps_the_briefing(self):
+        expected = "Good morning, Sem. Today is Tuesday, October 13. The time is 07:00."
+        self.assertEqual(self.render(), expected)
+        forecast = {"weather.buienradar": {"forecast": [
+            {"datetime": "2026-10-14T00:00:00+02:00", "condition": "sunny"},
+        ]}}
+        self.assertEqual(self.render(weather_forecast=forecast), expected)
 
     def test_bins_today_tomorrow_stale_and_missing(self):
         for stream, days, date in [("gft", 0, 20261013), ("papier", 1, 20261014),
