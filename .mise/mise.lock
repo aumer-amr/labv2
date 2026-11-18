@@ -49,6 +49,46 @@ url = "https://github.com/FiloSottile/age/releases/download/v1.3.2/age-v1.3.2-wi
 url_api = "https://api.github.com/repos/FiloSottile/age/releases/assets/535541937"
 provenance = "github-attestations"
 
+[[tools."aqua:oxc-project/oxc/oxfmt"]]
+version = "0.75.0"
+backend = "aqua:oxc-project/oxc/oxfmt"
+specifiers = ["0.75.0"]
+
+[tools."aqua:oxc-project/oxc/oxfmt"."platforms.linux-arm64"]
+checksum = "sha256:d572f06bfa6367d6cb766a077c2e0c4fd70a13b323879829dda00274b3b2cee6"
+url = "https://github.com/oxc-project/oxc/releases/download/oxfmt_v0.75.0/oxfmt-aarch64-unknown-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/oxc-project/oxc/releases/assets/680610856"
+
+[tools."aqua:oxc-project/oxc/oxfmt"."platforms.linux-arm64-musl"]
+checksum = "sha256:b419aee50009e1fbde95766beb9760d4ebebfdb31ba2bd6aff5b875a1da63e90"
+url = "https://github.com/oxc-project/oxc/releases/download/oxfmt_v0.75.0/oxfmt-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/oxc-project/oxc/releases/assets/680610858"
+
+[tools."aqua:oxc-project/oxc/oxfmt"."platforms.linux-x64"]
+checksum = "sha256:6a111e38ab6edfe61b87deffbc95e461e3b7326d5d034bdee71ba92cdfd87641"
+url = "https://github.com/oxc-project/oxc/releases/download/oxfmt_v0.75.0/oxfmt-x86_64-unknown-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/oxc-project/oxc/releases/assets/680610917"
+
+[tools."aqua:oxc-project/oxc/oxfmt"."platforms.linux-x64-musl"]
+checksum = "sha256:e55000473da87f60974463456853799c3445a15a1608d39329e74ce43e3d1abc"
+url = "https://github.com/oxc-project/oxc/releases/download/oxfmt_v0.75.0/oxfmt-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/oxc-project/oxc/releases/assets/680610922"
+
+[tools."aqua:oxc-project/oxc/oxfmt"."platforms.macos-arm64"]
+checksum = "sha256:e7973efba410ee690afdf306c3a561ebd9e6072005d28fe50ef4a4d7d4649bb3"
+url = "https://github.com/oxc-project/oxc/releases/download/oxfmt_v0.75.0/oxfmt-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/oxc-project/oxc/releases/assets/680610854"
+
+[tools."aqua:oxc-project/oxc/oxfmt"."platforms.macos-x64"]
+checksum = "sha256:e0242cd799da9e94d0676a003fe2912893a26f419b766614af1ca8b944aacfd9"
+url = "https://github.com/oxc-project/oxc/releases/download/oxfmt_v0.75.0/oxfmt-x86_64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/oxc-project/oxc/releases/assets/680610913"
+
+[tools."aqua:oxc-project/oxc/oxfmt"."platforms.windows-x64"]
+checksum = "sha256:3b2e7c87397f82a78b6a0212e2fe94d24a4cacc4805994a8f69de44c33b8e8b3"
+url = "https://github.com/oxc-project/oxc/releases/download/oxfmt_v0.75.0/oxfmt-x86_64-pc-windows-msvc.zip"
+url_api = "https://api.github.com/repos/oxc-project/oxc/releases/assets/680610912"
+
 [[tools.cloudflared]]
 version = "2026.11.0"
 backend = "aqua:cloudflare/cloudflared"
@@ -685,11 +725,45 @@ url = "https://nodejs.org/dist/v26.13.1/node-v26.13.1-darwin-x64.tar.gz"
 checksum = "sha256:e2edda75bfb089654705cf65a13b58933bfd5f57148e8ebda916f58a2474f1f7"
 url = "https://nodejs.org/dist/v26.13.1/node-v26.13.1-win-x64.zip"
 
-[[tools.oxfmt]]
-version = "0.74.0"
-aube = { path = "locks/oxfmt/0.74.0", digest = "sha256:b7977a181c0e11736ab44f83b24a4b862754204c253477e29d1758b0f898aad7" }
-backend = "npm:oxfmt"
-specifiers = ["0.74.0"]
+[[tools.shellcheck]]
+version = "0.11.0"
+backend = "aqua:koalaman/shellcheck"
+specifiers = ["0.11.0"]
+
+[tools.shellcheck."platforms.linux-arm64"]
+checksum = "sha256:12b331c1d2db6b9eb13cfca64306b1b157a86eb69db83023e261eaa7e7c14588"
+url = "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.aarch64.tar.xz"
+url_api = "https://api.github.com/repos/koalaman/shellcheck/releases/assets/279056934"
+
+[tools.shellcheck."platforms.linux-arm64-musl"]
+checksum = "sha256:12b331c1d2db6b9eb13cfca64306b1b157a86eb69db83023e261eaa7e7c14588"
+url = "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.aarch64.tar.xz"
+url_api = "https://api.github.com/repos/koalaman/shellcheck/releases/assets/279056934"
+
+[tools.shellcheck."platforms.linux-x64"]
+checksum = "sha256:8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198"
+url = "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.x86_64.tar.xz"
+url_api = "https://api.github.com/repos/koalaman/shellcheck/releases/assets/279056942"
+
+[tools.shellcheck."platforms.linux-x64-musl"]
+checksum = "sha256:8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198"
+url = "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.x86_64.tar.xz"
+url_api = "https://api.github.com/repos/koalaman/shellcheck/releases/assets/279056942"
+
+[tools.shellcheck."platforms.macos-arm64"]
+checksum = "sha256:56affdd8de5527894dca6dc3d7e0a99a873b0f004d7aabc30ae407d3f48b0a79"
+url = "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.darwin.aarch64.tar.xz"
+url_api = "https://api.github.com/repos/koalaman/shellcheck/releases/assets/279056932"
+
+[tools.shellcheck."platforms.macos-x64"]
+checksum = "sha256:3c89db4edcab7cf1c27bff178882e0f6f27f7afdf54e859fa041fca10febe4c6"
+url = "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.darwin.x86_64.tar.xz"
+url_api = "https://api.github.com/repos/koalaman/shellcheck/releases/assets/279056930"
+
+[tools.shellcheck."platforms.windows-x64"]
+checksum = "sha256:8a4e35ab0b331c85d73567b12f2a444df187f483e5079ceffa6bda1faa2e740e"
+url = "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.zip"
+url_api = "https://api.github.com/repos/koalaman/shellcheck/releases/assets/279056944"
 
 [[tools.sops]]
 version = "3.13.3"
