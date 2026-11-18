@@ -11,13 +11,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   filter:
     name: Flate - Filter
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
     outputs:
       changed-files: ${{ steps.changed-files.outputs.changed_files }}
     steps:
@@ -25,13 +26,22 @@ jobs:
         id: changed-files
         uses: bjw-s-labs/action-changed-files@147be9638332cf68fd60714a610509d7a9360d60 # v0.7.0
         with:
-          patterns: kubernetes/**/*
+          include_deleted_files: "true"
+          patterns: |
+            kubernetes/**/*
+            .github/workflows/flate.yaml
+            .mise/config.toml
+            .mise/mise.lock
+            scripts/ci/check-route-schemas.py
+            tests/ci/check-route-schemas.py
 
   flate:
     if: ${{ needs.filter.outputs.changed-files != '[]' }}
     needs: filter
     name: Flate
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -41,6 +51,19 @@ jobs:
 
       - name: Install Flate
         uses: home-operations/flate/action@bbb6ebc344da051752dbdb1b413860ceffcfb63d # v0.7.3
+
+      - name: Install manifest validation tools
+        uses: jdx/mise-action@236a21c3b91f5db6d4e174b348674a0f0caac06d # v5.2.9
+        with:
+          # renovate: datasource=github-releases depName=jdx/mise
+          version: 2026.11.9
+          install_args: flux2 kubeconform yq
+          cache: false
+
+      - name: Validate route and DNS schemas
+        run: |
+          mise exec -- python3 scripts/ci/check-route-schemas.py
+          mise exec -- python3 tests/ci/check-route-schemas.py
 
       - name: Run Flate
         id: flate

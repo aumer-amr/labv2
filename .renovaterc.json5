@@ -1,9 +1,9 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: [
-    "github>home-operations/renovate-presets#11.0.0",
-    "github>home-operations/renovate-presets//apps/grafanaDashboards.json5#11.0.0",
-    "github>home-operations/renovate-presets//apps/talosFactory.json5#11.0.0",
+    "github>home-operations/renovate-presets#12.0.0",
+    "github>home-operations/renovate-presets//apps/grafanaDashboards.json5#12.0.0",
+    "github>home-operations/renovate-presets//apps/talosFactory.json5#12.0.0",
     ":timezone(Europe/Amsterdam)",
   ],
   schedule: ["* 1 * * 1,4"],
@@ -63,6 +63,24 @@
       groupName: "mise tools",
       groupSlug: "mise-tools",
       minimumReleaseAge: "3 days",
+    },
+    {
+      description: "Let helm-values manage the cloudflared image so it counts once in the group",
+      matchManagers: ["flux"],
+      matchFileNames: ["kubernetes/apps/network/cloudflare-tunnel/app/helmrelease.yaml"],
+      matchPackageNames: ["docker.io/cloudflare/cloudflared"],
+      enabled: false,
+    },
+    {
+      description: "Group cloudflared CLI and image version updates",
+      matchPackageNames: ["cloudflare/cloudflared", "docker.io/cloudflare/cloudflared"],
+      matchUpdateTypes: ["major", "minor", "patch"],
+      groupName: "cloudflared",
+      groupSlug: "cloudflared",
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+      minimumGroupSize: 2,
     },
     {
       description: "Use GitHub releases for the annotated topf Talos version",

@@ -22,8 +22,9 @@ spec:
   interval: 1h
   patches:
     - target:
+        group: kopiur.home-operations.com
         kind: SnapshotPolicy
-        name: vikunja
+        name: '\$\{APP\}' # Kustomize applies patches before Flux substitutes APP.
       patch: |-
         apiVersion: kopiur.home-operations.com/v1alpha1
         kind: SnapshotPolicy

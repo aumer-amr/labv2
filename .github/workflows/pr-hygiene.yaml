@@ -34,8 +34,8 @@ jobs:
           install_args: node zizmor yq lefthook flux2
           cache: false
 
-      - name: Install formatter after Node
-        run: mise install --locked oxfmt
+      - name: Install standalone formatter
+        run: mise install --locked aqua:oxc-project/oxc/oxfmt
 
       - name: Check PR changes
         env:

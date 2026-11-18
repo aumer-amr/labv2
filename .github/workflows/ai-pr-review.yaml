@@ -17,7 +17,11 @@ permissions: {}
 jobs:
   # Remove this build and the patch once upstream wires the evidence transport.
   build-runtime:
-    if: ${{ !github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository }}
+    if: >-
+      ${{ !github.event.pull_request.draft &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login == 'labv2-bot[bot]' &&
+      startsWith(github.event.pull_request.head.ref, 'renovate/') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -68,7 +72,11 @@ jobs:
   review:
     needs: build-runtime
     # Untrusted forks must not run on a runner with internal service access.
-    if: ${{ !github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository }}
+    if: >-
+      ${{ !github.event.pull_request.draft &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login == 'labv2-bot[bot]' &&
+      startsWith(github.event.pull_request.head.ref, 'renovate/') }}
     runs-on: labv2-pr-reviewer
     timeout-minutes: 60
     permissions:

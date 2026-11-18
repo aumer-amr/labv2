@@ -2,9 +2,10 @@
 """Test shared CNPG alerts. Requires flux, yq, and promtool on PATH."""
 
 import json
-import os
 from pathlib import Path
+import shutil
 import subprocess
+import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -73,13 +74,17 @@ cases = [
      series({"success": "_x3 180x27", "failure": "_x3 0x27"}, pod="2"), [(30, [])]),
 ]
 
+flux = shutil.which("flux")
+if not flux:
+    sys.exit("Flux is required on PATH")
+
 with tempfile.TemporaryDirectory(prefix="cnpg-alert-tests-") as directory:
     directory = Path(directory)
     groups = []
     for namespace, app in CLUSTERS:
         rendered = subprocess.check_output(
-            ["flux", "envsubst", "--strict"], input=SOURCE.read_text(), text=True,
-            env={**os.environ, "NAMESPACE": namespace, "APP": app},
+            [Path(flux).absolute(), "envsubst", "--strict"], input=SOURCE.read_text(), text=True,
+            env={"NAMESPACE": namespace, "APP": app},
         )
         resource = json.loads(subprocess.check_output(
             ["yq", "-o=json", "."], input=rendered, text=True,
