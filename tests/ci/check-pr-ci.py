@@ -35,6 +35,8 @@ changed_files_input = workflow["jobs"]["filter"]["steps"][0]["with"]
 assert set(changed_files_input["patterns"].splitlines()) == {
     "kubernetes/**/*",
     ".github/workflows/flate.yaml",
+    ".mise/config.toml",
+    ".mise/mise.lock",
     "scripts/ci/check-route-schemas.py",
     "tests/ci/check-route-schemas.py",
 }

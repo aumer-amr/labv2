@@ -36,9 +36,11 @@ spec:
     - target:
         kind: HTTPRoute
       patch: |
-        - op: add
-          path: /metadata/annotations
-          value:
+        apiVersion: gateway.networking.k8s.io/v1
+        kind: HTTPRoute
+        metadata:
+          name: route-test
+          annotations:
             fixture.example.invalid/patched: "true"
   postBuild:
     substitute:
@@ -81,6 +83,27 @@ def main():
         assert "namespace: route-space" in routes, routes
         assert "fixture.example.invalid/patched:" in routes, routes
         assert validate_routes(routes) == 0
+
+        for metadata_field in ("annotations", "labels"):
+            literal_route = ROUTE.replace(
+                "  name: route-test\n",
+                f'  name: route-test\n  {metadata_field}:\n'
+                '    kustomize.toolkit.fluxcd.io/substitute: disabled\n',
+            ).replace(
+                "    - ${ROUTE_TEST_HOST}",
+                "    - route.example.invalid\n"
+                "  rules:\n"
+                "    - filters:\n"
+                "        - type: RequestHeaderModifier\n"
+                "          requestHeaderModifier:\n"
+                "            set:\n"
+                "              - name: X-Template\n"
+                "                value: '${ROUTE_TEST_LITERAL}'",
+            )
+            route_manifest.write_text(literal_route)
+            routes, = render_routes(root, flux)
+            assert "${ROUTE_TEST_LITERAL}" in routes, routes
+            assert validate_routes(routes) == 0
 
         route_manifest.write_text(ROUTE.replace("hostnames:", "invalidField:"))
         routes, = render_routes(root, flux)

@@ -30,6 +30,8 @@ jobs:
           patterns: |
             kubernetes/**/*
             .github/workflows/flate.yaml
+            .mise/config.toml
+            .mise/mise.lock
             scripts/ci/check-route-schemas.py
             tests/ci/check-route-schemas.py
 
