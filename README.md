@@ -12,14 +12,22 @@ This repository contains rendered cluster configuration. Initial template setup 
 
 ## Runbooks
 
-- [Deployment](docs/deployment.md) — bootstrap Talos and applications, then verify the rollout.
-- [GitOps](docs/gitops.md) — change applications, reconcile Flux, and operate network routes.
-- [Application databases](docs/database.md) — add, connect, verify, upgrade, and recover per-application PostgreSQL clusters.
-- [Application Valkey caches](docs/valkey.md) — add, connect, verify, and upgrade isolated per-application Valkey instances.
-- [Proactive AI monitoring](docs/ai-cluster-monitoring.md): ZeroClaw profiles and schedules, Qwen investigation, Langfuse tracing, and automatic Vikunja tasks.
-- [Reset](docs/reset.md) — return one or all Talos nodes to maintenance mode.
-- [Maintenance](docs/maintenance.md) — apply and upgrade Talos, add nodes, maintain Kubernetes, and troubleshoot failures.
-- [Cluster power](docs/power.md) — safely shut down and restart the full Talos and Rook Ceph cluster.
+### Deploy and change the cluster
+
+- [Bootstrap Talos and deploy applications](docs/deployment.md)
+- [Change applications and network routes with Flux](docs/gitops.md)
+
+### Operate and recover the cluster
+
+- [Maintain Talos and Kubernetes or troubleshoot failures](docs/maintenance.md)
+- [Investigate cluster alerts with AI monitoring](docs/ai-cluster-monitoring.md)
+- Read the [power preconditions](docs/power.md#preconditions) before you [shut down](docs/power.md#shutdown) or [start the cluster](docs/power.md#startup).
+- Resetting removes Kubernetes state. Read the [reset warning](docs/reset.md) before you [reset one node](docs/reset.md#reset-one-node) or [reset all nodes](docs/reset.md#reset-all-nodes).
+
+### Manage application data
+
+- [Set up, upgrade, or recover PostgreSQL databases](docs/database.md)
+- [Set up, upgrade, or restore Valkey caches](docs/valkey.md)
 
 ## Quick Reference
 
