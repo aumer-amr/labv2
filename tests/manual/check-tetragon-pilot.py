@@ -64,6 +64,14 @@ def test_alerts(work):
         {"name": "event loss alerts", "interval": "1m",
          "input_series": [{"series": 'tetragon_observer_ringbuf_events_lost_total{job="tetragon"}', "values": "0 0 1+0x5"}],
          "alert_rule_test": [{"eval_time": "2m", "alertname": "TetragonPilotEventLoss", "exp_alerts": [expected("TetragonPilotEventLoss")]}]},
+        {"name": "loss counters with identical labels fire and clear one alert", "interval": "1m",
+         "input_series": [
+             {"series": 'tetragon_observer_ringbuf_events_lost_total{job="tetragon"}', "values": "0+0x8"},
+             {"series": 'tetragon_events_export_failed_total{job="tetragon"}', "values": "0 0 1+0x6"}],
+         "alert_rule_test": [
+             {"eval_time": "1m", "alertname": "TetragonPilotEventLoss", "exp_alerts": []},
+             {"eval_time": "2m", "alertname": "TetragonPilotEventLoss", "exp_alerts": [expected("TetragonPilotEventLoss")]},
+             {"eval_time": "8m", "alertname": "TetragonPilotEventLoss", "exp_alerts": []}]},
         {"name": "missing scrape target", "interval": "1m", "input_series": [],
          "alert_rule_test": [{"eval_time": "6m", "alertname": "TetragonPilotUnavailable", "exp_alerts": [expected("TetragonPilotUnavailable", {"job": "tetragon"})]}]},
     ]
