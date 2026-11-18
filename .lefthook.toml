@@ -28,19 +28,23 @@ run = 'mise lock && git ls-files --modified --deleted --others --exclude-standar
 glob = ["*.json", "*.json5", "*.jsonc"]
 # Native lock sidecars are digest-pinned; formatting changes their identity.
 exclude = [".mise/locks/**"]
-run = "oxfmt {staged_files}"
+run = "oxfmt --no-error-on-unmatched-pattern {staged_files}"
 stage_fixed = true
 
 [pre-commit.commands.format-markdown]
 glob = ["*.md", "*.markdown", "*.mdx"]
-run = "oxfmt {staged_files}"
+run = "oxfmt --no-error-on-unmatched-pattern {staged_files}"
 stage_fixed = true
 
 [pre-commit.commands.format-yaml]
 glob = ["*.yaml", "*.yml"]
 exclude = [".mise/locks/**"]
-run = "oxfmt {staged_files}"
+run = "oxfmt --no-error-on-unmatched-pattern {staged_files}"
 stage_fixed = true
+
+[pre-commit.commands.shellcheck]
+glob = ["*.sh", "*.bash"]
+run = "shellcheck -- {staged_files}"
 
 [pre-commit.commands.zizmor]
 glob = [".github/workflows/*.yaml", ".github/actions/**/action.yaml"]
