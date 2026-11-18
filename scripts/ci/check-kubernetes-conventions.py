@@ -22,12 +22,12 @@ TARGET_EXCEPTIONS = {
 }
 
 
-def render(root):
+def render_children(root, manifest):
     built = subprocess.run(
         ["flux", "build", "kustomization", "cluster-apps", "--namespace", "flux-system",
          "--dry-run", "--in-memory-build", "--kubeconfig", "/dev/null",
          "--path", str(root / "kubernetes/apps"),
-         "--kustomization-file", str(root / "kubernetes/flux/cluster/ks.yaml")],
+         "--kustomization-file", str(manifest)],
         cwd=root, capture_output=True, check=True,
     )
     # Filter out Secret documents before decoding; never log rendered manifests.
@@ -45,6 +45,26 @@ def render(root):
         children[namespace, name] = child["spec"]
     if not children:
         raise ValueError("No Flux children found")
+    return children
+
+
+def render(root):
+    manifest = root / "kubernetes/flux/cluster/ks.yaml"
+    children = render_children(root, manifest)
+    if not (root / "kubernetes/apps/flux-kustomization-schema.json").is_file():
+        return children
+
+    # Kustomize keys the patch list by body and can collapse distinct targets.
+    with tempfile.TemporaryDirectory() as directory:
+        unpatched = Path(directory) / "cluster-apps.yaml"
+        unpatched.write_bytes(subprocess.check_output(["yq", "del(.spec.patches)", str(manifest)]))
+        local_children = render_children(root, unpatched)
+
+    for (namespace, name), spec in local_children.items():
+        local = spec.get("patches", [])
+        merged = children.get((namespace, name), {}).get("patches", [])
+        if local and (len(merged) <= len(local) or merged[-len(local):] != local):
+            raise ValueError(f"{namespace}/{name}: child patches were lost or reordered when merging shared defaults")
     return children
 
 

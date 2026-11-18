@@ -115,6 +115,37 @@ registered = json.loads(subprocess.check_output(
     ["yq", "-o=json", ".resources", str(apps_root / "kustomization.yaml")],
 ))
 assert set(registered) == {f"./{path.parent.name}" for path in apps_root.glob("*/kustomization.yaml")}
+
+with tempfile.TemporaryDirectory() as directory:
+    fixture = Path(directory)
+    parent = Path("kubernetes/flux/cluster/ks.yaml")
+    (fixture / parent).parent.mkdir(parents=True)
+    (fixture / parent).write_bytes((root / parent).read_bytes())
+    apps = fixture / "kubernetes/apps"
+    apps.mkdir(parents=True)
+    schema = "flux-kustomization-schema.json"
+    (apps / schema).write_bytes((apps_root / schema).read_bytes())
+    (apps / "kustomization.yaml").write_text(json.dumps({
+        "apiVersion": "kustomize.config.k8s.io/v1beta1", "kind": "Kustomization",
+        "openapi": {"path": schema}, "resources": ["child.yaml"],
+    }))
+    patch = '[{"op":"add","path":"/spec/timeout","value":"10m"}]'
+    child_spec = child("home", "app")
+    child_spec["patches"] = [
+        {"target": {"group": "helm.toolkit.fluxcd.io", "kind": "HelmRelease", "name": name}, "patch": patch}
+        for name in ("first", "second")
+    ]
+    (apps / "child.yaml").write_text(json.dumps({
+        "apiVersion": "kustomize.toolkit.fluxcd.io/v1", "kind": "Kustomization",
+        "metadata": {"namespace": "home", "name": "app"}, "spec": child_spec,
+    }))
+    try:
+        conventions.render(fixture)
+    except ValueError as error:
+        assert str(error).startswith("home/app: child patches were lost or reordered"), error
+    else:
+        raise AssertionError("Child patches with distinct targets collapsed without an error")
+
 children = conventions.render(root)
 reloader_spec = children["kube-system", "reloader"]
 vikunja_spec = children["developer-tools", "vikunja"]
