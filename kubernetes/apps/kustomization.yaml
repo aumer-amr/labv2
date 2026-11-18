@@ -1,0 +1,27 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+openapi:
+  # Merge the HelmRelease defaults before existing child patches.
+  path: flux-kustomization-schema.json
+resources:
+  - ./actions-runner-system
+  - ./actions-runners
+  - ./administration
+  - ./ai
+  - ./cert-manager
+  - ./database
+  - ./default
+  - ./developer-tools
+  - ./external-secrets
+  - ./fitness
+  - ./flux-system
+  - ./forgejo-runners
+  - ./home
+  - ./kube-system
+  - ./network
+  - ./observability
+  - ./rook-ceph
+  - ./security
+  - ./system-upgrade
+  - ./trivy-system

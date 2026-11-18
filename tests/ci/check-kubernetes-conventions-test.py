@@ -110,9 +110,23 @@ with tempfile.TemporaryDirectory() as directory:
     assert any("child removed" in error for error in conventions.validate(baseline, conventions.render(root)))
 
 root = conventions.ROOT
+apps_root = root / "kubernetes/apps"
+registered = json.loads(subprocess.check_output(
+    ["yq", "-o=json", ".resources", str(apps_root / "kustomization.yaml")],
+))
+assert set(registered) == {f"./{path.parent.name}" for path in apps_root.glob("*/kustomization.yaml")}
+children = conventions.render(root)
+reloader_spec = children["kube-system", "reloader"]
+vikunja_spec = children["developer-tools", "vikunja"]
+defaults, = reloader_spec["patches"]
+assert vikunja_spec["patches"][0] == defaults
+assert [patch["target"]["kind"] for patch in vikunja_spec["patches"]] == ["HelmRelease", "SnapshotPolicy"]
+for child_spec in children.values():
+    assert child_spec["decryption"]["provider"] == "sops"
+    assert child_spec["deletionPolicy"] == "WaitForTermination"
+
 with tempfile.TemporaryDirectory() as directory:
     child_file = Path(directory) / "reloader.json"
-    reloader_spec = conventions.render(root)["kube-system", "reloader"]
     child_file.write_text(json.dumps({
         "apiVersion": "kustomize.toolkit.fluxcd.io/v1", "kind": "Kustomization",
         "metadata": {"namespace": "kube-system", "name": "reloader"}, "spec": reloader_spec,
@@ -134,5 +148,22 @@ with tempfile.TemporaryDirectory() as directory:
         "cleanupOnFail": True, "crds": "CreateReplace", "strategy": {"name": "RemediateOnFailure"},
         "remediation": {"remediateLastFailure": True, "retries": 2},
     }
+
+    child_file = Path(directory) / "vikunja.json"
+    child_file.write_text(json.dumps({
+        "apiVersion": "kustomize.toolkit.fluxcd.io/v1", "kind": "Kustomization",
+        "metadata": {"namespace": "developer-tools", "name": "vikunja"}, "spec": vikunja_spec,
+    }))
+    resources = subprocess.check_output(
+        ["flux", "build", "kustomization", "vikunja", "--namespace", "developer-tools",
+         "--dry-run", "--in-memory-build", "--kubeconfig", "/dev/null", "--strict-substitute",
+         "--path", vikunja_spec["path"], "--kustomization-file", str(child_file)],
+        cwd=root,
+    )
+    retention = subprocess.check_output(
+        ["yq", 'select(.kind == "SnapshotPolicy" and .metadata.name == "vikunja") | .spec.retention.keepDaily', "-"],
+        input=resources,
+    )
+    assert retention.strip() == b"30"
 
 print("Kubernetes convention fixtures passed")
