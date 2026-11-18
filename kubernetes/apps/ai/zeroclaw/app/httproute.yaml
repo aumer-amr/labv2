@@ -6,6 +6,8 @@ metadata:
   annotations:
     gatus.home-operations.com/endpoint: |-
       path: /
+      client:
+        ignore-redirect: true
       conditions: ["[STATUS] == 302"]
 spec:
   hostnames:
