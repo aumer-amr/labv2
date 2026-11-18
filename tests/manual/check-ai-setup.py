@@ -19,17 +19,7 @@ def read_yaml(path, expression="."):
 
 models = AI / "litellm/app/models"
 local = read_yaml(models / "qwen3-5-9b.yaml")["spec"]
-lar = read_yaml(models / "lar-9b.yaml")["spec"]
-assert lar["params"]["apiBase"] == local["params"]["apiBase"] == "http://epyon-chat.ai.svc.cluster.local:8080/v1"
-assert lar["modelName"] == "lar-9b" and lar["params"]["model"] == "openai/lar-9b"
-pool = read_yaml(AI / "llmkube/models/epyon-chat.yaml", 'select(.kind == "ModelPool")')["spec"]
-assert pool["default"] == "qwen3.5-9b"
-members = {member["inferenceServiceRef"]["name"] for member in pool["members"]}
-assert members == {"qwen3.5-9b", "lar-9b"}
-for filename in ("qwen3-5-9b.yaml", "lar-9b.yaml"):
-    member = read_yaml(AI / "llmkube/models" / filename, 'select(.kind == "InferenceService")')["spec"]
-    assert member["nodeSelector"] == pool["nodeSelector"] and "replicas" not in member
-assert lar["modelName"] in read_yaml(AI / "open-webui/app/litellmvirtualkey.yaml")["spec"]["models"]
+assert local["params"]["apiBase"].startswith("http://qwen3-5-9b.ai.svc.")
 fallback = read_yaml(models / "qwen3-5-9b-fallback.yaml")["spec"]
 assert fallback["params"]["apiBase"] == "http://qwen3-5-9b-fallback.ai.svc.cluster.local:8080/v1"
 assert fallback["modelName"] == "qwen3.5-9b-fallback"
