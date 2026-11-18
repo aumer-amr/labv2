@@ -5,6 +5,7 @@ const path = require("node:path");
 const fs = require("node:fs");
 const os = require("node:os");
 const { execFileSync } = require("node:child_process");
+const { createServer } = require("node:http");
 const { runToolHarness, resolveLoopLimits } = require(
   path.resolve(process.argv[2], ".test-build/src/tools/harness.js"),
 );
@@ -17,6 +18,7 @@ const { adaptiveLoopBudgets } = require(
 const { applyToolHarnessFailureEnforcement, applyToolMinSuccessfulEnforcement } = require(
   path.resolve(process.argv[2], ".test-build/src/enforcement/enforce.js"),
 );
+const { actionMain } = require(path.resolve(process.argv[2], ".test-build/src/run/action.js"));
 
 for (const [changedFiles, changedLines, requests, rounds] of [
   [3, 120, 24, 24],
@@ -149,6 +151,7 @@ async function check(mode) {
     for (const mode of ["no-call", "denied", "mixed", "unrecovered", "no-evidence"])
       await checkPlanning(mode);
     await checkHeadReads();
+    await checkDispatch();
     console.log(
       "Evidence transport, exact-head reads, security boundaries, and diagnostics passed",
     );
@@ -159,6 +162,121 @@ async function check(mode) {
   console.error(error);
   process.exitCode = 1;
 });
+
+async function checkDispatch() {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "review-dispatch-"));
+  const workspace = path.join(root, "trusted");
+  const modelRequests = [];
+  const server = createServer(async (request, response) => {
+    let body = "";
+    for await (const chunk of request) body += chunk;
+    modelRequests.push(body);
+    response.setHeader("Content-Type", "application/json");
+    response.end(JSON.stringify({ choices: [{ message: { content: JSON.stringify({
+      verdict: "approve", review_markdown: "Fixture review", findings: [],
+    }) }, finish_reason: "stop" }] }));
+  });
+  try {
+    fs.mkdirSync(workspace);
+    execFileSync("git", ["init", "--quiet", workspace]);
+    execFileSync("git", ["-C", workspace, "-c", "user.name=fixture", "-c", "user.email=test@example.com",
+      "-c", "commit.gpgsign=false", "commit", "--quiet", "--allow-empty", "-m", "trusted base"]);
+    const base = execFileSync("git", ["-C", workspace, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+    await new Promise((resolve, reject) => server.once("error", reject).listen(0, "127.0.0.1", resolve));
+    const model = `http://127.0.0.1:${server.address().port}`;
+    fs.writeFileSync(path.join(workspace, "providers.json"), JSON.stringify({
+      providers: [{ id: "pin-fixture", command: [process.execPath, "evidence.cjs"] }],
+    }));
+    fs.writeFileSync(path.join(workspace, "evidence.cjs"), `
+      const assert = require("node:assert/strict");
+      assert.equal(process.env.PR_HEAD_SHA, ${JSON.stringify(head)});
+      assert.equal(process.env.PR_REVIEWER_BASE_REF, ${JSON.stringify(base)});
+      assert.equal(process.env.PR_NUMBER, "7");
+      assert.equal(process.env.AI_API_KEY, undefined);
+      console.log(JSON.stringify({ findings: [{ message: "trusted evidence fixture" }] }));
+    `);
+    const eventPath = path.join(root, "event.json");
+    fs.writeFileSync(eventPath, JSON.stringify({ inputs: { pr_number: "7" } }));
+    let state = "open";
+    let baseBranch = "main";
+    global.fetch = async (url, init) => {
+      const req = new URL(url);
+      assert.equal(req.origin, "https://api.github.com");
+      if (req.pathname === "/repos/o/r/pulls/7") {
+        const accept = new Headers(init.headers).get("Accept");
+        if (accept === "application/vnd.github.v3.diff") {
+          return new Response("diff --git a/README.md b/README.md\n--- a/README.md\n+++ b/README.md\n@@ -1 +1,2 @@\n hello\n+world\n");
+        }
+        return Response.json({
+          number: 7, state, draft: false, title: "Fixture", body: "",
+          base: { sha: base, ref: baseBranch, repo: { full_name: "o/r" } },
+          head: { sha: head, ref: "renovate/chart", repo: { full_name: "o/r" } },
+          user: { login: "labv2-bot[bot]" }, changed_files: 1,
+        });
+      }
+      if (req.pathname === "/repos/o/r/pulls/7/files") {
+        return Response.json([{ filename: "README.md", status: "modified" }]);
+      }
+      if (/\/(comments|reviews)$/.test(req.pathname)) return Response.json([]);
+      return Response.json({}, { status: 404 });
+    };
+    const output = path.join(root, "output");
+    for (const [basePin, headPin, currentState, currentBranch, skip] of [
+      [base, "c".repeat(40), "open", "main", "superseded-head"],
+      ["c".repeat(40), head, "open", "main", "superseded-base"],
+      [base, head, "closed", "main", "manual-pr-ineligible"],
+      [base, head, "open", "release", "manual-pr-ineligible"],
+      [base, head, "open", "main", null],
+    ]) {
+      state = currentState;
+      baseBranch = currentBranch;
+      fs.rmSync(output, { force: true });
+      assert.equal(await actionMain({
+        PATH: process.env.PATH,
+        HOME: process.env.HOME,
+        GITHUB_ACTIONS: "true",
+        GITHUB_EVENT_NAME: "workflow_dispatch",
+        GITHUB_EVENT_PATH: eventPath,
+        GITHUB_REPOSITORY: "o/r",
+        GITHUB_WORKSPACE: workspace,
+        GITHUB_API_URL: "https://api.github.com",
+        GITHUB_SERVER_URL: "https://github.com",
+        RUNNER_TEMP: root,
+        GITHUB_OUTPUT: output,
+        LABV2_REVIEW_HEAD_SHA: headPin,
+        LABV2_REVIEW_BASE_SHA: basePin,
+        "INPUT_GITHUB-TOKEN": "fixture",
+        "INPUT_PR-NUMBER": "7",
+        "INPUT_FORCE-REVIEW": "true",
+        "INPUT_AI-BASE-URL": model,
+        "INPUT_AI-MODEL": "fixture",
+        "INPUT_AI-API-KEY": "fixture-key",
+        "INPUT_AI-REQUEST-TIMEOUT-SEC": "5",
+        "INPUT_AI-PRIMARY-RETRIES": "1",
+        "INPUT_AI-STREAM": "false",
+        "INPUT_TOOL-MODE": "off",
+        "INPUT_DEEP-REVIEW": "false",
+        "INPUT_CI-STATUS-CHECK": "false",
+        "INPUT_EVIDENCE-PROVIDERS-FILE": "providers.json",
+        "INPUT_PUBLISH-MODE": "comment",
+      }), 0);
+      const result = fs.readFileSync(output, "utf8");
+      if (skip) {
+        assert.match(result, new RegExp(`skip-reason=${skip}`));
+        assert.equal(modelRequests.length, 0);
+      } else {
+        assert.match(result, /should-review=true/);
+        const run = fs.readdirSync(root).find((name) => name.startsWith("v3-review-run-"));
+        assert.ok(run);
+        assert.match(fs.readFileSync(path.join(root, run, "evidence-providers.md"), "utf8"), /trusted evidence fixture/);
+        assert.ok(modelRequests.some((body) => body.includes("trusted evidence fixture")));
+      }
+    }
+  } finally {
+    if (server.listening) await new Promise((resolve) => server.close(resolve));
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
 
 async function checkPlanning(mode) {
   const corpus = "# PR Diff\n+ Update Grafana MCP\n\n# Tool Harness Findings\nPending\n";

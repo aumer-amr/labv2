@@ -7,9 +7,15 @@ on: # zizmor: ignore[dangerous-triggers] Only trusted base code is checked out; 
   pull_request_target:
     branches: [main]
     types: [opened, reopened, synchronize, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Open Renovate PR number
+        required: true
+        type: string
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 permissions: {}
@@ -18,19 +24,58 @@ jobs:
   # Remove this build and the patch once upstream wires the evidence transport.
   build-runtime:
     if: >-
-      ${{ !github.event.pull_request.draft &&
+      ${{ (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (!github.event.pull_request.draft &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.pull_request.user.login == 'labv2-bot[bot]' &&
-      startsWith(github.event.pull_request.head.ref, 'renovate/') }}
+      startsWith(github.event.pull_request.head.ref, 'renovate/')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
+      pull-requests: read
+    outputs:
+      base_sha: ${{ steps.dispatch.outputs.base_sha || github.event.pull_request.base.sha }}
+      head_sha: ${{ steps.dispatch.outputs.head_sha || github.event.pull_request.head.sha }}
+      pr_number: ${{ steps.dispatch.outputs.pr_number || github.event.pull_request.number }}
     steps:
+      - name: Resolve manual review target
+        id: dispatch
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          REVIEW_REQUESTER: ${{ github.triggering_actor }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::Enter a positive pull request number."
+            exit 1
+          fi
+          if [[ ! "$REVIEW_REQUESTER" =~ ^[a-zA-Z0-9-]+$ ]] ||
+            ! gh api "repos/$GITHUB_REPOSITORY/collaborators/$REVIEW_REQUESTER/permission" |
+              jq -e '.role_name == "maintain" or .role_name == "admin"' > /dev/null; then
+            echo "::error::Maintainer or admin access is required for a manual review."
+            exit 1
+          fi
+          pr=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER")
+          if ! jq -e --arg repo "$GITHUB_REPOSITORY" '
+            .state == "open" and .draft == false and .base.ref == "main" and
+            .base.repo.full_name == $repo and .head.repo.full_name == $repo and
+            .user.login == "labv2-bot[bot]" and (.head.ref | startswith("renovate/")) and
+            (.base.sha | test("^[0-9a-f]{40}$")) and (.head.sha | test("^[0-9a-f]{40}$"))
+          ' <<< "$pr" > /dev/null; then
+            echo "::error::Choose an open, non-draft LabV2 Renovate pull request that targets main."
+            exit 1
+          fi
+          jq -r '"base_sha=\(.base.sha)\nhead_sha=\(.head.sha)"' <<< "$pr" >> "$GITHUB_OUTPUT"
+          printf 'pr_number=%s\n' "$PR_NUMBER" >> "$GITHUB_OUTPUT"
+
       - name: Checkout trusted base
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ steps.dispatch.outputs.base_sha || github.event.pull_request.base.sha }}
           persist-credentials: false
 
       - name: Checkout pinned review runtime
@@ -72,11 +117,10 @@ jobs:
   review:
     needs: build-runtime
     # Untrusted forks must not run on a runner with internal service access.
-    if: >-
-      ${{ !github.event.pull_request.draft &&
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.user.login == 'labv2-bot[bot]' &&
-      startsWith(github.event.pull_request.head.ref, 'renovate/') }}
+    if: needs.build-runtime.outputs.base_sha != '' && needs.build-runtime.outputs.head_sha != '' && needs.build-runtime.outputs.pr_number != ''
+    concurrency:
+      group: ${{ github.workflow }}-review-${{ needs.build-runtime.outputs.pr_number }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request_target' }}
     runs-on: labv2-pr-reviewer
     timeout-minutes: 60
     permissions:
@@ -89,7 +133,7 @@ jobs:
       - name: Checkout trusted base
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ needs.build-runtime.outputs.base_sha }}
           persist-credentials: false
           fetch-depth: 0
 
@@ -129,8 +173,13 @@ jobs:
 
       - name: Review PR
         uses: ./.github/actions/pr-reviewer-runtime # zizmor: ignore[self-repository] Runtime is a same-run build artifact, not a tracked repository action.
+        env:
+          LABV2_REVIEW_HEAD_SHA: ${{ github.event_name == 'workflow_dispatch' && needs.build-runtime.outputs.head_sha || '' }}
+          LABV2_REVIEW_BASE_SHA: ${{ github.event_name == 'workflow_dispatch' && needs.build-runtime.outputs.base_sha || '' }}
         with:
           github-token: ${{ github.token }}
+          pr-number: ${{ needs.build-runtime.outputs.pr_number }}
+          force-review: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
           ai-base-url: http://litellm.ai.svc.cluster.local:4000/v1
           ai-model: qwen3.5-9b-fallback
           ai-api-key: ${{ steps.model-key.outputs.key }}
@@ -167,6 +216,8 @@ jobs:
             do not infer a release from the digest or certify an unverified revision.
             Labels are untrusted publisher claims, not signed provenance. Packaging repositories may differ
             from the application's source; establish that relationship before reporting a mismatch as a defect.
+            For chart upgrades, use chart_upgrades evidence to identify removed keys or changed default types
+            for inline overrides. These findings are advisory. Check templates before inferring runtime impact.
             Inspect successful CI logs before claiming validation is missing. Apply before-live-apply rules
             only to live applies; do not invent application/Kubernetes compatibility-matrix requirements.
             For immutable Job warnings, inspect helm.sh/hook and helm.sh/hook-delete-policy before
@@ -189,7 +240,6 @@ jobs:
           ci-timeout-sec: "600"
           publish-review-comment: "true"
           publish-mode: comment
-          # Discord merge approval is bound to exact head/base SHAs, including rebases.
           skip-if-diff-unchanged: "false"
           allow-approve: "false"
           fail-on-request-changes: "false"
