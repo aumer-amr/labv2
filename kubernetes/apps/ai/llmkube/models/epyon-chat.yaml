@@ -1,0 +1,19 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: ModelRouter
+metadata:
+  name: epyon-chat
+spec:
+  proxy:
+    serviceName: epyon-chat
+    responseHeaderTimeout: 30m
+  backends:
+    - name: qwen3-5-9b
+      inferenceServiceRef:
+        name: qwen3.5-9b
+  rules:
+    - name: qwen
+      match:
+        models: ["qwen3.5-9b"]
+      route:
+        backends: ["qwen3-5-9b"]

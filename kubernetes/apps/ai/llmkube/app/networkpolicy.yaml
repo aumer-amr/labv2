@@ -33,6 +33,8 @@ spec:
               protocol: UDP
           rules:
             dns:
+              - matchName: qwen3-5-9b.ai.svc.cluster.local
+              - matchName: lar-9b.ai.svc.cluster.local
               - matchName: huggingface.co
               - matchName: huggingface.co.ai.svc.cluster.local
               - matchName: huggingface.co.svc.cluster.local
@@ -51,6 +53,8 @@ spec:
               protocol: TCP
           rules:
             dns:
+              - matchName: qwen3-5-9b.ai.svc.cluster.local
+              - matchName: lar-9b.ai.svc.cluster.local
               - matchName: huggingface.co
               - matchName: huggingface.co.ai.svc.cluster.local
               - matchName: huggingface.co.svc.cluster.local
@@ -59,6 +63,15 @@ spec:
               - matchPattern: "**.hf.co.ai.svc.cluster.local"
               - matchPattern: "**.hf.co.svc.cluster.local"
               - matchPattern: "**.hf.co.cluster.local"
+    - toEndpoints:
+        - matchExpressions:
+            - key: inference.llmkube.dev/service
+              operator: In
+              values: ["qwen3.5-9b", "lar-9b"]
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
     - toFQDNs:
         - matchName: huggingface.co
         - matchName: huggingface.co.ai.svc.cluster.local
@@ -165,6 +178,7 @@ spec:
       - key: inference.llmkube.dev/service
         operator: In
         values:
+          - lar-9b
           - qwen3.5-9b
           - qwen3-5-9b-fallback
           - qwen3-embedding-0.6b
