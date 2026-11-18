@@ -27,7 +27,18 @@ workflow = yaml(".github/workflows/flate.yaml")
 gate = workflow["jobs"]["success"]
 assert set(gate["needs"]) == {"filter", "flate"}
 assert gate["if"] == "${{ always() }}"
-assert workflow["jobs"]["filter"]["steps"][0]["with"]["patterns"] == "kubernetes/**/*"
+assert workflow["permissions"] == {}
+assert workflow["jobs"]["filter"]["permissions"] == {"pull-requests": "read"}
+assert workflow["jobs"]["flate"]["permissions"] == {"contents": "read"}
+assert "permissions" not in gate
+changed_files_input = workflow["jobs"]["filter"]["steps"][0]["with"]
+assert set(changed_files_input["patterns"].splitlines()) == {
+    "kubernetes/**/*",
+    ".github/workflows/flate.yaml",
+    "scripts/ci/check-route-schemas.py",
+    "tests/ci/check-route-schemas.py",
+}
+assert changed_files_input["include_deleted_files"] == "true"
 assert workflow["jobs"]["flate"]["if"] == "${{ needs.filter.outputs.changed-files != '[]' }}"
 for filtered, validated, changed in itertools.product(
     ["success", "failure", "cancelled", "skipped"],
