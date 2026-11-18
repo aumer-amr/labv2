@@ -1,5 +1,22 @@
 ---
 apiVersion: inference.llmkube.dev/v1alpha1
+kind: ModelPool
+metadata:
+  name: epyon-chat
+spec:
+  gpu: 1
+  nodeSelector:
+    kubernetes.io/hostname: epyon
+  default: qwen3.5-9b
+  swapPolicy: sticky
+  swapBudget: 15m
+  members:
+    - inferenceServiceRef:
+        name: qwen3.5-9b
+    - inferenceServiceRef:
+        name: lar-9b
+---
+apiVersion: inference.llmkube.dev/v1alpha1
 kind: ModelRouter
 metadata:
   name: epyon-chat
@@ -11,9 +28,17 @@ spec:
     - name: qwen3-5-9b
       inferenceServiceRef:
         name: qwen3.5-9b
+    - name: lar-9b
+      inferenceServiceRef:
+        name: lar-9b
   rules:
     - name: qwen
       match:
         models: ["qwen3.5-9b"]
       route:
         backends: ["qwen3-5-9b"]
+    - name: lar
+      match:
+        models: ["lar-9b"]
+      route:
+        backends: ["lar-9b"]

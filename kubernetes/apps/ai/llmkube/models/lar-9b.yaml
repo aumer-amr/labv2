@@ -1,0 +1,94 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: Model
+metadata:
+  name: lar-9b
+spec:
+  source: https://huggingface.co/mradermacher/LAR-9B-GGUF/resolve/bd4f2f2cff6762db49239296cc1b51546333bafa/LAR-9B.Q4_K_M.gguf
+  sha256: a22f743cd5f533ab52641151240f636f2508a009c6edb8023e24a25f9d09842c
+  format: gguf
+  quantization: Q4_K_M
+  hardware:
+    accelerator: intel
+    gpu:
+      enabled: true
+      vendor: intel
+      layers: 99
+      resourceClaims:
+        - name: gpu
+          resourceClaimTemplateName: llmkube-models-gpu
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: InferenceService
+metadata:
+  name: lar-9b
+spec:
+  modelRef: lar-9b
+  runtime: llamacpp
+  # renovate: datasource=docker depName=ghcr.io/ggml-org/llama.cpp
+  image: ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:4bce66a7831e1d396f49d433eb738b9ef1edc20002f5a0d5099b15282d01d13f
+  # The epyon-chat ModelPool owns replicas.
+  nodeSelector:
+    kubernetes.io/hostname: epyon
+  securityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+  podSecurityContext:
+    # The operator overrides UID only for its cache-permission init container.
+    # Existing shared cache directories belong to the downloader UID.
+    runAsUser: 101
+    runAsGroup: 102
+    fsGroup: 102
+    seccompProfile:
+      type: RuntimeDefault
+    supplementalGroups:
+      - 44
+      - 992
+  priority: normal
+  contextSize: 65536
+  parallelSlots: 1
+  batchSize: 2048
+  uBatchSize: 512
+  jinja: true
+  extraArgs:
+    - --alias
+    - lar-9b
+    - --cache-ram
+    - "0"
+    - --threads
+    - "6"
+    - --threads-batch
+    - "12"
+    - --load-mode
+    - mmap
+    - --metrics
+  endpoint:
+    port: 8080
+    type: ClusterIP
+  resources:
+    cpu: 500m
+    memory: 12Gi
+    memoryLimit: 24Gi
+  probeOverrides:
+    startup:
+      httpGet:
+        path: /health
+        port: 8080
+      periodSeconds: 10
+      failureThreshold: 360
+    liveness:
+      httpGet:
+        path: /health
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      failureThreshold: 6
+    readiness:
+      httpGet:
+        path: /health
+        port: 8080
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 6
