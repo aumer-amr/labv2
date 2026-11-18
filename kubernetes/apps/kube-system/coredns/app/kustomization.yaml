@@ -5,4 +5,5 @@ resources:
   - ./whisper-assist-networkpolicy.yaml
   - ./helmrelease.yaml
   - ./networkpolicy.yaml
+  - ./cliproxyapi-networkpolicy.yaml
   - ./ocirepository.yaml
