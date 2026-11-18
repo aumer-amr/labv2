@@ -75,11 +75,18 @@ apps-namespaces:
 [private]
 apps-secrets:
     just log info "Applying secrets for apps" stage "{{ recipe_name() }}"
-    for secret in \
-        "{{ source_directory() }}/deploy-key.sops.yaml" \
-        "{{ source_directory() }}/sops-age.sops.yaml" \
+    sync_url="$(yq --exit-status '.spec.values.instance.sync.url' "{{ kubernetes_dir }}/apps/flux-system/flux-instance/app/helmrelease.yaml")"
+    secrets=()
+    case "$sync_url" in
+        ssh://*) secrets+=("{{ source_directory() }}/deploy-key.sops.yaml") ;;
+        https://*|http://*) ;;
+        *) just log fatal "Unsupported Flux Git source URL scheme" ;;
+    esac
+    secrets+=(
+        "{{ source_directory() }}/sops-age.sops.yaml"
         "{{ kubernetes_dir }}/components/sops/cluster-secrets.sops.yaml"
-    do
+    )
+    for secret in "${secrets[@]}"; do
         name="$(basename "$secret" .sops.yaml)"
         if sops decrypt "$secret" \
                 | kubectl --namespace flux-system apply --server-side --filename - &>/dev/null; then
@@ -96,17 +103,18 @@ apps-secrets-op:
         just log fatal "Failed to apply kustomize manifests" "stage" "{{ recipe_name() }}"
     fi
 
-# Wait until nodes register as Ready=False. They only become Ready=True once the CNI is healthy.
+# Nodes can register before the CNI makes them Ready.
 [private]
 apps-ready:
-    just log info "Waiting for nodes to register as Ready=False" stage "{{ recipe_name() }}"
-    if ! kubectl wait nodes --for=condition=Ready=True --all --timeout=10s &>/dev/null; then
-        deadline=$((SECONDS + 600))
-        until kubectl wait nodes --for=condition=Ready=False --all --timeout=10s &>/dev/null; do
-            if (( SECONDS >= deadline )); then
-                just log fatal "Timed out waiting for nodes to register"
-            fi
-            just log info "Nodes not available, waiting for nodes to be available. Retrying in 5 seconds..."
-            sleep 5
-        done
-    fi
+    just log info "Waiting for a node to register" stage "{{ recipe_name() }}"
+    deadline=$((SECONDS + 600))
+    while (( (remaining = deadline - SECONDS) > 0 )); do
+        if nodes="$(kubectl get nodes --output=name --request-timeout="$((remaining < 10 ? remaining : 10))s" 2>/dev/null)" && [[ -n "$nodes" ]]; then
+            exit 0
+        fi
+        remaining=$((deadline - SECONDS))
+        if (( remaining > 0 )); then
+            sleep "$((remaining < 5 ? remaining : 5))"
+        fi
+    done
+    just log fatal "Timed out waiting for a node to register"
