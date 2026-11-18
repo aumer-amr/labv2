@@ -190,9 +190,6 @@ spec:
                   - qwen3.5-9b
                   - qwen3-5-9b-fallback
                   - qwen3-embedding-0.6b
-        - podSelector:
-            matchLabels:
-              inference.llmkube.dev/model-router: epyon-chat
       ports:
         - port: 8080
           protocol: TCP
@@ -244,7 +241,6 @@ spec:
               - matchName: grafana-mcp.ai.svc.cluster.local
               - matchName: qwen3-embedding-0-6b.ai.svc.cluster.local
               - matchName: qwen3-5-9b.ai.svc.cluster.local
-              - matchName: epyon-chat.ai.svc.cluster.local
               - matchName: qwen3-5-9b-fallback.ai.svc.cluster.local
               - matchName: unifi-mcp.ai.svc.cluster.local
               - matchName: truenas-mcp.ai.svc.cluster.local
@@ -277,7 +273,6 @@ spec:
               - matchName: grafana-mcp.ai.svc.cluster.local
               - matchName: qwen3-embedding-0-6b.ai.svc.cluster.local
               - matchName: qwen3-5-9b.ai.svc.cluster.local
-              - matchName: epyon-chat.ai.svc.cluster.local
               - matchName: qwen3-5-9b-fallback.ai.svc.cluster.local
               - matchName: unifi-mcp.ai.svc.cluster.local
               - matchName: truenas-mcp.ai.svc.cluster.local

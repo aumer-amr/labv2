@@ -27,7 +27,7 @@ spec:
   runtime: llamacpp
   # renovate: datasource=docker depName=ghcr.io/ggml-org/llama.cpp
   image: ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:4bce66a7831e1d396f49d433eb738b9ef1edc20002f5a0d5099b15282d01d13f
-  # The epyon-chat ModelPool owns replicas.
+  replicas: 1
   nodeSelector:
     kubernetes.io/hostname: epyon
   podSecurityContext:

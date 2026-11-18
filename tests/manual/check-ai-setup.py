@@ -19,7 +19,7 @@ def read_yaml(path, expression="."):
 
 models = AI / "litellm/app/models"
 local = read_yaml(models / "qwen3-5-9b.yaml")["spec"]
-assert local["params"]["apiBase"].startswith("http://qwen3-5-9b.ai.svc.")
+assert local["params"]["apiBase"] == "http://qwen3-5-9b.ai.svc.cluster.local:8080/v1"
 fallback = read_yaml(models / "qwen3-5-9b-fallback.yaml")["spec"]
 assert fallback["params"]["apiBase"] == "http://qwen3-5-9b-fallback.ai.svc.cluster.local:8080/v1"
 assert fallback["modelName"] == "qwen3.5-9b-fallback"

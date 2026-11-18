@@ -30,25 +30,15 @@ metadata:
   name: qwen3.5-9b
 spec:
   podSelector:
-    matchExpressions:
-      - key: inference.llmkube.dev/service
-        operator: In
-        values: ["qwen3.5-9b", "lar-9b"]
+    matchLabels:
+      inference.llmkube.dev/service: qwen3.5-9b
   policyTypes:
     - Ingress
   ingress:
     - from:
         - podSelector:
             matchLabels:
-              inference.llmkube.dev/model-router: epyon-chat
-        - podSelector:
-            matchLabels:
               app.kubernetes.io/name: litellm
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/instance: llmkube
-              app.kubernetes.io/name: llmkube
-              control-plane: controller-manager
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: observability
@@ -58,68 +48,3 @@ spec:
       ports:
         - port: 8080
           protocol: TCP
----
-apiVersion: cilium.io/v2
-kind: CiliumNetworkPolicy
-metadata:
-  name: epyon-chat-router
-spec:
-  endpointSelector:
-    matchLabels:
-      inference.llmkube.dev/model-router: epyon-chat
-  ingress:
-    - fromEndpoints:
-        - matchLabels:
-            app.kubernetes.io/name: litellm
-      toPorts:
-        - ports:
-            - port: "8080"
-              protocol: TCP
-    - fromEndpoints:
-        - matchLabels:
-            k8s:io.kubernetes.pod.namespace: observability
-            app.kubernetes.io/name: prometheus
-      toPorts:
-        - ports:
-            - port: "9090"
-              protocol: TCP
-  egress:
-    - toEntities:
-        - kube-apiserver
-      toPorts:
-        - ports:
-            - port: "6443"
-              protocol: TCP
-    - toEndpoints:
-        - matchExpressions:
-            - key: inference.llmkube.dev/service
-              operator: In
-              values: ["qwen3.5-9b", "lar-9b"]
-      toPorts:
-        - ports:
-            - port: "8080"
-              protocol: TCP
-    - toEndpoints:
-        - matchLabels:
-            k8s:io.kubernetes.pod.namespace: kube-system
-            k8s:k8s-app: kube-dns
-      toPorts:
-        - ports:
-            - port: "53"
-              protocol: UDP
-          rules:
-            dns:
-              - matchName: qwen3-5-9b.ai.svc.cluster.local
-              - matchName: lar-9b.ai.svc.cluster.local
-    - toEndpoints:
-        - matchLabels:
-            k8s:io.kubernetes.pod.namespace: kube-system
-            k8s:k8s-app: kube-dns
-      toPorts:
-        - ports:
-            - port: "53"
-              protocol: TCP
-          rules:
-            dns:
-              - matchName: qwen3-5-9b.ai.svc.cluster.local
-              - matchName: lar-9b.ai.svc.cluster.local
