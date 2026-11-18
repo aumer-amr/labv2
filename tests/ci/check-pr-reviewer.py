@@ -24,7 +24,12 @@ def read_yaml(path, expression="."):
 workflow = read_yaml(".github/workflows/ai-pr-review.yaml")
 assert set(workflow["on"]) == {"pull_request_target"}
 job = workflow["jobs"]["review"]
-assert "head.repo.full_name == github.repository" in job["if"]
+assert job["if"] == (
+    "${{ !github.event.pull_request.draft && "
+    "github.event.pull_request.head.repo.full_name == github.repository && "
+    "github.event.pull_request.user.login == 'labv2-bot[bot]' && "
+    "startsWith(github.event.pull_request.head.ref, 'renovate/') }}"
+)
 assert job["permissions"]["contents"] == "read"
 checkouts = [s for s in job["steps"] if s.get("uses", "").startswith("actions/checkout@")]
 assert len(checkouts) == 1
