@@ -66,6 +66,10 @@ spec:
                   httpGet:
                     path: /
                     port: &port 8000
+                    # Paperless validates the Host header against PAPERLESS_URL.
+                    httpHeaders: &probeHeaders
+                      - name: Host
+                        value: paperless.aumer.dev
                   periodSeconds: 30
                   timeoutSeconds: 5
                   failureThreshold: 5
@@ -76,6 +80,7 @@ spec:
                   httpGet:
                     path: /
                     port: *port
+                    httpHeaders: *probeHeaders
                   periodSeconds: 10
                   timeoutSeconds: 5
                   failureThreshold: 5
@@ -86,6 +91,7 @@ spec:
                   httpGet:
                     path: /
                     port: *port
+                    httpHeaders: *probeHeaders
                   failureThreshold: 30
                   periodSeconds: 10
             resources:
