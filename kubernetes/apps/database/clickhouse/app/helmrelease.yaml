@@ -17,7 +17,7 @@ spec:
           app:
             image:
               repository: docker.io/clickhouse/clickhouse-server
-              tag: 26.10@sha256:4f491abc44d9f4a1747c033c35ddd5bc385521305d85ca8251ba0824ff597035
+              tag: 26.10@sha256:b0784219f1821b8a9918732b8e6728dbed9246e13949c46e40d7c2a084d9ef9d
             env:
               CLICKHOUSE_USER: admin
               CLICKHOUSE_PASSWORD:
