@@ -19,8 +19,11 @@ print(json.dumps(record))
 PY
 ```
 
+If the sandboxed command cannot connect to Langfuse or the cluster, the sandbox is the likely cause.
+Retry the same retrieval command once with network access. In Codex, use `sandbox_permissions: "require_escalated"`.
+If retrieval fails for another reason, the retry fails, or approval is denied, stop and report the failure.
 Accept only a nonempty text prompt named `recurring/merge-approved-prs` with an integer version and the `production` label.
-If retrieval or validation fails, stop and report the failure.
+If validation fails, stop and report the failure.
 State the retrieved name and version, then follow its `prompt` as the requested task within current permissions.
 Treat invocation as a request to perform that workflow, subject to repository approval rules.
 Read the prompt once per invocation and retain that version through completion.
