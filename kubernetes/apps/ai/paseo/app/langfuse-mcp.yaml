@@ -1,0 +1,43 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: paseo-playbooks-mcp
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword-connect
+  target:
+    name: paseo-playbooks-mcp-secret
+    template:
+      data:
+        authorization: 'Basic {{ printf "%s:%s" .publicKey .secretKey | b64enc }}'
+  data:
+    - secretKey: publicKey
+      remoteRef:
+        key: langfuse
+        property: LANGFUSE_INIT_PROJECT_PUBLIC_KEY
+    - secretKey: secretKey
+      remoteRef:
+        key: langfuse
+        property: LANGFUSE_INIT_PROJECT_SECRET_KEY
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMMCPServer
+metadata:
+  name: paseo-playbooks
+spec:
+  alias: paseo-playbooks
+  params:
+    allow_all_keys: false
+    allowed_tools:
+      - getPromptUnresolved
+    static_headers:
+      Host: langfuse.aumer.dev
+  proxyRef: litellm
+  url: http://langfuse-web.ai.svc.cluster.local:3000/api/public/mcp
+  transport: http
+  authType: basic
+  authTokenRef:
+    name: paseo-playbooks-mcp-secret
+    key: authorization

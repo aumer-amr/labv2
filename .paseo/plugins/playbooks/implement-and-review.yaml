@@ -1,0 +1,76 @@
+---
+title: Implement and review a LabV2 task
+description: Have Sol implement a Tasks card and Astra review it. Approve the reviewed commit to open and merge a checked PR.
+isolation: { mode: worktree, base: main }
+concurrency: 1
+manager: { mode: none }
+agent: { provider: codex, model: gpt-6.1-sol, mode: auto }
+permissions: { on_request: escalate }
+
+inputs:
+  task_key:
+    type: string
+    required: true
+    description: Exact key of an existing Paseo Tasks card, such as LABV2-1.
+
+outputs:
+  changes: { type: string }
+  findings: { type: string }
+  pr_url: { type: string }
+  merge_sha: { type: string }
+
+steps:
+  - id: implement
+    inputs: [task_key]
+    role:
+      name: implementer
+      prompt: Implement the request on card {{ inputs.task_key }} in {{ worktree }}.
+    outputs:
+      changes: { type: string, description: Changed paths and the checks you ran. }
+      candidate_sha: { type: string, description: Full Git commit ID of the local change. }
+    timeout: 45m
+
+  - id: review
+    needs: [implement]
+    inputs: [task_key, changes, candidate_sha]
+    role:
+      name: reviewer
+      agent: { model: gpt-6-astra }
+      prompt: |
+        Review commit {{ inputs.candidate_sha }} in {{ worktree }} against card {{ inputs.task_key }}.
+        The implementer reported the following changes and checks.
+        {{ inputs.changes }}
+    outputs:
+      findings:
+        type: string
+        description: Review verdict, changed paths, test results, and any requested fixes.
+      reviewed_sha: { type: string, description: Full Git commit ID you inspected. }
+    outcomes: [passed, changes_requested, failure]
+    on:
+      changes_requested: { goto: implement, max_loops: 1 }
+    timeout: 30m
+
+  - id: accept
+    needs: [review]
+    gate:
+      question: |
+        Publish commit {{ steps.review.outputs.reviewed_sha }} for {{ playbook.inputs.task_key }} and merge its PR into aumer-amr/labv2 main when the required checks pass?
+
+        {{ steps.review.outputs.findings }}
+
+  - id: open_pr
+    needs: [accept]
+    inputs: [task_key, candidate_sha, reviewed_sha]
+    script: { run: checked-pr.py }
+    outputs:
+      pr_number: { type: string }
+      pr_url: { type: string }
+    timeout: 5m
+
+  - id: merge_pr
+    needs: [open_pr]
+    inputs: [task_key, candidate_sha, reviewed_sha, pr_number]
+    script: { run: checked-pr.py, poll: 1m }
+    outputs:
+      merge_sha: { type: string, description: Merge commit on main. }
+    timeout: 2h
