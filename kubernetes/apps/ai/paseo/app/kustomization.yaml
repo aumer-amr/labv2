@@ -12,5 +12,7 @@ configMapGenerator:
     files:
       - codex.toml=./config/config.toml
       - paseo.json=./config/paseo.json
+      - ./config/plugins.json
+      - ./config/plugins.py
 generatorOptions:
   disableNameSuffixHash: true

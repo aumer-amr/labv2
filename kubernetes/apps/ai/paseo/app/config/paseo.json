@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "pluginsEnabled": true,
   "daemon": {
     "relay": { "enabled": false },
     "mcp": { "enabled": false }

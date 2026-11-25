@@ -36,6 +36,13 @@ spec:
             image:
               repository: ghcr.io/aumer-amr/paseo-codex
               tag: 0.17.4
+            args:
+              - /bin/sh
+              - -ec
+              - |
+                python3 /etc/paseo-template/plugins.py prepare
+                python3 /etc/paseo-template/plugins.py install &
+                exec /usr/local/bin/paseo-start
             env:
               TZ: Europe/Amsterdam
               PASEO_LISTEN: 0.0.0.0:6767
@@ -128,8 +135,12 @@ spec:
         type: configMap
         name: paseo-config
         globalMounts:
-          - path: /etc/paseo
+          - path: /etc/paseo-template
             readOnly: true
+      startup-config:
+        type: emptyDir
+        globalMounts:
+          - path: /etc/paseo
       langfuse-tracing:
         type: secret
         name: paseo-langfuse-tracing

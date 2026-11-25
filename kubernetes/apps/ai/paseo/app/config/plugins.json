@@ -1,0 +1,13 @@
+{
+  "tasks": { "registry": "anh-chu/tasks", "directory": "node_modules/paseo-plugin-tasks" },
+  "paseo-playbooks": { "registry": "lerenn/playbooks", "directory": "checkout" },
+  "genui": { "registry": "anh-chu/genui", "directory": "node_modules/paseo-plugin-genui" },
+  "progress": {
+    "registry": "stevecastaneda/progress",
+    "directory": "node_modules/@stevecastaneda/paseo-progress"
+  },
+  "host-monitor": {
+    "registry": "a31521424/host-monitor",
+    "directory": "checkout/plugins/host-monitor"
+  }
+}
