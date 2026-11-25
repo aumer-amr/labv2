@@ -4,7 +4,11 @@ sandbox_mode = "workspace-write"
 cli_auth_credentials_store = "file"
 
 [features]
+hooks = true
 multi_agent_v2 = false
+
+[plugins."tracing@codex-observability-plugin"]
+enabled = true
 
 [sandbox_workspace_write]
 network_access = false

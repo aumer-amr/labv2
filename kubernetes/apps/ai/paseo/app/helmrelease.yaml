@@ -44,6 +44,8 @@ spec:
               PASEO_WEB_UI_ENABLED: "true"
               PASEO_RELAY_ENABLED: "false"
               PASEO_LOG_FILE_LEVEL: info
+              # Keep project-local Codex settings from redirecting tracing credentials.
+              LANGFUSE_CODEX_BASE_URL: http://langfuse-web.ai.svc.cluster.local:3000
               LITELLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
@@ -128,5 +130,15 @@ spec:
         globalMounts:
           - path: /etc/paseo
             readOnly: true
+      langfuse-tracing:
+        type: secret
+        name: paseo-langfuse-tracing
+        defaultMode: 0440
+        advancedMounts:
+          main:
+            app:
+              - path: /home/paseo/.codex/langfuse.json
+                subPath: langfuse.json
+                readOnly: true
       tmp:
         type: emptyDir

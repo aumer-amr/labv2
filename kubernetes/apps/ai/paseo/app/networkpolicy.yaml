@@ -39,6 +39,15 @@ spec:
       ports:
         - port: 8080
           protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: langfuse
+              app.kubernetes.io/name: langfuse
+              app: web
+      ports:
+        - port: 3000
+          protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -79,6 +88,28 @@ spec:
               app.kubernetes.io/name: paseo
       ports:
         - port: 8080
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: paseo-to-langfuse-web
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: langfuse
+      app.kubernetes.io/name: langfuse
+      app: web
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: paseo
+              app.kubernetes.io/name: paseo
+      ports:
+        - port: 3000
           protocol: TCP
 ---
 apiVersion: cilium.io/v2
