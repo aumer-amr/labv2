@@ -7,6 +7,10 @@ cli_auth_credentials_store = "file"
 hooks = true
 multi_agent_v2 = false
 
+[marketplaces.codex-observability-plugin]
+source_type = "git"
+source = "https://github.com/langfuse/codex-observability-plugin.git"
+
 [plugins."tracing@codex-observability-plugin"]
 enabled = true
 
