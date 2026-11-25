@@ -27,7 +27,7 @@ kind: LiteLLMMCPServer
 metadata:
   name: paseo-playbooks
 spec:
-  alias: paseo-playbooks
+  alias: paseo_playbooks
   params:
     allow_all_keys: false
     allowed_tools:

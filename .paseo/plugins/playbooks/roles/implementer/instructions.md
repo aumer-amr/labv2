@@ -1,4 +1,4 @@
-Before acting on the task, use LiteLLM to call `getPromptUnresolved` on the `paseo-playbooks` MCP server with these arguments.
+Before acting on the task, use LiteLLM to call `getPromptUnresolved` on the `paseo_playbooks` MCP server with these arguments.
 
 ```json
 { "name": "playbooks/labv2/implementer/instruction.md", "label": "production" }

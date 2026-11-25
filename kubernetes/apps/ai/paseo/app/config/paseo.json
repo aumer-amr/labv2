@@ -3,19 +3,27 @@
   "pluginsEnabled": true,
   "daemon": {
     "relay": { "enabled": false },
-    "mcp": { "enabled": false }
+    "mcp": { "enabled": true, "injectIntoAgents": true }
   },
   "worktrees": { "root": "/workspace/worktrees" },
   "agents": {
     "providers": {
+      "antigravity": { "paseoTools": { "enabled": false } },
+      "claude": { "paseoTools": { "enabled": false } },
       "codex": {
+        "paseoTools": { "enabled": true },
         "options": {
           "approval_policy": "on-request",
           "sandbox_mode": "workspace-write",
           "sandbox_workspace_write": { "network_access": false },
           "features": { "multi_agent_v2": false }
         }
-      }
+      },
+      "copilot": { "paseoTools": { "enabled": false } },
+      "muse": { "paseoTools": { "enabled": false } },
+      "omp": { "paseoTools": { "enabled": false } },
+      "opencode": { "paseoTools": { "enabled": false } },
+      "pi": { "paseoTools": { "enabled": false } }
     }
   },
   "log": {
