@@ -32,7 +32,7 @@ spec:
     network.home.arpa/from-envoy-internal: allow
     network.home.arpa/to-envoy-external: allow
   # renovate: datasource=docker depName=ghcr.io/berriai/litellm
-  image: ghcr.io/berriai/litellm:v1.109.1@sha256:11175975a3093e05e92faee2fe2fe3412a3ae2fcaa849eb0fe25d5f0d8bcb2e9
+  image: ghcr.io/berriai/litellm:1.111.0@sha256:ce00096d012719d58c52cecfa373f7c6256dd1b0ff08f6fa607e10e9628f1f46
   replicas: 1
   generalSettings:
     cancel_on_disconnect: true
