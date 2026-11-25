@@ -35,7 +35,7 @@ spec:
           app:
             image:
               repository: ghcr.io/aumer-amr/paseo-codex
-              tag: sha-8608eac@sha256:e04c0e4612b33055d17e5e394adc0297e7f1fd68f6aa2c5da37df6e6067b7465
+              tag: 0.17.4
             env:
               TZ: Europe/Amsterdam
               PASEO_LISTEN: 0.0.0.0:6767
