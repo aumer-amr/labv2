@@ -9,6 +9,7 @@ spec:
   mcpToolsets:
     - 6b9621e4-cc01-4f86-a470-b0f1d1fb84e8
     - c53d724b-0d4e-4ffa-98cf-441e37bb809f
+    - d2de6d9f-cca8-4d74-9953-e1abe87aad67
   models:
     - no-model-access
   proxyRef: litellm
