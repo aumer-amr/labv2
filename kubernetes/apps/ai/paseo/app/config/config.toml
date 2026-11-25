@@ -21,6 +21,10 @@ network_access = false
 url = "http://litellm.ai.svc.cluster.local:4000/mcp/"
 env_http_headers = { "x-litellm-api-key" = "LITELLM_API_KEY" }
 
+[mcp_servers.paseo_playbooks]
+url = "http://litellm.ai.svc.cluster.local:4000/mcp/paseo_playbooks"
+env_http_headers = { "x-litellm-api-key" = "LITELLM_API_KEY" }
+
 [mcp_servers.memini]
 url = "http://memini.ai.svc.cluster.local:8080/mcp"
 bearer_token_env_var = "MEMINI_API_KEY"
