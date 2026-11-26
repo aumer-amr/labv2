@@ -5,7 +5,7 @@ isolation: { mode: worktree, base: main }
 concurrency: 1
 manager: { mode: none }
 agent: { provider: codex, model: gpt-6.1-sol, mode: auto }
-permissions: { on_request: escalate }
+permissions: { on_request: authorize }
 
 inputs:
   task_key:
