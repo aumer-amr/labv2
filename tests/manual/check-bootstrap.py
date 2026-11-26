@@ -4,6 +4,7 @@
 import os
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import tempfile
 
@@ -35,6 +36,14 @@ case "${0##*/}" in
         printf '%s\n' "${2##*/}" >> "$FIXTURE_DIR/decryptions"
         cat "$2"
         ;;
+    topf)
+        case "$*" in
+            talosconfig|'kubeconfig --validity 8760h') ;;
+            *) exit 99 ;;
+        esac
+        printf 'generated %s\n' "$1"
+        exit "$TOPF_EXIT_CODE"
+        ;;
 esac
 """
 
@@ -42,7 +51,11 @@ esac
 def main():
     with tempfile.TemporaryDirectory() as temp:
         fixture = Path(temp)
-        for path in (Path("justfile"), Path("bootstrap/mod.just")):
+        for path in (
+            Path("justfile"),
+            Path("bootstrap/mod.just"),
+            Path("scripts/write-admin-config.py"),
+        ):
             (fixture / path).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / path, fixture / path)
 
@@ -51,7 +64,7 @@ def main():
         stub = bin_dir / "command-fixture"
         stub.write_text(COMMAND_FIXTURE)
         stub.chmod(0o755)
-        for command in ("gum", "kubectl", "sops"):
+        for command in ("gum", "kubectl", "sops", "topf"):
             (bin_dir / command).symlink_to(stub.name)
 
         clock = fixture / "clock"
@@ -74,6 +87,23 @@ def main():
                 text=True,
                 timeout=15,
             )
+
+        (fixture / "talos").mkdir()
+        for name, directory in (("talosconfig", fixture / "talos"), ("kubeconfig", fixture)):
+            config = directory / name
+            config.write_text("previous configuration\n")
+            config.chmod(0o644)
+
+            result = run(f"talos-{name}", TOPF_EXIT_CODE="42")
+            assert result.returncode == 42, result.stderr
+            assert config.read_text() == "previous configuration\n"
+            assert not list(directory.glob(f".{name}.*"))
+
+            result = run(f"talos-{name}", TOPF_EXIT_CODE="0")
+            assert result.returncode == 0, result.stderr
+            assert config.read_text() == f"generated {name}\n"
+            assert stat.S_IMODE(config.stat().st_mode) == 0o600
+            assert not list(directory.glob(f".{name}.*"))
 
         queries = fixture / "node-queries"
         queries.write_text("")

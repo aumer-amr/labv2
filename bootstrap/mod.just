@@ -35,7 +35,7 @@ talos-apply:
 [working-directory('../talos')]
 talos-talosconfig:
     just log info "Generating talosconfig" stage "{{ recipe_name() }}"
-    topf talosconfig > talosconfig
+    python3 "{{ justfile_dir() }}/scripts/write-admin-config.py" talosconfig topf talosconfig
 
 # topf issues short-lived admin certs by default; 8760h keeps the
 # kubeconfig usable long-term.
@@ -43,7 +43,7 @@ talos-talosconfig:
 [working-directory('../talos')]
 talos-kubeconfig:
     just log info "Fetching kubeconfig" stage "{{ recipe_name() }}"
-    topf kubeconfig --validity 8760h > "{{ justfile_dir() }}/kubeconfig"
+    python3 "{{ justfile_dir() }}/scripts/write-admin-config.py" "{{ justfile_dir() }}/kubeconfig" topf kubeconfig --validity 8760h
 
 [private]
 apps-crds:
