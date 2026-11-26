@@ -53,7 +53,7 @@ Reload the shell with `source ~/.bashrc`. Running `codex` anywhere inside this r
 
 Edit `.codex-private/AGENTS.private.sops.yaml` through the VS Code SOPS extension or with `mise exec -- sops .codex-private/AGENTS.private.sops.yaml`. SOPS uses the repository's ignored `age.key` for decryption.
 
-Fresh deployment:
+For a fresh deployment, follow the [Talos bootstrap prerequisites](docs/deployment.md#bootstrap-talos).
 
 ```sh
 just bootstrap talos

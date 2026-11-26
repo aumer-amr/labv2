@@ -13,6 +13,9 @@ Commands assume Mise is activated in WSL. Otherwise run them through `mise exec 
 
 ## Bootstrap Talos
 
+Install Python 3 before starting. Use a Linux filesystem or a WSL mount with Linux file permissions enabled.
+Both admin configuration directories must support mode `0600`, which grants read and write access only to the file owner.
+
 ```sh
 just bootstrap talos
 ```
