@@ -37,7 +37,9 @@ case "${0##*/}" in
         cat "$2"
         ;;
     topf)
+        printf '%s\n' "$*" >> "$FIXTURE_DIR/topf-calls"
         case "$*" in
+            'secrets --confirm=false'|'apply --auto-bootstrap --confirm=false') exit 0 ;;
             talosconfig|'kubeconfig --validity 8760h') ;;
             *) exit 99 ;;
         esac
@@ -80,7 +82,7 @@ def main():
 
         def run(recipe, **variables):
             return subprocess.run(
-                ["just", f"bootstrap::{recipe}"],
+                ["just", "bootstrap", recipe],
                 cwd=fixture,
                 env={**env, **variables},
                 capture_output=True,
@@ -104,6 +106,33 @@ def main():
             assert config.read_text() == f"generated {name}\n"
             assert stat.S_IMODE(config.stat().st_mode) == 0o600
             assert not list(directory.glob(f".{name}.*"))
+
+        # Simulate a mount that cannot enforce mode 0600 for kubeconfig.
+        (fixture / "sitecustomize.py").write_text(
+            "from itertools import count\n"
+            "import os\n"
+            "fchmod = os.fchmod\n"
+            "calls = count()\n"
+            "os.fchmod = lambda fd, mode: fchmod(fd, 0o644 if next(calls) == 1 else mode)\n"
+        )
+        topf_calls = fixture / "topf-calls"
+        topf_calls.write_text("")
+        result = run("talos", PYTHONPATH=str(fixture), TOPF_EXIT_CODE="0")
+        assert result.returncode != 0, result.stderr
+        assert "Cannot set mode 0600" in result.stderr
+        assert str(fixture / "kubeconfig") in result.stderr
+        assert topf_calls.read_text() == ""
+        assert not list((fixture / "talos").glob(".talosconfig.*"))
+        assert not list(fixture.glob(".kubeconfig.*"))
+
+        result = run("talos", TOPF_EXIT_CODE="0")
+        assert result.returncode == 0, result.stderr
+        assert topf_calls.read_text().splitlines() == [
+            "secrets --confirm=false",
+            "apply --auto-bootstrap --confirm=false",
+            "talosconfig",
+            "kubeconfig --validity 8760h",
+        ]
 
         queries = fixture / "node-queries"
         queries.write_text("")

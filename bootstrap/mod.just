@@ -9,12 +9,16 @@ kubernetes_dir := justfile_dir() + '/kubernetes'
 
 [doc('Bootstrap the Talos cluster')]
 [group('bootstrap')]
-talos: talos-secret talos-apply talos-talosconfig talos-kubeconfig
+talos: talos-check-admin-configs talos-secret talos-apply talos-talosconfig talos-kubeconfig
 
 [doc('Bootstrap apps into the Talos cluster')]
 [group('bootstrap')]
 apps: apps-ready apps-namespaces apps-secrets apps-secrets-op apps-crds apps-helm
     just log info "Cluster is bootstrapped — Flux will start syncing the Git repository"
+
+[private]
+talos-check-admin-configs:
+    python3 "{{ justfile_dir() }}/scripts/write-admin-config.py" --check "{{ justfile_dir() }}/talos/talosconfig" "{{ justfile_dir() }}/kubeconfig"
 
 # No sops call or existence guard is needed: the bundle is stored already
 # encrypted with the repo's age recipient, and existing bundles are left
