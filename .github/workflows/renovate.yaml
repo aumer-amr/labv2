@@ -43,7 +43,7 @@ jobs:
         uses: renovatebot/github-action@acdd6bda8b035c99ce59d5675816af2aa65a1774 # v46.3.14
         with:
           token: ${{ steps.app-token.outputs.token }}
-          renovate-version: 44.257.9
+          renovate-version: 44.263.6
         env:
           LOG_LEVEL: info
           RENOVATE_AUTODISCOVER: "true"
