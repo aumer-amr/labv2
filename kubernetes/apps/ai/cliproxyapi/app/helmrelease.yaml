@@ -32,7 +32,7 @@ spec:
           cliproxyapi:
             image:
               repository: docker.io/eceasy/cli-proxy-api
-              tag: v8.1.3@sha256:784019627af9654e5d595aa74b6bdeb819c5a2a6f9ebade5461dcf2a8ba65d3a
+              tag: v8.1.6@sha256:e64b3e9814f3a263c3cd4b659c34a419a935e29ed60077a5739880c217292f34
             command: [/CLIProxyAPI/CLIProxyAPI]
             args: [--config, /etc/cliproxyapi/config.yaml, --local-model]
             env:
