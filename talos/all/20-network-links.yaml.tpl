@@ -3,7 +3,8 @@ apiVersion: v1alpha1
 kind: LinkAliasConfig
 name: ethSel0
 selector:
-  match: glob("{{ .Node.Data.macAddr }}", mac(link.hardware_addr))
+  match: >-
+    glob("{{ .Node.Data.macAddr }}", mac(size(link.permanent_addr) > 0 ? link.permanent_addr : link.hardware_addr))
 ---
 apiVersion: v1alpha1
 kind: BondConfig
