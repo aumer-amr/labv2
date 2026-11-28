@@ -1,5 +1,7 @@
 apiVersion: v1alpha1
 kind: KubeletConfig
+clusterDNS:
+  - 10.43.0.10
 config:
   crashLoopBackOff:
     maxContainerRestartPeriod: 60s
