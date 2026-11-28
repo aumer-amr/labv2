@@ -15,6 +15,7 @@ spec:
       network.home.arpa/from-envoy-external: allow
     replicaCount: 2
     config:
+      commandsEnabled: false
       kubernetes: true
       trustedProxies:
         - "10.42.0.0/16"
