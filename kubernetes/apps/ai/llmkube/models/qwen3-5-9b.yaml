@@ -26,7 +26,7 @@ spec:
   modelRef: qwen3.5-9b
   runtime: llamacpp
   # renovate: datasource=docker depName=ghcr.io/ggml-org/llama.cpp
-  image: ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:d397a7c758857d5f3c8e6d31b3e2a33d4d5b8226388a0cb9ffa79a70056a1731
+  image: ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:a4911a324843555ff09cd403f21ba314a78a1aa5f515a145774465161f168a7a
   replicas: 1
   nodeSelector:
     kubernetes.io/hostname: epyon
